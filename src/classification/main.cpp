@@ -10,7 +10,8 @@ int main() {
 
     juml::classification::GaussianNaiveBayes nb;
     nb.fit(daten,labels);
-    
+
+    std::cout.precision(10);
     std::cout <<  nb.score(daten,labels) << std::endl;
     return 0;
 }

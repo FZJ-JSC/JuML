@@ -7,7 +7,7 @@
 namespace juml {
 namespace stats {
     float gaussian_pdf(float x, float mean, float stddev);
-    arma::fvec gaussian_pdf(const arma::fvec& X, const arma::fvec& means, const arma::fvec& stddevs);
+    arma::fvec gaussian_pdf(const arma::frowvec& X, const arma::frowvec& means, const arma::frowvec& stddevs);
 } // stats
 } // juml
 
