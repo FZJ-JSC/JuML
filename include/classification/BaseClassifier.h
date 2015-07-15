@@ -4,20 +4,26 @@
 #include <armadillo>
 #include <mpi.h>
 
+#include "preprocessing/ClassNormalizer.h"
+
 namespace juml {
 namespace classification {
     class BaseClassifier {
     protected:
         MPI_Comm comm_;
-        
+        juml::preprocessing::ClassNormalizer class_normalizer_;
+
     public:
         BaseClassifier(MPI_Comm comm=MPI_COMM_WORLD) :
             comm_(comm)
         {};
 
-        virtual void fit(arma::fmat& X, arma::ivec& y) = 0;
-        virtual arma::ivec predict(arma::fmat& X) const = 0;
-        virtual float accuracy(arma::fmat& X, arma::ivec& y) const = 0;
+        virtual void fit(const arma::fmat& X, const arma::ivec& y) {
+            this->class_normalizer_.index(y);
+        };
+
+        virtual arma::ivec predict(const arma::fmat& X) const = 0;
+        virtual float accuracy(const arma::fmat& X, const arma::ivec& y) const = 0;
     };
 } // namespace classification
 } // namespace juml
