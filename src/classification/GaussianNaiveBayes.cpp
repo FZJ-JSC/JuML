@@ -3,9 +3,6 @@
 
 namespace juml {
 namespace classification {
-    GaussianNaiveBayes::GaussianNaiveBayes(MPI_Comm comm) :
-        comm_(comm)
-    {}
 
     void GaussianNaiveBayes::fit(arma::fmat& X, arma::ivec& y) {
         this->classes_ = arma::unique(y);
@@ -60,20 +57,16 @@ namespace classification {
     arma::ivec GaussianNaiveBayes::predict(arma::fmat& X) const {
         arma::fmat probabilities = this->predict_probability(X);
         arma::ivec predictions(X.n_rows);
-        arma::uword index;
-
-
         arma::ivec max_index = this->argmax(probabilities, 1);
 
         for (uint64_t i = 0; i < max_index.n_elem; ++i) {
             predictions(i) = this->inverse_mapping_.find(max_index(i))->second;
         }
 
-
         return predictions;
     }
 
-    float GaussianNaiveBayes::score(arma::fmat& X, arma::ivec& y) const {
+    float GaussianNaiveBayes::accuracy(arma::fmat& X, arma::ivec& y) const {
         arma::ivec predictions = this->predict(X);
         return (float)arma::sum(predictions == y) / (float)y.n_elem;
     }
