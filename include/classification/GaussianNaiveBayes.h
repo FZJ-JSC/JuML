@@ -28,7 +28,6 @@ namespace classification {
         arma::ivec predict(arma::fmat& X) const;
         arma::fmat predict_probability(arma::fmat& X) const;
         float accuracy(arma::fmat& X, arma::ivec& y) const;
-        arma::ivec argmax(arma::fmat& X, int dim) const;
 
         inline const arma::fvec& class_counts() const { return this->class_counts_; };
         inline const arma::fvec& prior() const { return this->prior_; };

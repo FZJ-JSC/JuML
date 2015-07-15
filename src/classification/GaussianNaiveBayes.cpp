@@ -1,5 +1,6 @@
-#include "stats/Distributions.h"
 #include "classification/GaussianNaiveBayes.h"
+#include "stats/Distributions.h"
+#include "utils/operations.h"
 
 namespace juml {
 namespace classification {
@@ -57,7 +58,7 @@ namespace classification {
     arma::ivec GaussianNaiveBayes::predict(arma::fmat& X) const {
         arma::fmat probabilities = this->predict_probability(X);
         arma::ivec predictions(X.n_rows);
-        arma::ivec max_index = this->argmax(probabilities, 1);
+        arma::uvec max_index = juml::utils::argmax(probabilities, 1);
 
         for (uint64_t i = 0; i < max_index.n_elem; ++i) {
             predictions(i) = this->inverse_mapping_.find(max_index(i))->second;
@@ -87,27 +88,6 @@ namespace classification {
         }
 
         return inverse_mapping;
-    }
-
-    arma::ivec GaussianNaiveBayes::argmax(arma::fmat& X, int dim) const {
-
-        arma::fmat data;
-        if (dim==0) {
-            data = X.t();
-        }
-        arma::ivec index(X.n_rows);
-
-        for (uint64_t row = 0; row < X.n_rows; ++row){
-            int temp_max = -1;
-            for (uint64_t col = 0; col < X.n_cols; ++col){
-                if (temp_max == -1 || X(row,temp_max) < X(row,col)) {
-                    temp_max = col;
-                }
-            }
-            index(row) = temp_max;
-        }
-
-        return index;
     }
 } // namespace classification
 } // namespace juml
