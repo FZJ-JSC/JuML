@@ -12,8 +12,8 @@ namespace stats {
         return prob * e;
     }
 
-    arma::fvec gaussian_pdf(const arma::frowvec& X, const arma::frowvec& means, const arma::frowvec& stddevs) {
-        arma::fvec probs(X.n_elem);
+    arma::frowvec gaussian_pdf(const arma::frowvec& X, const arma::frowvec& means, const arma::frowvec& stddevs) {
+        arma::frowvec probs(X.n_elem);
 
         for (uint64_t i = 0; i < X.n_elem; ++i) {
             probs(i) = gaussian_pdf(X(i), means(i), stddevs(i));

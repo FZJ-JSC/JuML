@@ -47,7 +47,7 @@ namespace classification {
             for (uint64_t row = 0; row < X.n_rows; ++row) {
                 const arma::frowvec& mean = this->theta_.row(mapping.second);
                 const arma::frowvec& stddev = this->stddev_.row(mapping.second);
-                arma::fvec features_probs = juml::stats::gaussian_pdf(X.row(row), mean, stddev);
+                arma::frowvec features_probs = juml::stats::gaussian_pdf(X.row(row), mean, stddev);
                 probabilities(row, mapping.second) *= arma::prod(features_probs);
             }
         }
