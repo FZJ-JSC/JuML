@@ -1,0 +1,2 @@
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include/clustering/)
+ADD_LIBRARY(K_MEANS k_means.cpp)

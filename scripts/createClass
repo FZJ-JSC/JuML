@@ -1,0 +1,78 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import re
+
+def createDir(BeginPath,namespaces):
+  if len(namespaces):
+    for n in namespaces:
+      BeginPath += "/" + n
+      if not os.path.exists(BeginPath):
+        os.makedirs(BeginPath)
+        cmakePath = BeginPath[:BeginPath.find(n)]+"CMakeLists.txt"
+        with open(cmakePath,"a+") as cmakeFile:
+          cmakeFile.write("ADD_SUBDIRECTORY("+n+")\n")
+  return BeginPath
+
+
+def lower(string):
+  words = re.findall('[A-Z][^A-Z]*',string)
+  ret = ""
+  for word in words:
+    ret += word.lower()+"_"
+  return ret[:-1]
+
+argString   = sys.argv[1].split("::")
+namespaces  = argString[:-1]
+className    = argString[-1]
+currentPath = os.path.dirname(os.path.realpath(__file__));
+head        = currentPath.find("/JuML/")
+includePath     = currentPath[:head+5] + "/include"
+srcPath     = currentPath[:head+5] + "/src"
+
+includePath = createDir(includePath,namespaces)
+srcPath = createDir(srcPath, namespaces)
+
+nameLower = lower(className)
+nameUpper = nameLower.upper()
+namespace = "yuml"
+
+with open(includePath+"/"+nameLower+".h","w+") as headerFile:
+  headerFile.write("""#ifndef """+nameUpper+"""_H
+#define """+nameUpper+"""_H
+
+namespace """+namespace+"""{
+
+class """+className+"""{
+/*### Constructor and Destructor ###*/
+public:
+  """+className+"""();
+  ~"""+className+"""();
+
+}; // """+className+"""
+} // """+namespace+"""
+#endif // """+nameUpper+"""_H""")
+
+with open(srcPath + "/" + nameLower + ".cpp" ,"w+") as srcFile:
+  srcFile.write("""#include \""""+nameLower+""".h\"
+
+yuml::"""+className+"""::"""+className+"""(){
+
+}
+
+yuml::"""+className+"""::~"""+className+"""(){
+
+}
+
+""")
+
+newCmake = True != os.path.isfile(srcPath + "/CMakeLists.txt")
+
+with open(srcPath + "/CMakeLists.txt","a+") as cmakeFile:
+  if newCmake:
+    ns =""
+    for n in namespaces:
+	ns += n + "/"
+    cmakeFile.write("INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include/"+ns+")\n");	  
+  cmakeFile.write("ADD_LIBRARY("+nameUpper+" "+nameLower+".cpp)\n")
