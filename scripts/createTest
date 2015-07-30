@@ -4,6 +4,16 @@ import sys
 import os
 import re
 
+usage = """
+Creates unit test for the given class and add default settings to the CMakeLists.txt files.
+Make sure that the class exists
+    
+    usage:
+    createTest [module::]classname
+"""
+
+
+
 def lower(string):
   words = re.findall('[A-Z][^A-Z]*',string)
   ret = ""
@@ -12,6 +22,9 @@ def lower(string):
   return ret[:-1]
 
 
+if len(sys.argv) != 2:
+  print usage
+  sys.exit(-1)
 argString   = sys.argv[1].split("::")
 namespaces  = argString[:-1]
 testName    = argString[-1]
@@ -25,7 +38,6 @@ if len(namespaces):
     if not os.path.exists(dirpath):
       os.makedirs(dirpath)
       cmakePath = dirpath[:dirpath.find(n)]+"CMakeLists.txt"
-      print cmakePath
       with open(cmakePath,"a+") as cmakeFile:
         cmakeFile.write("ADD_SUBDIRECTORY("+n+")\n")
 
@@ -44,5 +56,5 @@ with open(dirpath + "/CMakeLists.txt","a+") as cmakeFile:
   cmakeFile.write("""
 #Test for """+testCAP+"""
 ADD_EXECUTABLE("""+testCAP+"""_TEST """+lower(testName)+""".cpp)
-TARGET_LINK_LIBRARIES("""+testCAP+"""_TEST """+testCAP+""" gtest)
+TARGET_LINK_LIBRARIES("""+testCAP+"""_TEST """+namespaces[-1]+""" gtest)
 ADD_TEST("""+testCAP+"""_UNIT_TEST """+testCAP+"""_TEST)""")

@@ -4,15 +4,25 @@ import sys
 import os
 import re
 
-def createDir(BeginPath,namespaces):
+usage = """
+Creates a new .h and .cpp file and add default settings to the CMakeLists.txt files
+    
+    usage:
+    createClass [module::]classname
+"""
+
+def createDir(BeginPath,namespaces,cmake=True):
   if len(namespaces):
     for n in namespaces:
       BeginPath += "/" + n
       if not os.path.exists(BeginPath):
         os.makedirs(BeginPath)
-        cmakePath = BeginPath[:BeginPath.find(n)]+"CMakeLists.txt"
-        with open(cmakePath,"a+") as cmakeFile:
-          cmakeFile.write("ADD_SUBDIRECTORY("+n+")\n")
+	if cmake:
+          cmakePath = BeginPath[:BeginPath.find(n)]+"CMakeLists.txt"
+          with open(cmakePath,"a+") as cmakeFile:
+            cmakeFile.write("""
+file(GLOB """+n.upper()+"""_SRC """+n+"""/*.cpp)
+ADD_LIBRARY("""+n+""" ${"""+n.upper()+"""_SRC})""")
   return BeginPath
 
 
@@ -23,6 +33,9 @@ def lower(string):
     ret += word.lower()+"_"
   return ret[:-1]
 
+if len(sys.argv) !=2:
+  print usage
+  sys.exit(-1)
 argString   = sys.argv[1].split("::")
 namespaces  = argString[:-1]
 className    = argString[-1]
@@ -31,7 +44,7 @@ head        = currentPath.find("/JuML/")
 includePath     = currentPath[:head+5] + "/include"
 srcPath     = currentPath[:head+5] + "/src"
 
-includePath = createDir(includePath,namespaces)
+includePath = createDir(includePath,namespaces,False)
 srcPath = createDir(srcPath, namespaces)
 
 nameLower = lower(className)
@@ -55,7 +68,7 @@ public:
 #endif // """+nameUpper+"""_H""")
 
 with open(srcPath + "/" + nameLower + ".cpp" ,"w+") as srcFile:
-  srcFile.write("""#include \""""+nameLower+""".h\"
+  srcFile.write("""#include \""""+namespaces[-1]+"""/"""+nameLower+""".h\"
 
 yuml::"""+className+"""::"""+className+"""(){
 
@@ -66,13 +79,3 @@ yuml::"""+className+"""::~"""+className+"""(){
 }
 
 """)
-
-newCmake = True != os.path.isfile(srcPath + "/CMakeLists.txt")
-
-with open(srcPath + "/CMakeLists.txt","a+") as cmakeFile:
-  if newCmake:
-    ns =""
-    for n in namespaces:
-	ns += n + "/"
-    cmakeFile.write("INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include/"+ns+")\n");	  
-  cmakeFile.write("ADD_LIBRARY("+nameUpper+" "+nameLower+".cpp)\n")

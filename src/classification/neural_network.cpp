@@ -1,4 +1,4 @@
-#include "neural_network.h"
+#include "classification/neural_network.h"
 
 yuml::NeuralNetwork::NeuralNetwork(){
 
