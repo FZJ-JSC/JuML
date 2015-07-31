@@ -1,2 +1,0 @@
-ADD_SUBDIRECTORY(classification)
-ADD_SUBDIRECTORY(clustering)
