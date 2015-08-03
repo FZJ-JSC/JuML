@@ -1,0 +1,122 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import os.path
+import re
+
+usage = """
+Creates a new .h and .cpp file and add default settings to the CMakeLists.txt files
+
+    usage:
+    createClass [module::]classname
+"""
+
+# CONSTANTS
+NAMESPACE = "juml"
+HEADER_TEMPLATE = """\
+/*
+* Copyright (c) 2015
+* Forschungszentrum Juelich GmbH, Juelich Supercomputing Center
+*
+* This software may be modified and distributed under the terms of BSD-style license.
+*
+* File name: {className}.h
+*
+* Description: Header of class {className}
+*
+* Maintainer:
+*
+* Email:
+*/
+
+#ifndef {guard}_H
+#define {guard}_H
+
+namespace {namespace} {{
+    //! {className}
+    //! TODO: Describe me
+    class {className} {{
+    public:
+    //! {className} constructor
+    {className}();
+
+    }}; // {className}
+}}  // {namespace}
+#endif // {guard}_H
+"""
+
+SRC_TEMPLATE = """\
+/*
+* Copyright (c) 2015
+* Forschungszentrum Juelich GmbH, Juelich Supercomputing Center
+*
+* This software may be modified and distributed under the terms of BSD-style license.
+*
+* File name: {className}.cpp
+*
+* Description: Implementation of class {className}
+*
+* Maintainer:
+*
+* Email:
+*/
+
+#include \"{path}/{className}.h\"
+
+namespace {namespace} {{
+  {className}::{className}() {{
+  }}
+}} // namespace {namespace}
+"""
+
+CMAKE_TEMPLATE = """\
+file(GLOB {name}_SRC {namespace}/*.cpp)
+ADD_LIBRARY{{({namespace}}} ${{{name}_SRC}})
+"""
+
+# FUNCTIONS
+def create_cmake_package(base_path, namespaces, cmake):
+    path = os.path.join(base_path, *namespaces)
+    try:
+        os.makedirs(path)
+    except os.error:
+        pass
+
+    if not cmake:
+        return path
+
+    for i, part in enumerate(namespaces):
+        with open(os.path.join(base_path, *(namespaces[:i+1] + ["CMakeLists.txt"])), "w") as cmake_file:
+            cmake_file.write(CMAKE_TEMPLATE.format(name=part.upper(), namespace=part))
+    return path
+
+def create_header(path, namespaces, class_name):
+    with open(os.path.join(path, *(namespaces + [class_name + ".h"])), "w+") as header_file:
+        header_file.write(HEADER_TEMPLATE.format(className=class_name, guard=class_name.upper(), namespace=NAMESPACE))
+
+def create_src(path, namespaces, class_name):
+    with open(os.path.join(path, *(namespaces + [class_name + ".cpp"])), "w+") as src_file:
+        src_file.write(SRC_TEMPLATE.format(namespace=NAMESPACE, className=class_name, path=os.path.join(*namespaces)))
+
+
+## ***** main *****
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print usage
+        sys.exit(-1)
+
+    arg_string = sys.argv[1].split("::")
+    namespaces = arg_string[:-1]
+    class_name = arg_string[-1]
+
+    if len(namespaces) < 1:
+        raise ValueError("No namespace given.")
+
+    include_path = os.path.abspath("../include")
+    src_path = os.path.abspath("../src")
+
+    create_cmake_package(include_path, namespaces, cmake=False)
+    create_cmake_package(src_path, namespaces, cmake=True)
+    create_header(include_path, namespaces, class_name)
+    create_src(src_path, namespaces,class_name)
