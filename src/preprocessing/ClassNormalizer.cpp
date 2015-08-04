@@ -16,7 +16,7 @@
 #include <exception>
 #include <sstream>
 
-#include "preprocessing/class_normalizer.h"
+#include "preprocessing/ClassNormalizer.h"
 
 namespace juml {
     ClassNormalizer::ClassNormalizer(MPI_Comm comm) : comm_(comm) {

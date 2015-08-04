@@ -1,0 +1,2 @@
+FILE(GLOB STATS_SRC *.cpp)
+ADD_LIBRARY(stats ${STATS_SRC})

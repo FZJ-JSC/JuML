@@ -7,11 +7,10 @@
 #include "preprocessing/ClassNormalizer.h"
 
 namespace juml {
-namespace classification {
     class BaseClassifier {
     protected:
         MPI_Comm comm_;
-        juml::preprocessing::ClassNormalizer class_normalizer_;
+        ClassNormalizer class_normalizer_;
 
     public:
         BaseClassifier(MPI_Comm comm=MPI_COMM_WORLD) :
@@ -25,7 +24,6 @@ namespace classification {
         virtual arma::ivec predict(const arma::fmat& X) const = 0;
         virtual float accuracy(const arma::fmat& X, const arma::ivec& y) const = 0;
     };
-} // namespace classification
 } // namespace juml
 
 #endif // BASECLASSIFIER_H

@@ -28,8 +28,7 @@ int main(int argc, char** argv) {
 CMAKE_TEMPLATE = """\
 #Test for {testName}
 ADD_EXECUTABLE({testName}_TEST {className}.cpp)
-ADD_DEPENDENCIES({testName}_TEST {namespace})
-TARGET_LINK_LIBRARIES({testName}_TEST {namespace} gtest)
+TARGET_LINK_LIBRARIES({testName}_TEST {namespace} gtest gtest_main ${{CMAKE_THREAD_LIBS_INIT}})
 ADD_TEST({testName}_UNIT_TEST {testName}_TEST)
 """
 
