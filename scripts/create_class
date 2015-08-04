@@ -63,8 +63,8 @@ SRC_TEMPLATE = """\
 #include \"{path}/{className}.h\"
 
 namespace {namespace} {{
-  {className}::{className}() {{
-  }}
+    {className}::{className}() {{
+    }}
 }} // namespace {namespace}
 """
 
