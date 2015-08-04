@@ -1,3 +1,18 @@
+/*
+* Copyright (c) 2015
+* Forschungszentrum Juelich GmbH, Juelich Supercomputing Center
+*
+* This software may be modified and distributed under the terms of BSD-style license.
+*
+* File name: BaseClassifier.h
+*
+* Description: Header of class BaseClassifier
+*
+* Maintainer: m.goetz
+*
+* Email: murxman@gmail.com
+*/
+
 #ifndef BASECLASSIFIER_H
 #define BASECLASSIFIER_H
 
