@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import re
+
+USAGE = """
+Creates unit test for the given class and add default settings to the CMakeLists.txt files.
+Make sure that the class exists
+
+    usage:
+    create_test [module::]classname
+"""
+
+TEST_TEMPLATE = """\
+#include <gtest/gtest.h>
+
+TEST (SampleTest, SampleCase) {
+    EXPECT_EQ(42,42);
+}
+
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+"""
+
+CMAKE_TEMPLATE = """\
+#Test for {testName}
+ADD_EXECUTABLE({testName}_TEST {className}.cpp)
+ADD_DEPENDENCIES({testName}_TEST {namespace})
+TARGET_LINK_LIBRARIES({testName}_TEST {namespace} gtest)
+ADD_TEST({testName}_UNIT_TEST {testName}_TEST)
+"""
+
+def camel_case_to_underscores(string):
+    words = re.findall("[A-Z][^A-Z]*", string)
+    if not words:
+        return string
+
+    ret = [word.lower() for word in words]
+    return "_".join(ret)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print(USAGE)
+        sys.exit(-1)
+
+    arg_string = sys.argv[1].split("::")
+    namespaces = arg_string[:-1]
+    class_name = arg_string[-1]
+    path = os.path.abspath("../tests")
+    test_namespace_path = os.path.join(path, *namespaces)
+
+    # Create directory hierarchy
+    try:
+        os.makedirs(test_namespace_path)
+    except os.error:
+        pass
+
+    # Write cmake list for adding the subdirectories
+    for i, part in enumerate(namespaces):
+        test_base_cmake = os.path.join(path, "CMakeLists.txt")
+        base_cmake_code = "ADD_SUBDIRECTORY(%s)\n" % os.path.join(*namespaces[:i+1])
+
+        if os.path.exists(test_base_cmake):
+            with open(test_base_cmake, "r") as base_cmake_file:
+                base_already_added = base_cmake_code in base_cmake_file.read()
+        else:
+            base_already_added = False
+
+        if not base_already_added:
+            with open(test_base_cmake, "a+") as base_cmake_file:
+                base_cmake_file.write(base_cmake_code)
+
+    # Write test template code
+    with open(os.path.join(test_namespace_path, class_name + ".cpp"), "w+") as test_file:
+        test_file.write(TEST_TEMPLATE)
+
+    # Write cmake list creating test executable
+    test_cmake = os.path.join(test_namespace_path, "CMakeLists.txt")
+    test_name = camel_case_to_underscores(class_name)
+    cmake_code = CMAKE_TEMPLATE.format(testName=test_name.upper(), className=class_name, namespace=namespaces[-1])
+
+    if os.path.exists(test_cmake):
+        with open(test_cmake, "r") as cmake_file:
+            already_added = cmake_code in cmake_file.read()
+    else:
+        already_added = False
+
+    if not already_added:
+        with open(test_cmake, "a+") as cmake_file:
+            cmake_file.write(cmake_code)

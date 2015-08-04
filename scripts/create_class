@@ -3,13 +3,12 @@
 import sys
 import os
 import os.path
-import re
 
-usage = """
+USAGE = """
 Creates a new .h and .cpp file and add default settings to the CMakeLists.txt files
 
     usage:
-    createClass [module::]classname
+    create_class [module::]classname
 """
 
 # CONSTANTS
@@ -71,8 +70,8 @@ namespace {namespace} {{
 """
 
 CMAKE_TEMPLATE = """\
-file(GLOB {name}_SRC {namespace}/*.cpp)
-ADD_LIBRARY{{({namespace}}} ${{{name}_SRC}})
+file(GLOB {name}_SRC *.cpp)
+ADD_LIBRARY({{{namespace}}} ${{{name}_SRC}})
 """
 
 # FUNCTIONS
@@ -88,7 +87,8 @@ def create_cmake_package(base_path, namespaces, cmake):
 
     for i, part in enumerate(namespaces):
         with open(os.path.join(base_path, *(namespaces[:i+1] + ["CMakeLists.txt"])), "w") as cmake_file:
-            cmake_file.write(CMAKE_TEMPLATE.format(name=part.upper(), namespace=part))
+            text = CMAKE_TEMPLATE.format(name=part.upper(), namespace=part)
+            cmake_file.write(text)
     return path
 
 def create_header(path, namespaces, class_name):
@@ -103,7 +103,7 @@ def create_src(path, namespaces, class_name):
 ## ***** main *****
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print usage
+        print(USAGE)
         sys.exit(-1)
 
     arg_string = sys.argv[1].split("::")

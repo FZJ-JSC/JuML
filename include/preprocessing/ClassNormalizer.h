@@ -1,38 +1,54 @@
-#ifndef CLASSNORMALIZER_H
-#define CLASSNORMALIZER_H
+/*
+ * Copyright (c) 2015
+ * Forschungszentrum Juelich GmbH, Juelich Supercomputing Center
+ *
+ * This software may be modified and distributed under the terms of BSD-style license.
+ *
+ * File name: ClassNormalizer.h
+ *
+ * Description: Header of class ClassNormalizer
+ *
+ * Maintainer: p.glock
+ *
+ * Email: phil.glock@gmail.com
+ */
+
+#ifndef CLASS_NORMALIZER_H
+#define CLASS_NORMALIZER_H
 
 #include <armadillo>
-#include <exception>
 #include <map>
-#include <sstream>
-#include <stdint.h>
+#include <mpi.h>
 
 namespace juml {
-namespace preprocessing {
 
-    class ClassNormalizer {
-    protected:
-        arma::ivec class_labels_;
-        std::map<int32_t, int32_t> class_mapping_;
-    public:
-        void index(const arma::ivec& y);
+//! ClassNormalizer
+//! TODO: Describe me
+class ClassNormalizer {
+protected:
+    arma::ivec class_labels_;
+    std::map<int, int> class_mapping_;
+    MPI_Comm comm_;
+    int mpi_rank_;
+    int mpi_size_;
+public:
+    ClassNormalizer(MPI_Comm comm=MPI_COMM_WORLD);
 
-        inline int32_t n_classes() const {
-            return this->class_labels_.n_elem;
-        }
+    void index(const arma::ivec& y);
 
-        int32_t transform(int32_t class_label) const;
+    inline int n_classes() const {
+        return this->class_labels_.n_elem;
+    }
 
-        inline int32_t invert(int32_t transformed_label) const {
-            return this->class_labels_(transformed_label);
-        }
+    int transform(int class_label) const;
 
-        inline const arma::ivec& classes() const {
-            return this->class_labels_;
-        }
-    };
+    inline int invert(int transformed_label) const {
+        return this->class_labels_(transformed_label);
+    }
 
-} // namespace preprocessing
-} // namespace juml
-
-#endif // CLASSNORMALIZER_H
+    inline const arma::ivec& classes() const {
+        return this->class_labels_;
+    }
+}; // ClassNormalizer
+}  // juml
+#endif // CLASS_NORMALIZER_H
