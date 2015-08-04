@@ -1,19 +1,32 @@
+/*
+* Copyright (c) 2015
+* Forschungszentrum Juelich GmbH, Juelich Supercomputing Center
+*
+* This software may be modified and distributed under the terms of BSD-style license.
+*
+* File name: DataSet.h
+*
+* Description: Header of class DataSet
+*
+* Maintainer: p.glock
+*
+* Email: phil.glock@gmail.com
+*/
+
 #ifndef OPERATIONS_H
 #define OPERATIONS_H
 
 #include <armadillo>
 #include <limits>
-#include <stdint.h>
 
 namespace juml {
-namespace utils {
     template <typename T>
     arma::uvec argmax_cols(const arma::Mat<T>& X) {
         arma::uvec indices(X.n_cols);
 
-        for (uint64_t col = 0; col < X.n_cols; ++col) {
+        for (size_t col = 0; col < X.n_cols; ++col) {
             T compare = std::numeric_limits<T>::lowest();
-            for (uint64_t row = 0; row < X.n_rows; ++row) {
+            for (size_t row = 0; row < X.n_rows; ++row) {
                 const auto element = X(row, col);
 
                 if (element > compare) {
@@ -28,9 +41,9 @@ namespace utils {
     arma::uvec argmin_cols(const arma::Mat<T>& X) {
         arma::uvec indices(X.n_cols);
 
-        for (uint64_t col = 0; col < X.n_cols; ++col) {
+        for (size_t col = 0; col < X.n_cols; ++col) {
             T compare = std::numeric_limits<T>::max();
-            for (uint64_t row = 0; row < X.n_rows; ++row) {
+            for (size_t row = 0; row < X.n_rows; ++row) {
                 const auto element = X(row, col);
 
                 if (element < compare) {
@@ -47,9 +60,9 @@ namespace utils {
     arma::uvec argmax_rows(const arma::Mat<T>& X) {
         arma::uvec indices(X.n_rows);
 
-        for (uint64_t row = 0; row < X.n_rows; ++row) {
+        for (size_t row = 0; row < X.n_rows; ++row) {
             T compare = std::numeric_limits<T>::lowest();
-            for (uint64_t col = 0; col < X.n_cols; ++col) {
+            for (size_t col = 0; col < X.n_cols; ++col) {
                 const auto element = X(row, col);
 
                 if (element > compare) {
@@ -66,9 +79,9 @@ namespace utils {
     arma::uvec argmin_rows(const arma::Mat<T>& X) {
         arma::uvec indices(X.n_rows);
 
-        for (uint64_t row = 0; row < X.n_rows; ++row) {
+        for (size_t row = 0; row < X.n_rows; ++row) {
             T compare = std::numeric_limits<T>::max();
-            for (uint64_t col = 0; col < X.n_cols; ++col) {
+            for (size_t col = 0; col < X.n_cols; ++col) {
                 const auto element = X(row, col);
 
                 if (element < compare) {
@@ -97,7 +110,6 @@ namespace utils {
         return argmin_rows(X);
 
     }
-} // namespace utils
 } // namespace juml
 
 #endif // OPERATIONS_H
