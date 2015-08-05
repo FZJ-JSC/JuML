@@ -1,4 +1,2 @@
 ADD_SUBDIRECTORY(preprocessing)
 ADD_SUBDIRECTORY(classification)
-ADD_SUBDIRECTORY(io)
-ADD_SUBDIRECTORY(data)

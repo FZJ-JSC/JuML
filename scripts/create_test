@@ -15,8 +15,8 @@ Make sure that the class exists
 TEST_TEMPLATE = """\
 #include <gtest/gtest.h>
 
-TEST (SampleTest, SampleCase) {
-    EXPECT_EQ(42,42);
+TEST (SAMPLE_TEST, TEST_42) {
+    ASSERT_EQ(42, 42);
 }
 
 int main(int argc, char** argv) {
@@ -26,10 +26,10 @@ int main(int argc, char** argv) {
 """
 
 CMAKE_TEMPLATE = """\
-#Test for {testName}
+# Test for {testName}
 ADD_EXECUTABLE({testName}_TEST {className}.cpp)
 TARGET_LINK_LIBRARIES({testName}_TEST {namespace} gtest gtest_main ${{CMAKE_THREAD_LIBS_INIT}})
-ADD_TEST({testName}_UNIT_TEST {testName}_TEST)
+ADD_TEST({testName}_TEST {testName}_TEST)
 """
 
 def camel_case_to_underscores(string):
