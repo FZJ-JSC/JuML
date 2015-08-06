@@ -46,7 +46,6 @@ namespace juml {
         const int n_dims = H5Sget_simple_extent_ndims(file_space_id);
 
         if (n_dims > 2) {
-            H5Tclose(data_type);
             H5Dclose(file_space_id);
             H5Dclose(data_id);
             H5Fclose(file_id);
