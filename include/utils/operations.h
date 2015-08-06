@@ -21,8 +21,8 @@
 
 namespace juml {
     template <typename T>
-    arma::uvec argmax_cols(const arma::Mat<T>& X) {
-        arma::uvec indices(X.n_cols);
+    arma::Col<unsigned int> argmax_cols(const arma::Mat<T>& X) {
+        arma::Col<unsigned int> indices(X.n_cols);
 
         for (size_t col = 0; col < X.n_cols; ++col) {
             T compare = std::numeric_limits<T>::lowest();
@@ -38,8 +38,8 @@ namespace juml {
     }
 
     template <typename T>
-    arma::uvec argmin_cols(const arma::Mat<T>& X) {
-        arma::uvec indices(X.n_cols);
+    arma::Col<unsigned int> argmin_cols(const arma::Mat<T>& X) {
+        arma::Col<unsigned int> indices(X.n_cols);
 
         for (size_t col = 0; col < X.n_cols; ++col) {
             T compare = std::numeric_limits<T>::max();
@@ -57,8 +57,8 @@ namespace juml {
     }
 
     template <typename T>
-    arma::uvec argmax_rows(const arma::Mat<T>& X) {
-        arma::uvec indices(X.n_rows);
+    arma::Col<unsigned int> argmax_rows(const arma::Mat<T>& X) {
+        arma::Col<unsigned int> indices(X.n_rows);
 
         for (size_t row = 0; row < X.n_rows; ++row) {
             T compare = std::numeric_limits<T>::lowest();
@@ -76,8 +76,8 @@ namespace juml {
     }
 
     template <typename T>
-    arma::uvec argmin_rows(const arma::Mat<T>& X) {
-        arma::uvec indices(X.n_rows);
+    arma::Col<unsigned int> argmin_rows(const arma::Mat<T>& X) {
+        arma::Col<unsigned int> indices(X.n_rows);
 
         for (size_t row = 0; row < X.n_rows; ++row) {
             T compare = std::numeric_limits<T>::max();
@@ -95,7 +95,7 @@ namespace juml {
     }
 
     template <typename T>
-    arma::uvec argmax(const arma::Mat<T>& X, int dim=0) {
+    arma::Col<unsigned int> argmax(const arma::Mat<T>& X, int dim=0) {
         if (dim == 0) {
             return argmax_cols(X);
         }
@@ -103,7 +103,7 @@ namespace juml {
     }
 
     template <typename T>
-    arma::uvec argmin(const arma::Mat<T>& X, int dim=0) {
+    arma::Col<unsigned int> argmin(const arma::Mat<T>& X, int dim=0) {
         if (dim == 0) {
             return argmin_cols(X);
         }

@@ -4,9 +4,9 @@
 *
 * This software may be modified and distributed under the terms of BSD-style license.
 *
-* File name: DataSet.h
+* File name: Dataset.h
 *
-* Description: Header of class DataSet
+* Description: Header of class Dataset
 *
 * Maintainer: m.goetz
 *
@@ -23,13 +23,13 @@
 #include "classification/BaseClassifier.h"
 
 namespace juml {
-    //! DataSet
+    //! Dataset
     //! TODO: Describe me
-    class DataSet {
+    class Dataset {
     friend BaseClassifier;
 
     protected:
-        arma::fmat data_;
+        arma::Mat<float> data_;
         std::string filename_;
         std::string data_set_;
         MPI_Comm comm_;
@@ -40,13 +40,13 @@ namespace juml {
 
 
     public:
-        //! DataSet constructor
-        DataSet(const std::string& filename, const std::string& data_set, MPI_Comm comm=MPI_COMM_WORLD);
-        ~DataSet();
+        //! Dataset constructor
+        Dataset(const std::string& filename, const std::string& data_set, MPI_Comm comm=MPI_COMM_WORLD);
+        ~Dataset();
 
-        virtual inline arma::fmat& data() { return this->data_; }
+        virtual inline arma::Mat<float>& data() { return this->data_; }
         virtual inline size_t n_features() const { return this->data_.n_cols; }
         virtual inline size_t n_samples() const { return this->data_.n_rows; }
-    }; // DataSet
+    }; // Dataset
 }  // juml
 #endif // DATASET_H

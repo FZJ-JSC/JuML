@@ -24,27 +24,27 @@
 namespace juml {
     class GaussianNaiveBayes : public BaseClassifier {
     protected:
-        arma::fvec class_counts_;
-        arma::fvec prior_;
-        arma::fmat theta_;
-        arma::fmat stddev_;
+        arma::Col<float> class_counts_;
+        arma::Col<float> prior_;
+        arma::Mat<float> theta_;
+        arma::Mat<float> stddev_;
 
     public:
-        void fit(const arma::fmat& X, const arma::ivec& y);
-        arma::ivec predict(const arma::fmat& X) const;
-        arma::fmat predict_probability(const arma::fmat& X) const;
-        float accuracy(const arma::fmat& X, const arma::ivec& y) const;
+        void fit(const arma::Mat<float>& X, const arma::Col<int>& y);
+        arma::Col<int> predict(const arma::Mat<float>& X) const;
+        arma::Mat<float> predict_probability(const arma::Mat<float>& X) const;
+        float accuracy(const arma::Mat<float>& X, const arma::Col<int>& y) const;
 
-        inline const arma::fvec& class_counts() const {
+        inline const arma::Col<float>& class_counts() const {
             return this->class_counts_;
         };
-        inline const arma::fvec& prior() const {
+        inline const arma::Col<float>& prior() const {
             return this->prior_;
         };
-        inline const arma::fmat& theta() const {
+        inline const arma::Mat<float>& theta() const {
             return this->theta_;
         };
-        inline const arma::fmat& stddev() const {
+        inline const arma::Mat<float>& stddev() const {
             return this->stddev_;
         };
     };

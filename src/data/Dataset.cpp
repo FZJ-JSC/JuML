@@ -4,9 +4,9 @@
 *
 * This software may be modified and distributed under the terms of BSD-style license.
 *
-* File name: DataSet.cpp
+* File name: Dataset.cpp
 *
-* Description: Implementation of class DataSet
+* Description: Implementation of class Dataset
 *
 * Maintainer: m.goetz
 *
@@ -18,21 +18,22 @@
 #include <math.h>
 #include <mpi.h>
 
-#include "data/DataSet.h"
+#include "data/Dataset.h"
+
+#include <iostream>
 
 namespace juml {
-    DataSet::DataSet(const std::string& filename, const std::string& data_set, MPI_Comm comm)
+    Dataset::Dataset(const std::string& filename, const std::string& data_set, MPI_Comm comm)
         : comm_(comm), filename_(filename_), data_set_(data_set) {
 
         MPI_Comm_rank(this->comm_, &this->mpi_rank_);
         MPI_Comm_size(this->comm_, &this->mpi_size_);
     }
 
-    DataSet::~DataSet() {
+    Dataset::~Dataset() {
     }
 
-    void DataSet::load_equal_chunks() {
-
+    void Dataset::load_equal_chunks() {
         // create access list for parallel IO
         hid_t access_plist = H5Pcreate(H5P_FILE_ACCESS);
         H5Pset_fapl_mpio(access_plist, this->comm_, MPI_INFO_NULL);
@@ -44,7 +45,6 @@ namespace juml {
         const hid_t data_id = H5Dopen(file_id, this->data_set_.c_str(), access_plist);
         const hid_t file_space_id = H5Dget_space(data_id);
         const int n_dims = H5Sget_simple_extent_ndims(file_space_id);
-
         if (n_dims > 2) {
             H5Dclose(file_space_id);
             H5Dclose(data_id);

@@ -32,12 +32,12 @@ namespace juml {
             comm_(comm)
         {};
 
-        virtual void fit(const arma::fmat& X, const arma::ivec& y) {
+        virtual void fit(const arma::Mat<float>& X, const arma::Col<int>& y) {
             this->class_normalizer_.index(y);
         };
 
-        virtual arma::ivec predict(const arma::fmat& X) const = 0;
-        virtual float accuracy(const arma::fmat& X, const arma::ivec& y) const = 0;
+        virtual arma::Col<int> predict(const arma::Mat<float>& X) const = 0;
+        virtual float accuracy(const arma::Mat<float>& X, const arma::Col<int>& y) const = 0;
     };
 } // namespace juml
 

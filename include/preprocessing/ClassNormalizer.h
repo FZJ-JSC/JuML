@@ -26,7 +26,7 @@ namespace juml {
 //! TODO: Describe me
 class ClassNormalizer {
 protected:
-    arma::ivec class_labels_;
+    arma::Col<int> class_labels_;
     std::map<int, int> class_mapping_;
     MPI_Comm comm_;
     int mpi_rank_;
@@ -34,7 +34,7 @@ protected:
 public:
     ClassNormalizer(MPI_Comm comm=MPI_COMM_WORLD);
 
-    void index(const arma::ivec& y);
+    void index(const arma::Col<int>& y);
 
     inline int n_classes() const {
         return this->class_labels_.n_elem;
@@ -46,7 +46,7 @@ public:
         return this->class_labels_(transformed_label);
     }
 
-    inline const arma::ivec& classes() const {
+    inline const arma::Col<int>& classes() const {
         return this->class_labels_;
     }
 }; // ClassNormalizer

@@ -13,7 +13,6 @@
  * Email: phil.glock@gmail.com
  */
 
-
 #include <exception>
 #include <sstream>
 
@@ -25,9 +24,9 @@ namespace juml {
         MPI_Comm_size(comm, &this->mpi_size_);
     }
 
-    void ClassNormalizer::index(const arma::ivec& y) {
+    void ClassNormalizer::index(const arma::Col<int>& y) {
         this->class_mapping_.clear();
-        arma::ivec local_class_labels = arma::unique(y);
+        arma::Col<int> local_class_labels = arma::unique(y);
 
         // send the local number of classes to all processes
         int n_classes = local_class_labels.n_elem;
@@ -48,7 +47,7 @@ namespace juml {
         MPI_Allgatherv(local_class_labels.memptr(), n_classes, MPI_INT, total_classes, total_n_classes, displacements, MPI_INT, this->comm_);
 
         // compute global unique classes
-        arma::ivec global_classes(total_classes, total, false, true);
+        arma::Col<int> global_classes(total_classes, total, false, true);
         this->class_labels_ = arma::unique(global_classes);
 
         // release mpi buffers
@@ -73,3 +72,4 @@ namespace juml {
         return found->second;
     }
 } // namespace juml
+
