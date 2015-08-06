@@ -1,0 +1,2 @@
+FILE(GLOB DATA_SRC *.cpp)
+ADD_LIBRARY(data ${DATA_SRC})

@@ -1,10 +1,23 @@
+/*
+* Copyright (c) 2015
+* Forschungszentrum Juelich GmbH, Juelich Supercomputing Center
+*
+* This software may be modified and distributed under the terms of BSD-style license.
+*
+* File name: GaussianNaiveBayes.cpp
+*
+* Description: Implementation of class GaussianNaiveBayes
+*
+* Maintainer: p.glock
+*
+* Email: phil.glock@gmail.com
+*/
+
 #include "classification/GaussianNaiveBayes.h"
 #include "stats/Distributions.h"
 #include "utils/operations.h"
 
 namespace juml {
-namespace classification {
-
     void GaussianNaiveBayes::fit(const arma::fmat& X, const arma::ivec& y) {
         BaseClassifier::fit(X, y);
         const int32_t n_classes = this->class_normalizer_.n_classes();
@@ -45,7 +58,7 @@ namespace classification {
             for (uint64_t row = 0; row < X.n_rows; ++row) {
                 const arma::frowvec& mean = this->theta_.row(i);
                 const arma::frowvec& stddev = this->stddev_.row(i);
-                arma::frowvec features_probs = juml::stats::gaussian_pdf(X.row(row), mean, stddev);
+                arma::frowvec features_probs = gaussian_pdf<float>(X.row(row), mean, stddev);
                 probabilities(row, i) *= arma::prod(features_probs);
             }
         }
@@ -56,7 +69,7 @@ namespace classification {
     arma::ivec GaussianNaiveBayes::predict(const arma::fmat& X) const {
         arma::fmat probabilities = this->predict_probability(X);
         arma::ivec predictions(X.n_rows);
-        arma::uvec max_index = juml::utils::argmax(probabilities, 1);
+        arma::uvec max_index = argmax(probabilities, 1);
 
         for (uint64_t i = 0; i < max_index.n_elem; ++i) {
             predictions(i) = this->class_normalizer_.invert(max_index(i));
@@ -69,5 +82,4 @@ namespace classification {
         arma::ivec predictions = this->predict(X);
         return (float)arma::sum(predictions == y) / (float)y.n_elem;
     }
-} // namespace classification
 } // namespace juml

@@ -1,3 +1,18 @@
+/*
+* Copyright (c) 2015
+* Forschungszentrum Juelich GmbH, Juelich Supercomputing Center
+*
+* This software may be modified and distributed under the terms of BSD-style license.
+*
+* File name: GaussianNaiveBayes.h
+*
+* Description: Header of class GaussianNaiveBayes
+*
+* Maintainer: p.glock
+* 
+* Email: phil.glock@gmail.com
+*/
+
 #ifndef GAUSSIANNAIVEBAYES_H
 #define GAUSSIANNAIVEBAYES_H
 
@@ -7,8 +22,6 @@
 #include "classification/BaseClassifier.h"
 
 namespace juml {
-namespace classification {
-
     class GaussianNaiveBayes : public BaseClassifier {
     protected:
         arma::fvec class_counts_;
@@ -35,7 +48,6 @@ namespace classification {
             return this->stddev_;
         };
     };
-} // namespace classification
 } // namespace juml
 
 #endif // GAUSSIANNAIVEBAYES_H
