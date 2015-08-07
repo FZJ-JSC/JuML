@@ -26,18 +26,22 @@ namespace juml {
     protected:
         MPI_Comm comm_;
         ClassNormalizer class_normalizer_;
+        int mpi_size_;
+        int mpi_rank_;
 
     public:
-        BaseClassifier(MPI_Comm comm=MPI_COMM_WORLD) :
-            comm_(comm)
-        {};
+        BaseClassifier(MPI_Comm comm=MPI_COMM_WORLD) 
+            : comm_(comm), class_normalizer_(comm) {
+            MPI_Comm_size(this->comm_, this->mpi_size_);
+            MPI_Comm_rank(this->comm_, this->mpi_rank_);
+        };
 
-        virtual void fit(const arma::Mat<float>& X, const arma::Col<int>& y) {
+        virtual inline void fit(const Dataset& X, const Dataset& y) {
             this->class_normalizer_.index(y);
         };
 
-        virtual arma::Col<int> predict(const arma::Mat<float>& X) const = 0;
-        virtual float accuracy(const arma::Mat<float>& X, const arma::Col<int>& y) const = 0;
+        virtual Dataset predict(const Dataset& X) const = 0;
+        virtual float accuracy(const Dataset& X, const Dataset& y) const = 0;
     };
 } // namespace juml
 
