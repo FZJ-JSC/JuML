@@ -67,7 +67,15 @@ TEST (DISTRIBUTIONS_TEST, GAUSSIAN_PDF_VECTOR_TEST) {
 }
 
 int main(int argc, char** argv) {
+    int result = -1;
+    
     ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    try {
+        result = RUN_ALL_TESTS();
+    } catch (const std::exception& e) {
+        std::cerr << "Test failed with exception: " << e.what() << std::endl;
+    }
+    
+    return result;
 }
 
