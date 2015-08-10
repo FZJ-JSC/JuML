@@ -163,7 +163,8 @@ namespace juml {
             T* data_points = new T[total_size];
             hid_t native_type = H5Tget_native_type(data_type, H5T_DIR_ASCEND);
             H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, data_points);
-            this->data_ = arma::Mat<T>(data_points, chunk_size, n_dims < 2 ? 1 : chunk_dimensions[1], false, true);
+            this->data_ = arma::Mat<T>(data_points, chunk_size, n_dims < 2 ? 1 : chunk_dimensions[1]);
+            delete[] data_points;
 
             // release ressources
             H5Tclose(data_type);
@@ -171,13 +172,11 @@ namespace juml {
             H5Dclose(data_id);
             H5Fclose(file_id);
             H5Pclose(access_plist);
-    }
+        }
 
         virtual inline const arma::Mat<T>& data() const { return this->data_; }
         virtual inline size_t n_features() const { return this->data_.n_cols; }
         virtual inline size_t n_samples() const { return this->data_.n_rows; }
-        
-        virtual ~Dataset() {};
     }; // Dataset
 }  // juml
 #endif // DATASET_H
