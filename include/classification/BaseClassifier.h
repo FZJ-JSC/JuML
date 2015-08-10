@@ -37,7 +37,7 @@ namespace juml {
             MPI_Comm_rank(this->comm_, &this->mpi_rank_);
         };
 
-        virtual inline void fit(const Dataset<float>& X, const Dataset<int>& y) {
+        virtual inline void fit(Dataset<float>& X, Dataset<int>& y) {
             this->class_normalizer_.index(y);
         };
 

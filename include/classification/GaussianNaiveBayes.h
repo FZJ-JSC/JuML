@@ -31,7 +31,7 @@ namespace juml {
         arma::Mat<float> stddev_;
 
     public:
-        void fit(const Dataset<float>& X, const Dataset<int>& y);
+        void fit(Dataset<float>& X, Dataset<int>& y);
         Dataset<int> predict(const Dataset<float>& X) const;
         Dataset<float> predict_probability(const Dataset<float>& X) const;
         float accuracy(const Dataset<float>& X, const Dataset<int>& y) const;

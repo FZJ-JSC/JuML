@@ -20,7 +20,9 @@
 #include "utils/operations.h"
 
 namespace juml {
-    void GaussianNaiveBayes::fit(const Dataset<float>& X, const Dataset<int>& y) {
+    void GaussianNaiveBayes::fit(Dataset<float>& X, Dataset<int>& y) {
+        X.load_equal_chunks();
+        y.load_equal_chunks();
         BaseClassifier::fit(X, y);
         
         const arma::Mat<float>& X_ = X.data();
@@ -55,7 +57,7 @@ namespace juml {
         }
         
         // copy variables into one array and use only one mpi call
-        const size_t n_floats = n_classes * ( 2 + X_.n_cols) + 1;
+        const size_t n_floats = n_classes * (2 + X_.n_cols) + 1;
         float* message = new float[n_floats];
         
         std::copy(this->class_counts_.memptr(), this->class_counts_.memptr() + this->class_counts_.n_elem, message);
@@ -101,7 +103,7 @@ namespace juml {
         MPI_Allreduce(MPI_IN_PLACE, message, n_stddev, MPI_FLOAT, MPI_SUM, this->comm_);
         
         for (size_t row = 0; row < n_classes; ++row) {
-            for (size_t col = 0; col < X_.n_elem; ++col) {
+            for (size_t col = 0; col < X_.n_cols; ++col) {
                 this->stddev_(row, col) = message[row * n_classes + col];
             }
         }
