@@ -13,15 +13,28 @@ Make sure that the class exists
 """
 
 TEST_TEMPLATE = """\
+#include <exception>
 #include <gtest/gtest.h>
+#include <iostream>
+#include <mpi.h>
 
 TEST (SAMPLE_TEST, TEST_42) {
     ASSERT_EQ(42, 42);
 }
 
 int main(int argc, char** argv) {
+    int result = -1;
+    
+    MPI_Init(&argc, &argv);
     ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    try {
+        result = RUN_ALL_TESTS();
+    } catch (const std::exception& e) {
+        std::cerr << "Test failed with exception: " << e.what() << std::endl;
+    }
+    MPI_Finalize();
+
+    return result;
 }
 """
 
@@ -29,7 +42,7 @@ CMAKE_TEMPLATE = """\
 # Test for {testName}
 ADD_EXECUTABLE({testName}_TEST {className}.cpp)
 TARGET_LINK_LIBRARIES({testName}_TEST {namespace} gtest gtest_main ${{CMAKE_THREAD_LIBS_INIT}})
-ADD_TEST({testName}_TEST {testName}_TEST)
+ADD_MPI_TEST({testName}_TEST {testName}_TEST 1)
 """
 
 def camel_case_to_underscores(string):

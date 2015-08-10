@@ -20,6 +20,8 @@
 #include <hdf5.h>
 #include <string>
 
+#include <iostream>
+
 namespace juml {
     //! HDF5_TYPE
     //! TODO: Describe me
@@ -152,13 +154,23 @@ namespace juml {
             // read the data
             hid_t data_type = H5Dget_type(data_id);
             H5T_class_t data_class = H5Tget_class(data_type);
+            
+            if (H5Tget_size(data_type) > sizeof(T)) {
+                H5Tclose(data_type);
+                H5Sclose(mem_space);
+                H5Dclose(data_id);
+                H5Fclose(file_id);
+                H5Pclose(access_plist);
+                throw std::domain_error("Mismatch between data type byte size in file and dataset type");
+            }
+            
             if (data_class != HDF5_TYPE<T>::handle) {
                 H5Tclose(data_type);
                 H5Sclose(mem_space);
                 H5Dclose(data_id);
                 H5Fclose(file_id);
                 H5Pclose(access_plist);
-                throw std::domain_error("Only float supported.");
+                throw std::domain_error("Mismatch of read and expected type");
             }
             T* data_points = new T[total_size];
             hid_t native_type = H5Tget_native_type(data_type, H5T_DIR_ASCEND);

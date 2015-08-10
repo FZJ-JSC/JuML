@@ -61,7 +61,7 @@ namespace juml {
         std::copy(this->class_counts_.memptr(), this->class_counts_.memptr() + this->class_counts_.n_elem, message);
         std::copy(this->prior_.memptr(), this->prior_.memptr() + this->prior_.n_elem, message + n_classes);
         std::copy(this->theta_.memptr(), this->theta_.memptr() + this->theta_.n_elem, message + n_classes * 2);
-        message[n_floats - 1] = y_.n_elem;
+        message[n_floats - 1] = (float)y_.n_elem;
         
         MPI_Allreduce(MPI_IN_PLACE, message, n_floats, MPI_FLOAT, MPI_SUM, this->comm_);
         
@@ -75,7 +75,7 @@ namespace juml {
             }
         }
         
-        const size_t total_n_y = message[n_floats - 1];
+        const size_t total_n_y = (size_t)message[n_floats - 1];
         this->prior_ /= total_n_y;
         this->theta_.each_col() /= this->class_counts_;
         
@@ -151,8 +151,12 @@ namespace juml {
         Dataset<int> predictions = this->predict(X);
         
         float local_sum = arma::accu(predictions.data() == y_);
+        float message[2] = {local_sum, (float)y_.n_elem};
+        MPI_Allreduce(MPI_IN_PLACE, message, 2, MPI_FLOAT, MPI_SUM, this->comm_);
+        const float total_sum = message[0];
+        const float total_n_samples = message[1];
         
-        return 0.0f;
+        return total_sum / total_n_samples;
     }
 } // namespace juml
 

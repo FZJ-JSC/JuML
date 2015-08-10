@@ -15,6 +15,7 @@
 
 #include <exception>
 #include <sstream>
+#include <iostream>
 
 #include "preprocessing/ClassNormalizer.h"
 
@@ -30,30 +31,31 @@ namespace juml {
 
         // send the local number of classes to all processes
         int n_classes = local_class_labels.n_elem;
-        int* total_n_classes = new int[this->mpi_size_];
-        MPI_Allgather(&n_classes, 1, MPI_INT, total_n_classes, 1, MPI_INT, this->comm_);
+        int* n_classes_per_processor = new int[this->mpi_size_];
+        MPI_Allgather(&n_classes, 1, MPI_INT, n_classes_per_processor, 1, MPI_INT, this->comm_);
 
         // calculate displacements
         int* displacements = new int[this->mpi_size_];
-        int total = 0;
+        displacements[0] = 0;
+        int total_n_classes = 0;
         for (int i = 1; i < this->mpi_size_; ++i) {
-            total += total_n_classes[i - 1];
-            displacements[i] = total;
+            total_n_classes += n_classes_per_processor[i - 1];
+            displacements[i] = total_n_classes;
         }
-        total += total_n_classes[this->mpi_size_ - 1];
+        total_n_classes += n_classes_per_processor[this->mpi_size_ - 1];
 
         // exchange class labels
-        int* total_classes = new int[total];
-        MPI_Allgatherv(local_class_labels.memptr(), n_classes, MPI_INT, total_classes, total_n_classes, displacements, MPI_INT, this->comm_);
+        int* total_classes = new int[total_n_classes];
+        MPI_Allgatherv(local_class_labels.memptr(), n_classes, MPI_INT, total_classes, n_classes_per_processor, displacements, MPI_INT, this->comm_);
 
         // compute global unique classes
-        arma::Col<int> global_classes(total_classes, total, false, true);
+        arma::Col<int> global_classes(total_classes, total_n_classes, false, true);
         this->class_labels_ = arma::unique(global_classes);
 
         // release mpi buffers
-        delete[] total_n_classes;
-        delete[] displacements;
         delete[] total_classes;
+        delete[] displacements;
+        delete[] n_classes_per_processor;
 
         // map original classes to normalized ones
         for (int label = 0; label < this->class_labels_.n_elem; ++label) {
