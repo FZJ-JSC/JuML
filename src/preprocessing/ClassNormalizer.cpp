@@ -24,9 +24,9 @@ namespace juml {
         MPI_Comm_size(comm, &this->mpi_size_);
     }
 
-    void ClassNormalizer::index(const arma::Col<int>& y) {
+    void ClassNormalizer::index(const Dataset<int>& y) {
         this->class_mapping_.clear();
-        arma::Col<int> local_class_labels = arma::unique(y);
+        arma::Mat<int> local_class_labels = arma::unique(y.data());
 
         // send the local number of classes to all processes
         int n_classes = local_class_labels.n_elem;

@@ -17,9 +17,10 @@
 #define GAUSSIANNAIVEBAYES_H
 
 #include <armadillo>
-#include <stdint.h>
+#include <mpi.h>
 
 #include "classification/BaseClassifier.h"
+#include "data/Dataset.h"
 
 namespace juml {
     class GaussianNaiveBayes : public BaseClassifier {
@@ -30,10 +31,10 @@ namespace juml {
         arma::Mat<float> stddev_;
 
     public:
-        void fit(const arma::Mat<float>& X, const arma::Col<int>& y);
-        arma::Col<int> predict(const arma::Mat<float>& X) const;
-        arma::Mat<float> predict_probability(const arma::Mat<float>& X) const;
-        float accuracy(const arma::Mat<float>& X, const arma::Col<int>& y) const;
+        void fit(const Dataset<float>& X, const Dataset<int>& y);
+        Dataset<int> predict(const Dataset<float>& X) const;
+        Dataset<float> predict_probability(const Dataset<float>& X) const;
+        float accuracy(const Dataset<float>& X, const Dataset<int>& y) const;
 
         inline const arma::Col<float>& class_counts() const {
             return this->class_counts_;

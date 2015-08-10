@@ -13,52 +13,119 @@
 * Email: phil.glock@gmail.com
 */
 
+#include <algorithm>
+
 #include "classification/GaussianNaiveBayes.h"
 #include "stats/Distributions.h"
 #include "utils/operations.h"
 
 namespace juml {
-    void GaussianNaiveBayes::fit(const arma::Mat<float>& X, const arma::Col<int>& y) {
+    void GaussianNaiveBayes::fit(const Dataset<float>& X, const Dataset<int>& y) {
         BaseClassifier::fit(X, y);
+        
+        const arma::Mat<float>& X_ = X.data();
+        const arma::Mat<int>& y_ = y.data();
+        
         const int n_classes = this->class_normalizer_.n_classes();
         this->class_counts_.zeros(n_classes);
         this->prior_.zeros(n_classes);
-        this->theta_.zeros(n_classes, X.n_cols);
-        this->stddev_.zeros(n_classes, X.n_cols);
+        this->theta_.zeros(n_classes, X_.n_cols);
+        this->stddev_.zeros(n_classes, X_.n_cols);
 
-        #pragma omp parallel for
-        for (size_t row = 0; row < X.n_rows ; ++row) {
-            const size_t class_index = this->class_normalizer_.transform(y(row));
-            ++class_counts_(class_index);
-            ++this->prior_(class_index);
-            this->theta_.row(class_index) += X.row(row);
+        #pragma omp parallel
+        {
+            arma::Col<float> class_counts(n_classes, arma::fill::zeros);
+            arma::Col<float> priors(n_classes, arma::fill::zeros);
+            arma::Mat<float> theta(n_classes, X_.n_cols, arma::fill::zeros);
+            
+            #pragma omp for nowait
+            for (size_t row = 0; row < X_.n_rows ; ++row) {
+                const size_t class_index = this->class_normalizer_.transform(y_(row));
+                ++class_counts(class_index);
+                ++priors(class_index);
+                theta.row(class_index) += X.data().row(row);
+            }
+            
+            #pragma omp critical
+            {
+                this->class_counts_ += class_counts;
+                this->prior_ += priors;
+                this->theta_ += theta;
+            }
         }
-        this->prior_ /= y.n_elem;
-        this->theta_.each_col() /= class_counts_;
-
-        #pragma omp parallel for
-        for (size_t row = 0; row < X.n_rows; ++row) {
-            const size_t class_index = this->class_normalizer_.transform(y(row));
-            arma::frowvec deviation = X.row(row) - this->theta_.row(class_index);
-            this->stddev_.row(class_index) += arma::pow(deviation, 2);
+        
+        // copy variables into one array and use only one mpi call
+        const size_t n_floats = n_classes * ( 2 + X_.n_cols) + 1;
+        float* message = new float[n_floats];
+        
+        std::copy(this->class_counts_.memptr(), this->class_counts_.memptr() + this->class_counts_.n_elem, message);
+        std::copy(this->prior_.memptr(), this->prior_.memptr() + this->prior_.n_elem, message + n_classes);
+        std::copy(this->theta_.memptr(), this->theta_.memptr() + this->theta_.n_elem, message + n_classes * 2);
+        message[n_floats - 1] = y_.n_elem;
+        
+        MPI_Allreduce(MPI_IN_PLACE, message, n_floats, MPI_FLOAT, MPI_SUM, this->comm_);
+        
+        // extract reduced class counts, prior and theta from message
+        for (size_t i = 0; i < n_classes; ++i) {
+            this->class_counts_(i) = message[i];
+            this->prior_(i) = message[i + n_classes];
+            
+            for (size_t j = 0; j < X_.n_cols; ++j) {
+                this->theta_(i, j) = message[i * X_.n_cols + j + 2 * n_classes];
+            }
         }
-
-        this->stddev_.each_col() /= class_counts_;
-        this->stddev_ = arma::sqrt(this->stddev_);
+        
+        const size_t total_n_y = message[n_floats - 1];
+        this->prior_ /= total_n_y;
+        this->theta_.each_col() /= this->class_counts_;
+        
+        // calculate standard deviation for each feature
+        #pragma omp parallel
+        {
+            arma::Mat<float> stddev(n_classes, X_.n_cols, arma::fill::zeros);
+            #pragma omp for nowait
+            for (size_t row = 0; row < X_.n_rows; ++row) {
+                const size_t class_index = this->class_normalizer_.transform(y_(row));
+                arma::Row<float> deviation = X_.row(row) - this->theta_.row(class_index);
+                stddev.row(class_index) += arma::pow(deviation, 2);
+            }
+            
+            #pragma omp critical
+            {
+                this->stddev_ += stddev;
+            }
+        }
+        
+        const size_t n_stddev = n_classes * X_.n_cols;
+        std::copy(this->stddev_.memptr(), this->stddev_.memptr() + n_stddev, message);
+        MPI_Allreduce(MPI_IN_PLACE, message, n_stddev, MPI_FLOAT, MPI_SUM, this->comm_);
+        
+        for (size_t row = 0; row < n_classes; ++row) {
+            for (size_t col = 0; col < X_.n_elem; ++col) {
+                this->stddev_(row, col) = message[row * n_classes + col];
+            }
+        }
+        
+        this->stddev_.each_col() /= this->class_counts_;
+        this->stddev_ = arma::sqrt(this->stddev_);        
+        
+        // release message buffer
+        delete[] message;
     }
 
-    arma::Mat<float> GaussianNaiveBayes::predict_probability(const arma::Mat<float>& X) const {
-        arma::Mat<float> probabilities = arma::ones<arma::Mat<float>>(X.n_rows, this->class_normalizer_.n_classes());
+    Dataset<float> GaussianNaiveBayes::predict_probability(const Dataset<float>& X) const {
+        const arma::Mat<float>& X_ = X.data();
+        arma::Mat<float> probabilities = arma::ones<arma::Mat<float>>(X_.n_rows, this->class_normalizer_.n_classes());
 
         for (size_t i = 0; i < this->prior_.n_elem; ++i) {
             const float prior = this->prior_(i);
             probabilities.col(i) *= prior;
 
             #pragma omp parallel for
-            for (size_t row = 0; row < X.n_rows; ++row) {
-                const arma::frowvec& mean = this->theta_.row(i);
-                const arma::frowvec& stddev = this->stddev_.row(i);
-                arma::frowvec features_probs = gaussian_pdf<float>(X.row(row), mean, stddev);
+            for (size_t row = 0; row < X_.n_rows; ++row) {
+                const arma::Row<float>& mean = this->theta_.row(i);
+                const arma::Row<float>& stddev = this->stddev_.row(i);
+                arma::Row<float> features_probs = gaussian_pdf<float>(X_.row(row), mean, stddev);
                 probabilities(row, i) *= arma::prod(features_probs);
             }
         }
@@ -66,9 +133,11 @@ namespace juml {
         return probabilities;
     }
 
-    arma::Col<int> GaussianNaiveBayes::predict(const arma::Mat<float>& X) const {
-        arma::Mat<float> probabilities = this->predict_probability(X);
-        arma::Col<int> predictions(X.n_rows);
+    Dataset<int> GaussianNaiveBayes::predict(const Dataset<float>& X) const {
+        const arma::Mat<float>& X_ = X.data();
+        
+        Dataset probabilities = this->predict_probability(X);
+        arma::Col<int> predictions(X_.n_rows);
         arma::Col<unsigned int> max_index = argmax(probabilities, 1);
 
         for (size_t i = 0; i < max_index.n_elem; ++i) {
@@ -78,7 +147,7 @@ namespace juml {
         return predictions;
     }
 
-    float GaussianNaiveBayes::accuracy(const arma::Mat<float>& X, const arma::Col<int>& y) const {
+    float GaussianNaiveBayes::accuracy(const Dataset<float>& X, const Dataset<int>& y) const {
         arma::Col<int> predictions = this->predict(X);
         return (float)arma::sum(predictions == y) / (float)y.n_elem;
     }

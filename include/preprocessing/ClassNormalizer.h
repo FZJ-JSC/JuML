@@ -20,35 +20,36 @@
 #include <map>
 #include <mpi.h>
 
+#include "data/Dataset.h"
+
 namespace juml {
+    //! ClassNormalizer
+    //! TODO: Describe me
+    class ClassNormalizer {
+    protected:
+        arma::Col<int> class_labels_;
+        std::map<int, int> class_mapping_;
+        MPI_Comm comm_;
+        int mpi_rank_;
+        int mpi_size_;
+    public:
+        ClassNormalizer(MPI_Comm comm=MPI_COMM_WORLD);
 
-//! ClassNormalizer
-//! TODO: Describe me
-class ClassNormalizer {
-protected:
-    arma::Col<int> class_labels_;
-    std::map<int, int> class_mapping_;
-    MPI_Comm comm_;
-    int mpi_rank_;
-    int mpi_size_;
-public:
-    ClassNormalizer(MPI_Comm comm=MPI_COMM_WORLD);
+        void index(const Dataset<int>& y);
 
-    void index(const arma::Col<int>& y);
+        inline int n_classes() const {
+            return this->class_labels_.n_elem;
+        }
 
-    inline int n_classes() const {
-        return this->class_labels_.n_elem;
-    }
+        int transform(int class_label) const;
 
-    int transform(int class_label) const;
+        inline int invert(int transformed_label) const {
+            return this->class_labels_(transformed_label);
+        }
 
-    inline int invert(int transformed_label) const {
-        return this->class_labels_(transformed_label);
-    }
-
-    inline const arma::Col<int>& classes() const {
-        return this->class_labels_;
-    }
-}; // ClassNormalizer
+        inline const arma::Col<int>& classes() const {
+            return this->class_labels_;
+        }
+    }; // ClassNormalizer
 }  // juml
 #endif // CLASS_NORMALIZER_H
