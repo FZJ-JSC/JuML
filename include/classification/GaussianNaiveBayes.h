@@ -52,3 +52,4 @@ namespace juml {
 } // namespace juml
 
 #endif // GAUSSIANNAIVEBAYES_H
+

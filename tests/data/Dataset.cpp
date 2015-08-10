@@ -15,7 +15,7 @@ TEST (DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_TEST) {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    Dataset data_1D(FILE_PATH, ONE_D);
+    juml::Dataset<float> data_1D(FILE_PATH, ONE_D);
     data_1D.load_equal_chunks();
     for (size_t row = 0; row < data_1D.data().n_elem; ++row) {
         ASSERT_FLOAT_EQ(data_1D.data()[row], (float)rank);
@@ -27,7 +27,7 @@ TEST (DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_TEST) {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    Dataset data_2D(FILE_PATH, TWO_D);
+    juml::Dataset<float> data_2D(FILE_PATH, TWO_D);
     data_2D.load_equal_chunks();
 
     for (size_t row = 0; row < data_2D.data().n_elem; ++row) {

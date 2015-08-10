@@ -53,3 +53,4 @@ namespace juml {
     }; // ClassNormalizer
 }  // juml
 #endif // CLASS_NORMALIZER_H
+

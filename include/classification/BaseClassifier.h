@@ -47,3 +47,4 @@ namespace juml {
 } // namespace juml
 
 #endif // BASECLASSIFIER_H
+

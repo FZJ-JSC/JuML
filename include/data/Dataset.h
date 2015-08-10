@@ -21,21 +21,20 @@
 #include <string>
 
 namespace juml {
+    //! HDF5_TYPE
+    //! TODO: Describe me
     template <typename>
     struct HDF5_TYPE;
     
     template <>
     struct HDF5_TYPE<float> {
-        hid_t handle = H5T_FLOAT;
-        hid_t format = H5T_NATIVE_FLOAT;
+        static const hid_t handle = H5T_FLOAT;
     };
     
     template <>
     struct HDF5_TYPE<int> {
-        hid_t handle = H5T_INTEGER;
-        hid_t format = H5T_NATIVE_INT;
+        static const hid_t handle = H5T_INTEGER;
     };
-    
     
     //! Dataset
     //! TODO: Describe me
@@ -51,10 +50,16 @@ namespace juml {
 
     public:
         //! Dataset constructor
-        Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm)
+        Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm=MPI_COMM_WORLD)
             : filename_(filename), dataset_(dataset), comm_(comm) {
             MPI_Comm_rank(this->comm_, &this->mpi_rank_);
             MPI_Comm_size(this->comm_, &this->mpi_size_);
+        };
+        
+        Dataset(arma::Mat<T>& data, MPI_Comm comm=MPI_COMM_WORLD)
+            : data_(data), comm_(comm) {
+            MPI_Comm_rank(this->comm_, &this->mpi_rank_);
+            MPI_Comm_size(this->comm_, &this->mpi_size_);    
         };
         
         void load_equal_chunks() {
@@ -143,7 +148,7 @@ namespace juml {
             for (int i = 1; i < n_dims; ++i) {
                 total_size *= dimensions[i];
             }
-
+            
             // read the data
             hid_t data_type = H5Dget_type(data_id);
             H5T_class_t data_class = H5Tget_class(data_type);
@@ -156,7 +161,8 @@ namespace juml {
                 throw std::domain_error("Only float supported.");
             }
             T* data_points = new T[total_size];
-            H5Dread(data_id, HDF5_TYPE<T>::format, mem_space, file_space_id, H5P_DEFAULT, data_points);
+            hid_t native_type = H5Tget_native_type(data_type, H5T_DIR_ASCEND);
+            H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, data_points);
             this->data_ = arma::Mat<T>(data_points, chunk_size, n_dims < 2 ? 1 : chunk_dimensions[1], false, true);
 
             // release ressources
@@ -175,3 +181,4 @@ namespace juml {
     }; // Dataset
 }  // juml
 #endif // DATASET_H
+

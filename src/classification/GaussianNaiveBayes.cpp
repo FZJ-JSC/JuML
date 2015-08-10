@@ -129,26 +129,30 @@ namespace juml {
                 probabilities(row, i) *= arma::prod(features_probs);
             }
         }
-
-        return probabilities;
+        return Dataset<float>(probabilities, this->comm_);
     }
 
     Dataset<int> GaussianNaiveBayes::predict(const Dataset<float>& X) const {
         const arma::Mat<float>& X_ = X.data();
         
-        Dataset probabilities = this->predict_probability(X);
+        Dataset<float> probabilities = this->predict_probability(X);
         arma::Col<int> predictions(X_.n_rows);
-        arma::Col<unsigned int> max_index = argmax(probabilities, 1);
+        arma::Col<unsigned int> max_index = argmax(probabilities.data(), 1);
 
         for (size_t i = 0; i < max_index.n_elem; ++i) {
             predictions(i) = this->class_normalizer_.invert(max_index(i));
         }
-
-        return predictions;
+        Dataset<int> preds(predictions, this->comm_);
+        return preds;
     }
 
     float GaussianNaiveBayes::accuracy(const Dataset<float>& X, const Dataset<int>& y) const {
-        arma::Col<int> predictions = this->predict(X);
-        return (float)arma::sum(predictions == y) / (float)y.n_elem;
+        const arma::Mat<int>& y_ = y.data();
+        Dataset<int> predictions = this->predict(X);
+        
+        float local_sum = arma::accu(predictions.data() == y_);
+        
+        return 0.0f;
     }
 } // namespace juml
+
