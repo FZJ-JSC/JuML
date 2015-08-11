@@ -20,8 +20,6 @@
 #include <hdf5.h>
 #include <string>
 
-#include <iostream>
-
 namespace juml {
     //! HDF5_TYPE
     //! TODO: Describe me
@@ -172,10 +170,12 @@ namespace juml {
                 H5Pclose(access_plist);
                 throw std::domain_error("Mismatch of read and expected type");
             }
+            
+            // read actual data
             T* data_points = new T[total_size];
             hid_t native_type = H5Tget_native_type(data_type, H5T_DIR_ASCEND);
             H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, data_points);
-            this->data_ = arma::Mat<T>(data_points, chunk_size, n_dims < 2 ? 1 : chunk_dimensions[1]);
+            this->data_ = arma::Mat<T>(data_points, n_dims < 2 ? 1 : chunk_dimensions[1], chunk_size).t();
             delete[] data_points;
 
             // release ressources

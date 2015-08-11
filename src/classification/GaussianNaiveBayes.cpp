@@ -43,9 +43,10 @@ namespace juml {
             #pragma omp for nowait
             for (size_t row = 0; row < X_.n_rows ; ++row) {
                 const size_t class_index = this->class_normalizer_.transform(y_(row));
+                
                 ++class_counts(class_index);
                 ++priors(class_index);
-                theta.row(class_index) += X.data().row(row);
+                theta.row(class_index) += X_.row(row);
             }
             
             #pragma omp critical
@@ -60,22 +61,21 @@ namespace juml {
         const size_t n_floats = n_classes * (2 + X_.n_cols) + 1;
         float* message = new float[n_floats];
         
-        std::copy(this->class_counts_.memptr(), this->class_counts_.memptr() + this->class_counts_.n_elem, message);
-        std::copy(this->prior_.memptr(), this->prior_.memptr() + this->prior_.n_elem, message + n_classes);
+        // create message
+        std::copy(this->class_counts_.memptr(), this->class_counts_.memptr() + n_classes, message);
+        std::copy(this->prior_.memptr(), this->prior_.memptr() + n_classes, message + n_classes);
         std::copy(this->theta_.memptr(), this->theta_.memptr() + this->theta_.n_elem, message + n_classes * 2);
         message[n_floats - 1] = (float)y_.n_elem;
         
+        // reduce to obtain global view
         MPI_Allreduce(MPI_IN_PLACE, message, n_floats, MPI_FLOAT, MPI_SUM, this->comm_);
         
+        // copy the reduced elements back
+        std::copy(message, message + n_classes, this->class_counts_.memptr());
+        std::copy(message + n_classes, message + 2 * n_classes, this->prior_.memptr());
+        std::copy(message + 2 * n_classes, message + 2 * n_classes + this->theta_.n_elem, this->theta_.memptr());
+        
         // extract reduced class counts, prior and theta from message
-        for (size_t i = 0; i < n_classes; ++i) {
-            this->class_counts_(i) = message[i];
-            this->prior_(i) = message[i + n_classes];
-            
-            for (size_t j = 0; j < X_.n_cols; ++j) {
-                this->theta_(i, j) = message[i * X_.n_cols + j + 2 * n_classes];
-            }
-        }
         
         const size_t total_n_y = (size_t)message[n_floats - 1];
         this->prior_ /= total_n_y;
@@ -98,16 +98,13 @@ namespace juml {
             }
         }
         
+        // exchange the standard deviations values
         const size_t n_stddev = n_classes * X_.n_cols;
         std::copy(this->stddev_.memptr(), this->stddev_.memptr() + n_stddev, message);
         MPI_Allreduce(MPI_IN_PLACE, message, n_stddev, MPI_FLOAT, MPI_SUM, this->comm_);
+        std::copy(message, message + n_stddev, this->stddev_.memptr());
         
-        for (size_t row = 0; row < n_classes; ++row) {
-            for (size_t col = 0; col < X_.n_cols; ++col) {
-                this->stddev_(row, col) = message[row * n_classes + col];
-            }
-        }
-        
+        // normalize standard deviation by class counts and calculate root (not variance)
         this->stddev_.each_col() /= this->class_counts_;
         this->stddev_ = arma::sqrt(this->stddev_);        
         
