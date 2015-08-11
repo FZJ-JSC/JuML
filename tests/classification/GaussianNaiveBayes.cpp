@@ -7,11 +7,6 @@
 #include "classification/GaussianNaiveBayes.h"
 #include "data/Dataset.h"
 
-/*
-In [15]: nb.score(X,y)
-Out[15]: 0.95999999999999996
-*/
-
 static const std::string FILE_PATH = "../../../datasets/iris.h5";
 static const std::string SAMPLES = "samples";
 static const std::string LABELS = "labels";
@@ -34,6 +29,7 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, IRIS_TEST) {
     const arma::Mat<float>& prior = gnb.prior();
     const arma::Mat<float>& theta = gnb.theta();
     const arma::Mat<float>& stddev = gnb.stddev();
+    
     for (int row = 0; row < 3; ++row) {
         ASSERT_FLOAT_EQ(prior(row), PRIORS[row]);
         for (int col = 0; col < 4; ++col) {
@@ -41,6 +37,8 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, IRIS_TEST) {
             ASSERT_FLOAT_EQ(stddev(row, col), STDDEV[row][col]);
         }
     }
+    
+    ASSERT_FLOAT_EQ(gnb.accuracy(X, y), 0.95999999999999996);
 }
 
 int main(int argc, char** argv) {
