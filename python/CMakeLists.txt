@@ -3,15 +3,18 @@ IF(SWIG_FOUND)
     INCLUDE(${SWIG_USE_FILE})
 
     FIND_PACKAGE(PythonLibs REQUIRED)
+    FIND_PACKAGE(PythonInterp REQUIRED)
     INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
-    
+
     EXECUTE_PROCESS(COMMAND
-        python -c "import mpi4py; print mpi4py.get_include()"
+        ${PYTHON_EXECUTABLE} -c "import mpi4py; print mpi4py.get_include()"
         OUTPUT_VARIABLE Mpi4Py_INCLUDE_PATH
         ERROR_VARIABLE  Mpi4Py_INCLUDE_ERROR
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+
     INCLUDE_DIRECTORIES(${Mpi4Py_INCLUDE_PATH})
+    MESSAGE(STATUS "Python: " ${PYTHON_EXECUTABLE}) 
     MESSAGE(STATUS "Found mpi4py: " ${Mpi4Py_INCLUDE_PATH})    
 
     INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
