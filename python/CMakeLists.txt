@@ -5,6 +5,8 @@ IF(SWIG_FOUND)
     FIND_PACKAGE(PythonLibs REQUIRED)
     FIND_PACKAGE(PythonInterp REQUIRED)
     INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
+
+    MESSAGE(STATUS "Python libs: " ${PYTHON_LIBRARIES}) 
     
     EXECUTE_PROCESS(COMMAND
         ${PYTHON_EXECUTABLE} -c "import mpi4py"
@@ -17,14 +19,14 @@ IF(SWIG_FOUND)
         MESSAGE(FATAL_ERROR "mpi4py not found: " ${Mpi4Py_ERROR}) 
     ELSE ()
         EXECUTE_PROCESS(COMMAND
-            ${PYTHON_EXECUTABLE} -c "import mpi4py; print mpi4py.get_include()"
+            ${PYTHON_EXECUTABLE} -c "import mpi4py; print(mpi4py.get_include())"
             OUTPUT_VARIABLE Mpi4Py_INCLUDE_PATH
             ERROR_VARIABLE  Mpi4Py_INCLUDE_ERROR
             OUTPUT_STRIP_TRAILING_WHITESPACE
         )
         
         EXECUTE_PROCESS(COMMAND
-            ${PYTHON_EXECUTABLE} -c "import mpi4py; print mpi4py.__version__"
+            ${PYTHON_EXECUTABLE} -c "import mpi4py; print(mpi4py.__version__)"
             OUTPUT_VARIABLE Mpi4Py_VERSION
             ERROR_VARIABLE  Mpi4Py_VERSION_ERROR
             OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -51,14 +53,14 @@ IF(SWIG_FOUND)
         MESSAGE(FATAL_ERROR "numpy not found: " ${Numpy_ERROR}) 
     ELSE ()
         EXECUTE_PROCESS(COMMAND
-            ${PYTHON_EXECUTABLE} -c "import numpy; print numpy.get_include()"
+            ${PYTHON_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
             OUTPUT_VARIABLE Numpy_INCLUDE_PATH
             ERROR_VARIABLE  Numpy_INCLUDE_ERROR
             OUTPUT_STRIP_TRAILING_WHITESPACE
         )
         
         EXECUTE_PROCESS(COMMAND
-            ${PYTHON_EXECUTABLE} -c "import numpy; print numpy.__version__"
+            ${PYTHON_EXECUTABLE} -c "import numpy; print(numpy.__version__)"
             OUTPUT_VARIABLE Numpy_VERSION
             ERROR_VARIABLE  Numpy_VERSION_ERROR
             OUTPUT_STRIP_TRAILING_WHITESPACE
