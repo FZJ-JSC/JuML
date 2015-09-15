@@ -70,7 +70,7 @@ namespace {namespace} {{
 
 CMAKE_TEMPLATE = """\
 FILE(GLOB {name}_SRC *.cpp)
-ADD_LIBRARY({namespace} ${{{name}_SRC}})
+ADD_LIBRARY({namespace} SHARED ${{{name}_SRC}})
 """
 
 # FUNCTIONS
