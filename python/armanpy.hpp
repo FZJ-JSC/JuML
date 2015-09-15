@@ -15,18 +15,15 @@
 //
 
 #if PY_VERSION_HEX >= 0x03000000
+#   define PYTHON_NULL NULL
+#else 
+#   define PYTHON_NULL
+#endif 
 
 #define INIT_ARMA_CAPSULE( MatT )  \
     ArmaCapsulePyType< MatT >::object.tp_new = PyType_GenericNew; \
-    if (PyType_Ready(&ArmaCapsulePyType< MatT >::object) < 0) return NULL;
+    if (PyType_Ready(&ArmaCapsulePyType< MatT >::object) < 0) return PYTHON_NULL;
 
-#else
-
-#define INIT_ARMA_CAPSULE( MatT )  \
-    ArmaCapsulePyType< MatT >::object.tp_new = PyType_GenericNew; \
-    if (PyType_Ready(&ArmaCapsulePyType< MatT >::object) < 0) return;
-
-#endif
 
 template< typename MatT >
 struct ArmaCapsule {
