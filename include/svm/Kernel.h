@@ -23,6 +23,7 @@
 namespace juml {
 
     namespace svm {
+
         enum class KernelType {LINEAR, POLY, RBF, PRECOMPUTED};
 
         //! Kernel
@@ -38,6 +39,9 @@ namespace juml {
             }
         }; // Kernel
 
+
+        //! Kernel<KernelType::LINEAR, kernel_t>
+        //! TODO: Describe me
         template <typename kernel_t>
         class Kernel <KernelType::LINEAR, kernel_t> {
             const arma::Mat<kernel_t>& x;
@@ -50,8 +54,11 @@ namespace juml {
             inline kernel_t evaluate_kernel(int i, int j) const {
                 return arma::dot(this->x.col(i), this->x.col(j));
             }
-        };
+        }; // Kernel<KernelType::LINEAR, kernel_t>
 
+
+        //! Kernel<KernelType::POLY, kernel_t>
+        //! TODO: Describe me
         template <typename kernel_t>
         class Kernel <KernelType::POLY, kernel_t> {
             const arma::Mat<kernel_t>& x;
@@ -67,8 +74,11 @@ namespace juml {
             inline kernel_t evaluate_kernel(int i, int j) const {
                 return pow(gamma * arma::dot(x.col(i), x.col(j)) + coef0, degree);
             }
-        };
+        }; // Kernel<KernelType::POLY, kernel_t>
 
+
+        //! Kernel<KernelType::RBF, kernel_t>
+        //! TODO: Describe me
         template <typename kernel_t>
         class Kernel <KernelType::RBF, kernel_t> {
             const arma::Mat<kernel_t>& x;
@@ -90,9 +100,11 @@ namespace juml {
                             )
                         );
             }
-        };
+        }; // Kernel<KernelType::RBF, kernel_t>
 
 
+        //! Kernel<KernelType::PRECOMPUTED, kernel_t>
+        //! TODO: Describe me
         template <typename kernel_t>
         class Kernel <KernelType::PRECOMPUTED, kernel_t> {
         public:
@@ -104,8 +116,7 @@ namespace juml {
             inline kernel_t evaluate_kernel(int i, int j) const {
                 return precomputed_kernel(i,j);
             }
-        };
-
+        }; // Kernel<KernelType::PRECOMPUTED, kernel_t>
 
     } // juml::svm
 }  // juml

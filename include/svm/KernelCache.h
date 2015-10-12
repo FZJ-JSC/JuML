@@ -19,7 +19,11 @@
 #include "Kernel.h"
 
 namespace juml {
+
     namespace svm {
+
+        //! KernelCache<Kernel>
+        //! TODO: Describe me
         template <class Kernel> class KernelCache {
             const size_t max_bytes;
             Kernel& kernel;
@@ -42,8 +46,11 @@ namespace juml {
                     }
                     return stub.memptr();
                 }
-        };
+        }; // KernelCache<Kernel>
 
+
+        //! KernelCache<Kernel<KernelType::PRECOMPUTED, kernel_t>>
+        //! TODO: Describe me
         template<typename kernel_t> class KernelCache<Kernel<KernelType::PRECOMPUTED, kernel_t>> {
             const Kernel<KernelType::PRECOMPUTED, kernel_t> kernel;
             public:
@@ -57,7 +64,7 @@ namespace juml {
                     return kernel.precomputed_kernel.colptr(col);
                 }
 
-        };
+        }; // KernelCache<Kernel<KernelType::PRECOMPUTED, kernel_t>>
     }
 }
 
