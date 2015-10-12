@@ -107,7 +107,7 @@ TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
         cachedKernel.get_col(z, idxs);
     }
 
-    arma::Mat<unsigned int> expected1 = {
+    arma::Mat<unsigned int> expected = {
         {0, 0, 0, 0, 0},
         {1, 1, 0, 0, 0},
         {1, 1, 0, 0, 0},
@@ -115,20 +115,37 @@ TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
         {0, 0, 0, 0, 0}
     };
 
-    EXPECT_MAT_EQ(expected1, counter.counts);
+    EXPECT_MAT_EQ(expected, counter.counts);
 
-    //Requesting the 3rd column should result in the first column being not cached anymore
-
+    //Requesting the 3rd column should result in the first column not being cached anymore
     cachedKernel.get_col(2, idxs);
-    arma::Mat<unsigned int> expected2 = {
+    expected = {
         {0, 0, 0, 0, 0},
         {1, 1, 1, 0, 0},
         {1, 1, 1, 0, 0},
         {1, 1, 1, 0, 0},
         {0, 0, 0, 0, 0}
     };
+    EXPECT_MAT_EQ(expected, counter.counts);
 
-    EXPECT_MAT_EQ(expected2, counter.counts);
+    //Requesting the 1st column so it gets calculated again
+    cachedKernel.get_col(0, idxs);
+    expected = {
+        {0, 0, 0, 0, 0},
+        {2, 1, 1, 0, 0},
+        {2, 1, 1, 0, 0},
+        {2, 1, 1, 0, 0},
+        {0, 0, 0, 0, 0}
+    };
+    EXPECT_MAT_EQ(expected, counter.counts);
+
+    //The 1st and 3rd column are cached, so we can request them without recalculation
+    for (int i = 0; i < 5; i++) {
+        cachedKernel.get_col(0, idxs);
+        EXPECT_MAT_EQ(expected, counter.counts);
+        cachedKernel.get_col(2, idxs);
+        EXPECT_MAT_EQ(expected, counter.counts);
+    }
 }
 
 int main(int argc, char** argv) {
