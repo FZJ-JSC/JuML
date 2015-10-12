@@ -53,7 +53,7 @@ TEST (KernelCacheTest, TestCachedKernelWithoutCacheDeletion) {
     const int N = 5;
     KernelEvaluationCounter counter(N);
     //Enough Space to cache the full Kernel
-    auto cachedKernel = juml::svm::KernelCache<KernelEvaluationCounter>(counter, sizeof(float) * N * N * 8, N);
+    auto cachedKernel = juml::svm::KernelCache<KernelEvaluationCounter>(counter, sizeof(float) * N * N, N);
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
