@@ -18,6 +18,17 @@ class KernelEvaluationCounter {
 	}
 };
 
+template<typename T>
+void EXPECT_MAT_EQ(arma::Mat<T> a, arma::Mat<T> b) {
+    ASSERT_TRUE(a.n_rows == b.n_rows && a.n_cols == b.n_cols) << "a and b do not have the same dimensions!";
+    for (int col = 0; col < a.n_cols; col++) {
+        for (int row = 0; row < a.n_rows; row++) {
+            EXPECT_EQ(a(row, col), b(row, col)) << "a differs from b at index (" << row << ", " << col << ")";
+        }
+    }
+}
+
+
 TEST (KernelCacheTest, TestKernelEvaluationCounter) {
     const int N = 5;
     KernelEvaluationCounter counter(N);
@@ -35,7 +46,6 @@ TEST (KernelCacheTest, TestKernelEvaluationCounter) {
     counter.evaluate_kernel(3,1);
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
-            int expected;
             if (i == 0 && j == 0) {
                 ASSERT_EQ(1, counter.counts(i,j));
             } else if (i == 1 && j == 3) {
@@ -62,24 +72,63 @@ TEST (KernelCacheTest, TestCachedKernelWithoutCacheDeletion) {
     }
 
     std::vector<unsigned int> idxs = {1, 2, 3};
-
+    //Request some entrys of the first column multiple times
+    //Every requested Kernel entry should only have been calculated once
+    arma::Mat<unsigned int> expected = {
+        {0, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0}
+    };
     for (int z = 0; z < 5; z++ ) {
         cachedKernel.get_col(0, idxs);
-        for (int i = 0; i < N; i++) {
-            if (i == 0) {
-                //Only calculated the requested values once
-                ASSERT_EQ(0, counter.counts(i,0));
-                ASSERT_EQ(1, counter.counts(i,1));
-                ASSERT_EQ(1, counter.counts(i,2));
-                ASSERT_EQ(1, counter.counts(i,3));
-                ASSERT_EQ(0, counter.counts(i,4));
-            } else {
-                for (int j = 0; j < N; j++) {
-                    ASSERT_EQ(0, counter.counts(i,j));
-                }
-            }
+        EXPECT_MAT_EQ(expected, counter.counts);
+    }
+}
+
+TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
+    const int N = 5;
+    KernelEvaluationCounter counter(N);
+    //Only enough space in cache for 2 columns
+    auto cachedKernel = juml::svm::KernelCache<KernelEvaluationCounter>(counter, sizeof(float) * N * 2, N);
+
+    //Nothing is cached initially
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            ASSERT_EQ(0, counter.counts(i,j));
         }
     }
+
+    std::vector<unsigned int> idxs = {1, 2, 3};
+
+    //Request uncached elements of the first 2 columns.
+    for (int z = 0; z < 2; z++ ) {
+        cachedKernel.get_col(z, idxs);
+    }
+
+    arma::Mat<unsigned int> expected1 = {
+        {0, 0, 0, 0, 0},
+        {1, 1, 0, 0, 0},
+        {1, 1, 0, 0, 0},
+        {1, 1, 0, 0, 0},
+        {0, 0, 0, 0, 0}
+    };
+
+    EXPECT_MAT_EQ(expected1, counter.counts);
+
+    //Requesting the 3rd column should result in the first column being not cached anymore
+
+    cachedKernel.get_col(2, idxs);
+    arma::Mat<unsigned int> expected2 = {
+        {0, 0, 0, 0, 0},
+        {1, 1, 1, 0, 0},
+        {1, 1, 1, 0, 0},
+        {1, 1, 1, 0, 0},
+        {0, 0, 0, 0, 0}
+    };
+
+    EXPECT_MAT_EQ(expected2, counter.counts);
 }
 
 int main(int argc, char** argv) {
