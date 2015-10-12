@@ -16,6 +16,7 @@
 
 #ifndef KERNEL_CACHE_H
 #define KERNEL_CACHE_H
+#include "Kernel.h"
 
 namespace juml {
     namespace svm {
@@ -33,6 +34,16 @@ namespace juml {
                     }
                     return stub.memptr();
                 }
+        };
+
+        template<typename kernel_t> class KernelCache<Kernel<KernelType::PRECOMPUTED, kernel_t>> {
+            const Kernel<KernelType::PRECOMPUTED, kernel_t> kernel;
+            public:
+                KernelCache(const Kernel<KernelType::PRECOMPUTED, kernel_t>& kernel_) : kernel(kernel_) {}
+                inline const kernel_t* get_col(int col, std::vector<unsigned int> idxs) {
+                    return kernel.precomputed_kernel.colptr(col);
+                }
+
         };
     }
 }

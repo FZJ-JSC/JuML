@@ -95,8 +95,8 @@ namespace juml {
 
         template <typename kernel_t>
         class Kernel <KernelType::PRECOMPUTED, kernel_t> {
-            const arma::Mat<kernel_t>& precomputed_kernel;
         public:
+            const arma::Mat<kernel_t>& precomputed_kernel;
             Kernel(arma::Mat<kernel_t>& kernel)
                 : precomputed_kernel(kernel) {
             }

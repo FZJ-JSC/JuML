@@ -148,6 +148,22 @@ TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
     }
 }
 
+
+TEST(KernelCacheTest, TestCachedKernelPrecomputed) {
+    using namespace juml::svm;
+    const int N = 5;
+    arma::Mat<float> precomputedKernel(N,N, arma::fill::zeros);
+    Kernel<KernelType::PRECOMPUTED, float> kernel(precomputedKernel);
+    auto cachedKernel = KernelCache<Kernel<KernelType::PRECOMPUTED, float>>(kernel);
+
+    std::vector<unsigned int> idxs = {1,2,3};
+    for (int col = 0; col < N; col++) {
+        ASSERT_EQ(&(precomputedKernel.at(0, col)), &(cachedKernel.get_col(col, idxs)[0]))
+            << "Cached Precomputed Kernel should return pointer into precomputed kernel memory";
+    }
+
+}
+
 int main(int argc, char** argv) {
     int result = -1;
 
