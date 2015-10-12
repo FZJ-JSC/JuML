@@ -24,10 +24,10 @@ namespace juml {
             Kernel& kernel;
             const unsigned int n;
             typedef decltype(kernel.evaluate_kernel(0,0)) kernel_t;
+            arma::Col<kernel_t> stub;
             public:
-                KernelCache(Kernel& kernel_, size_t bytes, unsigned int n_) : kernel(kernel_), max_bytes(bytes), n(n_) {}
-                const arma::Col<kernel_t> get_col(int i, std::vector<unsigned int> idxs) {
-                    arma::Col<kernel_t> stub(n);
+                KernelCache(Kernel& kernel_, size_t bytes, unsigned int n_) : kernel(kernel_), max_bytes(bytes), n(n_), stub(n) {}
+                const arma::Col<kernel_t>& get_col(int i, std::vector<unsigned int> idxs) {
                     for (auto z: idxs) {
                         stub(z) = kernel.evaluate_kernel(z, i);
                     }
