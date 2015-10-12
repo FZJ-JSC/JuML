@@ -29,7 +29,7 @@ namespace juml {
                 const arma::Col<kernel_t> get_col(int i, std::vector<unsigned int> idxs) {
                     arma::Col<kernel_t> stub(n);
                     for (auto z: idxs) {
-                        stub(z) = kernel.evaluate_kernel(i, z);
+                        stub(z) = kernel.evaluate_kernel(z, i);
                     }
                 }
         };
