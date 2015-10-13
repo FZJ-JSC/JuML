@@ -14,8 +14,8 @@
 * Email:
 */
 
-#ifndef KERNEL_H
-#define KERNEL_H
+#ifndef JUML_SVM_KERNEL_H_
+#define JUML_SVM_KERNEL_H_
 
 #include <armadillo>
 #include <math.h>
@@ -120,4 +120,4 @@ namespace juml {
 
     } // juml::svm
 }  // juml
-#endif // KERNEL_H
+#endif // JUML_SVM_KERNEL_H_

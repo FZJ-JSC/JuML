@@ -14,8 +14,8 @@
 * Email:
 */
 
-#ifndef KERNEL_CACHE_H
-#define KERNEL_CACHE_H
+#ifndef JUML_SVM_KERNELCACHE_H_
+#define JUML_SVM_KERNELCACHE_H_
 #include "Kernel.h"
 
 namespace juml {
@@ -70,4 +70,4 @@ namespace juml {
 
 
 
-#endif // KERNEL_CACHE_H
+#endif // JUML_SVM_KERNELCACHE_H_
