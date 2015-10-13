@@ -148,6 +148,92 @@ TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
     }
 }
 
+TEST(KernelCacheTest, TestCachedKernelPartialKernelCaching) {
+    using std::vector;
+    const int N = 5;
+    KernelEvaluationCounter counter(N);
+    //Enough space to cache the full kernel
+    auto cachedKernel = juml::svm::KernelCache<KernelEvaluationCounter>(counter, sizeof(float) * N * N, N);
+
+    arma::Mat<unsigned int> expected = arma::Mat<unsigned int>(N,N, arma::fill::zeros);
+
+    EXPECT_MAT_EQ(expected, counter.counts);
+
+    //Request only a few rows from a specific column
+    vector<unsigned int> idxs1 = {1, 2, 3};
+    cachedKernel.get_col(0, idxs1);
+
+    expected = {
+        {0, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0}
+    };
+
+    EXPECT_MAT_EQ(expected, counter.counts);
+
+    //Request other indixes from the same column. Only the new idxs should be recalculated.
+    vector<unsigned int> idxs2 = {0, 1, 4};
+    cachedKernel.get_col(0, idxs2);
+
+    expected = {
+        {1, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0}
+    };
+
+    EXPECT_MAT_EQ(expected, counter.counts);
+
+    //Request the full column
+    cachedKernel.get_col(1);
+
+    expected = {
+        {1, 1, 0, 0, 0},
+        {1, 1, 0, 0, 0},
+        {1, 1, 0, 0, 0},
+        {1, 1, 0, 0, 0},
+        {1, 1, 0, 0, 0}
+    };
+
+    EXPECT_MAT_EQ(expected, counter.counts);
+
+    //The full column is cached, so requesting special rows does not need any recalculation
+    cachedKernel.get_col(1, idxs1);
+    EXPECT_MAT_EQ(expected, counter.counts);
+    cachedKernel.get_col(1, idxs2);
+    EXPECT_MAT_EQ(expected, counter.counts);
+
+
+    //Request a partial column
+    cachedKernel.get_col(2, idxs1);
+
+    expected = {
+        {1, 1, 0, 0, 0},
+        {1, 1, 1, 0, 0},
+        {1, 1, 1, 0, 0},
+        {1, 1, 1, 0, 0},
+        {1, 1, 0, 0, 0}
+    };
+
+    EXPECT_MAT_EQ(expected, counter.counts);
+
+
+    //Requesting the full column after it has been partially calculated
+    cachedKernel.get_col(2);
+    expected = {
+        {1, 1, 1, 0, 0},
+        {1, 1, 1, 0, 0},
+        {1, 1, 1, 0, 0},
+        {1, 1, 1, 0, 0},
+        {1, 1, 1, 0, 0}
+    };
+
+    EXPECT_MAT_EQ(expected, counter.counts);
+}
+
 
 TEST(KernelCacheTest, TestCachedKernelPrecomputed) {
     using namespace juml::svm;
