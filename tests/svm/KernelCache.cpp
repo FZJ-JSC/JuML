@@ -18,15 +18,15 @@ class KernelEvaluationCounter {
 	}
 };
 
-template<typename T>
-void EXPECT_MAT_EQ(arma::Mat<T> a, arma::Mat<T> b) {
-    ASSERT_TRUE(a.n_rows == b.n_rows && a.n_cols == b.n_cols) << "a and b do not have the same dimensions!";
-    for (int col = 0; col < a.n_cols; col++) {
-        for (int row = 0; row < a.n_rows; row++) {
-            EXPECT_EQ(a(row, col), b(row, col)) << "a differs from b at index (" << row << ", " << col << ")";
-        }
-    }
-}
+#define EXPECT_MAT_EQ(a, b) do {\
+    ASSERT_TRUE(a.n_rows == b.n_rows && a.n_cols == b.n_cols) << "a and b do not have the same dimensions!"; \
+    for (int col = 0; col < a.n_cols; col++) { \
+        for (int row = 0; row < a.n_rows; row++) { \
+            EXPECT_EQ(a(row, col), b(row, col)) << "a differs from b at index (" << row << ", " << col << ")"; \
+        } \
+    } \
+} while (false)
+
 
 
 TEST (KernelCacheTest, TestKernelEvaluationCounter) {
