@@ -27,12 +27,12 @@ namespace juml {
         template <class Kernel> class KernelCache {
             const size_t max_bytes;
             Kernel& kernel;
-            const unsigned int n;
+            const unsigned int l;
             typedef decltype(kernel.evaluate_kernel(0,0)) kernel_t;
 
             public:
-                KernelCache(Kernel& kernel_, size_t bytes, unsigned int n_)
-                    : kernel(kernel_), max_bytes(bytes), n(n_), stub(n) {}
+                KernelCache(Kernel& kernel_, size_t bytes, unsigned int l_)
+                    : kernel(kernel_), max_bytes(bytes), l(l_), stub(l) {}
 
                 const kernel_t* get_col(int col) {
                    return nullptr;
