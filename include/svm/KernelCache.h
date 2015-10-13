@@ -29,22 +29,17 @@ namespace juml {
             Kernel& kernel;
             const unsigned int n;
             typedef decltype(kernel.evaluate_kernel(0,0)) kernel_t;
-            arma::Col<kernel_t> stub;
+
             public:
-                KernelCache(Kernel& kernel_, size_t bytes, unsigned int n_) : kernel(kernel_), max_bytes(bytes), n(n_), stub(n) {}
+                KernelCache(Kernel& kernel_, size_t bytes, unsigned int n_)
+                    : kernel(kernel_), max_bytes(bytes), n(n_), stub(n) {}
 
                 const kernel_t* get_col(int col) {
-                    for (int row = 0; row < n; row++) {
-                        stub(row) = kernel.evaluate_kernel(row, col);
-                    }
-                    return stub.memptr();
+                   return nullptr;
                 }
 
                 const kernel_t* get_col(int col, std::vector<unsigned int> idxs) {
-                    for (auto z: idxs) {
-                        stub(z) = kernel.evaluate_kernel(z, col);
-                    }
-                    return stub.memptr();
+                   return nullptr;
                 }
         }; // KernelCache<Kernel>
 
