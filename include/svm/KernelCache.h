@@ -104,6 +104,21 @@ namespace juml {
                 }
             }
 
+#ifdef JUML_SVM_KERNELCACHE_STATISTIC
+            unsigned long long colhit = 0;
+            unsigned long long colmiss = 0;
+            unsigned long long entryhit = 0;
+            unsigned long long entrymiss = 0;
+    #define COLHIT() colhit++
+    #define COLMISS() colmiss++
+    #define ENTRYHIT() entryhit++
+    #define ENTRYMISS() entrymiss++
+#else
+    #define COLHIT() ;
+    #define COLMISS() ;
+    #define ENTRYHIT() ;
+    #define ENTRYMISS() ;
+#endif
             public:
                 KernelCache(Kernel& kernel_, size_t bytes, unsigned int l_)
                     : kernel(kernel_),
@@ -122,6 +137,15 @@ namespace juml {
                 }
 
                 ~KernelCache() {
+#ifdef JUML_SVM_KERNELCACHE_STATISTIC
+                    std::cout << "KernelCache deconstructed with: " << std::endl
+                              << colhit << " Column Cache hits" << std::endl
+                              << colmiss << " Column Cache misses" << std::endl
+                              << (double)colhit/(colhit + colmiss)*100 << "% Column cache hit rate" << std::endl
+                              << entryhit << " Entry Cache hits" << std::endl
+                              << entrymiss << " Entry Cache misses" << std::endl
+                              << (double)entryhit/(entryhit + entrymiss) * 100 << " % Entry hit rate" << std::endl;
+#endif
                     delete[] head;
                     delete[] data_space;
                 }
@@ -130,14 +154,20 @@ namespace juml {
                     kernel_t *data;
                     if (get_data(col, data)) {
                         //Column already partially cached
+                        COLHIT();
                         for (int i = 0; i < l; i++) {
                             if (isnan(data[i])) {
+                                ENTRYMISS();
                                 data[i] = kernel.evaluate_kernel(i, col);
+                            } else {
+                                ENTRYHIT();
                             }
                         }
                     } else {
                         //Column is fresh, so we know we need to calculate everything
+                        COLMISS();
                         for (int i = 0; i < l; i++) {
+                            ENTRYMISS();
                             data[i] = kernel.evaluate_kernel(i, col);
                         }
                     }
@@ -148,17 +178,23 @@ namespace juml {
                     kernel_t *data;
                     if (get_data(col, data)) {
                         //Column already partially cached
+                        COLHIT();
                         for (int i: idxs) {
                             if (isnan(data[i])) {
+                                ENTRYMISS();
                                 data[i] = kernel.evaluate_kernel(i, col);
+                            } else {
+                                ENTRYHIT();
                             }
                         }
                     } else {
-                        //Column is fresh, so we know we need to calculate everything
+                        //Column is fresh, so we know we need to calculate everythinga
+                        COLMISS();
                         int lastindex = -1;
                         for (int i: idxs) {
                             //Need to fill the holes with NAN, so we know that we did not calculate these
                             std::fill(data + lastindex + 1, data + i, NAN);
+                            ENTRYMISS();
                             data[i] = kernel.evaluate_kernel(i, col);
                             lastindex = i;
                         }
@@ -168,7 +204,10 @@ namespace juml {
                 }
         }; // KernelCache<Kernel>
 
-
+#undef COLHIT
+#undef COLMISS
+#undef ENTRYHIT
+#undef ENTRYMISS
         //! KernelCache<Kernel<KernelType::PRECOMPUTED, kernel_t>>
         //! TODO: Describe me
         template<typename kernel_t> class KernelCache<Kernel<KernelType::PRECOMPUTED, kernel_t>> {
