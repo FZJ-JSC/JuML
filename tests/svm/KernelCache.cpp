@@ -14,7 +14,7 @@ class KernelEvaluationCounter {
 
 	float evaluate_kernel(int i, int j) {
 		counts(i,j)++;
-		return 1.0;
+		return i + n * j;
 	}
 };
 
@@ -27,7 +27,17 @@ class KernelEvaluationCounter {
     } \
 } while (false)
 
+#define ASSERT_KERNEL_VALUES(data, col, N) do { \
+    for (int i = 0; i < N; i++) { \
+        ASSERT_FLOAT_EQ(i + col*N, data[i]); \
+    } \
+} while (false)
 
+#define ASSERT_KERNEL_VALUES_SUBSET(data, col, idxs, N) do { \
+    for (int i: idxs) { \
+        ASSERT_FLOAT_EQ(i + col*N, data[i]); \
+    } \
+} while (false)
 
 TEST (KernelCacheTest, TestKernelEvaluationCounter) {
     const int N = 5;
@@ -82,8 +92,9 @@ TEST (KernelCacheTest, TestCachedKernelWithoutCacheDeletion) {
         {0, 0, 0, 0, 0}
     };
     for (int z = 0; z < 5; z++ ) {
-        cachedKernel.get_col(0, idxs);
+        const float *data = cachedKernel.get_col(0, idxs);
         EXPECT_MAT_EQ(expected, counter.counts);
+        ASSERT_KERNEL_VALUES_SUBSET(data, 0, idxs, 5);
     }
 }
 
@@ -101,10 +112,11 @@ TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
     }
 
     std::vector<unsigned int> idxs = {1, 2, 3};
-
+    const float *data;
     //Request uncached elements of the first 2 columns.
     for (int z = 0; z < 2; z++ ) {
-        cachedKernel.get_col(z, idxs);
+        data = cachedKernel.get_col(z, idxs);
+        ASSERT_KERNEL_VALUES_SUBSET(data, z, idxs, N);
     }
 
     arma::Mat<unsigned int> expected = {
@@ -118,7 +130,8 @@ TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
     EXPECT_MAT_EQ(expected, counter.counts);
 
     //Requesting the 3rd column should result in the first column not being cached anymore
-    cachedKernel.get_col(2, idxs);
+    data = cachedKernel.get_col(2, idxs);
+    ASSERT_KERNEL_VALUES_SUBSET(data, 2, idxs, N);
     expected = {
         {0, 0, 0, 0, 0},
         {1, 1, 1, 0, 0},
@@ -129,7 +142,8 @@ TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
     EXPECT_MAT_EQ(expected, counter.counts);
 
     //Requesting the 1st column so it gets calculated again
-    cachedKernel.get_col(0, idxs);
+    data = cachedKernel.get_col(0, idxs);
+    ASSERT_KERNEL_VALUES_SUBSET(data, 0, idxs, N);
     expected = {
         {0, 0, 0, 0, 0},
         {2, 1, 1, 0, 0},
@@ -141,9 +155,12 @@ TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
 
     //The 1st and 3rd column are cached, so we can request them without recalculation
     for (int i = 0; i < 5; i++) {
-        cachedKernel.get_col(0, idxs);
+        data =cachedKernel.get_col(0, idxs);
+        ASSERT_KERNEL_VALUES_SUBSET(data, 0, idxs, N);
         EXPECT_MAT_EQ(expected, counter.counts);
-        cachedKernel.get_col(2, idxs);
+
+        data = cachedKernel.get_col(2, idxs);
+        ASSERT_KERNEL_VALUES_SUBSET(data, 2, idxs, N);
         EXPECT_MAT_EQ(expected, counter.counts);
     }
 }
@@ -161,7 +178,8 @@ TEST(KernelCacheTest, TestCachedKernelPartialKernelCaching) {
 
     //Request only a few rows from a specific column
     vector<unsigned int> idxs1 = {1, 2, 3};
-    cachedKernel.get_col(0, idxs1);
+    const float *data = cachedKernel.get_col(0, idxs1);
+    ASSERT_KERNEL_VALUES_SUBSET(data, 0, idxs1, N);
 
     expected = {
         {0, 0, 0, 0, 0},
@@ -175,7 +193,8 @@ TEST(KernelCacheTest, TestCachedKernelPartialKernelCaching) {
 
     //Request other indixes from the same column. Only the new idxs should be recalculated.
     vector<unsigned int> idxs2 = {0, 1, 4};
-    cachedKernel.get_col(0, idxs2);
+    data = cachedKernel.get_col(0, idxs2);
+    ASSERT_KERNEL_VALUES_SUBSET(data, 0, idxs2, N);
 
     expected = {
         {1, 0, 0, 0, 0},
@@ -188,7 +207,8 @@ TEST(KernelCacheTest, TestCachedKernelPartialKernelCaching) {
     EXPECT_MAT_EQ(expected, counter.counts);
 
     //Request the full column
-    cachedKernel.get_col(1);
+    data = cachedKernel.get_col(1);
+    ASSERT_KERNEL_VALUES(data, 1, N);
 
     expected = {
         {1, 1, 0, 0, 0},
@@ -201,14 +221,18 @@ TEST(KernelCacheTest, TestCachedKernelPartialKernelCaching) {
     EXPECT_MAT_EQ(expected, counter.counts);
 
     //The full column is cached, so requesting special rows does not need any recalculation
-    cachedKernel.get_col(1, idxs1);
+    data = cachedKernel.get_col(1, idxs1);
+    ASSERT_KERNEL_VALUES(data, 1, N);
     EXPECT_MAT_EQ(expected, counter.counts);
-    cachedKernel.get_col(1, idxs2);
+
+    data = cachedKernel.get_col(1, idxs2);
+    ASSERT_KERNEL_VALUES(data, 1, N);
     EXPECT_MAT_EQ(expected, counter.counts);
 
 
     //Request a partial column
-    cachedKernel.get_col(2, idxs1);
+    data = cachedKernel.get_col(2, idxs1);
+    ASSERT_KERNEL_VALUES_SUBSET(data, 2, idxs1, N);
 
     expected = {
         {1, 1, 0, 0, 0},
@@ -222,7 +246,8 @@ TEST(KernelCacheTest, TestCachedKernelPartialKernelCaching) {
 
 
     //Requesting the full column after it has been partially calculated
-    cachedKernel.get_col(2);
+    data = cachedKernel.get_col(2);
+    ASSERT_KERNEL_VALUES(data, 2, N);
     expected = {
         {1, 1, 1, 0, 0},
         {1, 1, 1, 0, 0},
