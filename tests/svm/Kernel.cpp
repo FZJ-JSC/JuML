@@ -4,6 +4,7 @@
 #include <iostream>
 #include <mpi.h>
 #include "svm/Kernel.h"
+#include "svm/SVCKernel.h"
 
 TEST (KernelInitialisation, LinearKernel) {
     using juml::svm::Kernel;
@@ -84,6 +85,31 @@ TEST (KernelInitialisation, PrecomputedKernel) {
         }
     }
 
+
+}
+
+TEST (SpecializedKernel, SVCKernel) {
+    using juml::svm::Kernel;
+    using juml::svm::KernelType;
+    using juml::svm::SVCKernel;
+    using juml::svm::BinaryLabel;
+    arma::Mat<float> x(3,3);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            x(i,j) = i + 1;
+        }
+    }
+
+    Kernel<KernelType::LINEAR, float> kernel(x);
+    std::vector<BinaryLabel> labels = {BinaryLabel::NEGATIVE, BinaryLabel::POSITIVE, BinaryLabel::POSITIVE};
+
+    SVCKernel<Kernel<KernelType::LINEAR, float>> svcKernel(kernel, labels);
+
+    float result = 1 + 4 + 9;
+
+    EXPECT_EQ(-1 * 1 * result, svcKernel.evaluate_kernel(0,1));
+    EXPECT_EQ(1 * 1 * result, svcKernel.evaluate_kernel(1,2));
+    EXPECT_EQ(-1 * 1 * result, svcKernel.evaluate_kernel(0,2));
 
 }
 
