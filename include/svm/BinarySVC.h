@@ -5,7 +5,7 @@
 *
 * This software may be modified and distributed under the terms of BSD-style license.
 *
-* File name: SVCKernel.h
+* File name: BinarySVC.h
 *
 * Description: Header of class Kernel
 *

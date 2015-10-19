@@ -4,7 +4,7 @@
 #include <iostream>
 #include <mpi.h>
 #include "svm/Kernel.h"
-#include "svm/SVCKernel.h"
+#include "svm/BinarySVC.h"
 
 TEST (KernelInitialisation, LinearKernel) {
     using juml::svm::Kernel;
