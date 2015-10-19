@@ -136,6 +136,10 @@ namespace juml {
                     std::cout<<"Cache has space for " << maxCachedColumns << " Kernel Columns" << std::endl;
                 }
 
+                inline bool is_cached(int i) {
+                    return head[i].data != nullptr;
+                }
+
                 ~KernelCache() {
 #ifdef JUML_SVM_KERNELCACHE_STATISTIC
                     std::cout << "KernelCache deconstructed with: " << std::endl
@@ -214,6 +218,10 @@ namespace juml {
             const Kernel<KernelType::PRECOMPUTED, kernel_t> kernel;
             public:
                 KernelCache(const Kernel<KernelType::PRECOMPUTED, kernel_t>& kernel_) : kernel(kernel_) {}
+
+                inline bool is_cached(int i) {
+                    return true;
+                }
 
                 inline const kernel_t* get_col(int col) {
                     return kernel.precomputed_kernel.colptr(col);

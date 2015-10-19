@@ -111,6 +111,11 @@ TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
         }
     }
 
+    //Nothing should be cached
+    for (int i = 0; i < N; i++) {
+        EXPECT_EQ(false, cachedKernel.is_cached(i));
+    }
+
     std::vector<unsigned int> idxs = {1, 2, 3};
     const float *data;
     //Request uncached elements of the first 2 columns.
@@ -118,6 +123,13 @@ TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
         data = cachedKernel.get_col(z, idxs);
         ASSERT_KERNEL_VALUES_SUBSET(data, z, idxs, N);
     }
+
+    //First 2 column should report is_cached = true now
+    EXPECT_EQ(true,  cachedKernel.is_cached(0));
+    EXPECT_EQ(true,  cachedKernel.is_cached(1));
+    EXPECT_EQ(false, cachedKernel.is_cached(2));
+    EXPECT_EQ(false, cachedKernel.is_cached(3));
+    EXPECT_EQ(false, cachedKernel.is_cached(4));
 
     arma::Mat<unsigned int> expected = {
         {0, 0, 0, 0, 0},
@@ -132,6 +144,13 @@ TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
     //Requesting the 3rd column should result in the first column not being cached anymore
     data = cachedKernel.get_col(2, idxs);
     ASSERT_KERNEL_VALUES_SUBSET(data, 2, idxs, N);
+
+    EXPECT_EQ(false, cachedKernel.is_cached(0));
+    EXPECT_EQ(true,  cachedKernel.is_cached(1));
+    EXPECT_EQ(true,  cachedKernel.is_cached(2));
+    EXPECT_EQ(false, cachedKernel.is_cached(3));
+    EXPECT_EQ(false, cachedKernel.is_cached(4));
+
     expected = {
         {0, 0, 0, 0, 0},
         {1, 1, 1, 0, 0},
@@ -144,6 +163,13 @@ TEST (KernelCacheTest, TestCachedKernelWithCacheDeletion) {
     //Requesting the 1st column so it gets calculated again
     data = cachedKernel.get_col(0, idxs);
     ASSERT_KERNEL_VALUES_SUBSET(data, 0, idxs, N);
+
+    EXPECT_EQ(true,  cachedKernel.is_cached(0));
+    EXPECT_EQ(false, cachedKernel.is_cached(1));
+    EXPECT_EQ(true,  cachedKernel.is_cached(2));
+    EXPECT_EQ(false, cachedKernel.is_cached(3));
+    EXPECT_EQ(false, cachedKernel.is_cached(4));
+
     expected = {
         {0, 0, 0, 0, 0},
         {2, 1, 1, 0, 0},
