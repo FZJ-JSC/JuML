@@ -45,10 +45,8 @@ namespace juml {
         template <typename kernel_t>
         class Kernel <KernelType::LINEAR, kernel_t> {
             const arma::Mat<kernel_t>& x;
-            const arma::Col<int>& y;
         public:
-            Kernel(arma::Mat<kernel_t>& x_, arma::Col<int>& y_) : x(x_), y(y_) {
-                assert(x.n_rows == y.n_rows);
+            Kernel(arma::Mat<kernel_t>& x_) : x(x_) {
             }
 
             inline kernel_t evaluate_kernel(int i, int j) const {
@@ -62,13 +60,12 @@ namespace juml {
         template <typename kernel_t>
         class Kernel <KernelType::POLY, kernel_t> {
             const arma::Mat<kernel_t>& x;
-            const arma::Col<int>& y;
             const int degree;
             const double gamma;
             const double coef0;
         public:
-            Kernel(arma::Mat<kernel_t>& x_, arma::Col<int>& y_, int degree_, double gamma_, double coef0_)
-                : x(x_), y(y_), degree(degree_), gamma(gamma_), coef0(coef0_) {
+            Kernel(arma::Mat<kernel_t>& x_, int degree_, double gamma_, double coef0_)
+                : x(x_), degree(degree_), gamma(gamma_), coef0(coef0_) {
             }
 
             inline kernel_t evaluate_kernel(int i, int j) const {
@@ -82,12 +79,11 @@ namespace juml {
         template <typename kernel_t>
         class Kernel <KernelType::RBF, kernel_t> {
             const arma::Mat<kernel_t>& x;
-            const arma::Col<int>& y;
             const double gamma;
             arma::Col<kernel_t> x_square;
         public:
-            Kernel(arma::Mat<kernel_t>& x_, arma::Col<int>& y_, double gamma_)
-                : x(x_), y(y_), gamma(gamma_), x_square(x_.n_rows) {
+            Kernel(arma::Mat<kernel_t>& x_, double gamma_)
+                : x(x_), gamma(gamma_), x_square(x_.n_rows) {
                 for (int i = 0; i < x.n_rows; i++) {
                     x_square[i] = arma::dot(x.col(i), x.col(i));
                 }

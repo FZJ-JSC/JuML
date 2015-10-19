@@ -9,14 +9,13 @@ TEST (KernelInitialisation, LinearKernel) {
     using juml::svm::Kernel;
     using juml::svm::KernelType;
     arma::Mat<float> x(3,3);
-    arma::Col<int> y(3);
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             x(i,j) = i + 1;
         }
     }
 
-    Kernel<KernelType::LINEAR, float> kernel(x, y);
+    Kernel<KernelType::LINEAR, float> kernel(x);
 
     ASSERT_EQ(1*1 + 2*2 + 3*3, kernel.evaluate_kernel(0,1));
     ASSERT_EQ(1*1 + 2*2 + 3*3, kernel.evaluate_kernel(1,2));
@@ -28,7 +27,6 @@ TEST (KernelInitialisation, PolyKernel) {
     using juml::svm::Kernel;
     using juml::svm::KernelType;
     arma::Mat<float> x(3,3);
-    arma::Col<int> y(3);
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             x(i,j) = i + 1;
@@ -38,7 +36,7 @@ TEST (KernelInitialisation, PolyKernel) {
     double gamma = 1;
     double coef0 = 0;
 
-    Kernel<KernelType::POLY, float> kernel(x, y, degree, gamma, coef0);
+    Kernel<KernelType::POLY, float> kernel(x, degree, gamma, coef0);
 
     float result = pow(1*1 + 2*2 + 3*3, 2);
 
@@ -52,14 +50,13 @@ TEST (KernelInitialisation, RBFKernel) {
     using juml::svm::Kernel;
     using juml::svm::KernelType;
     arma::Mat<float> x(3,3);
-    arma::Col<int> y(3);
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             x(i,j) = i + 1;
         }
     }
 
-    Kernel<KernelType::RBF, float> kernel(x, y, 2);
+    Kernel<KernelType::RBF, float> kernel(x, 2);
 
     float result = exp(-2 * ( 2 * (1 + 4 + 9) - 2 * ( 1 + 4  + 9)));
 
@@ -73,7 +70,6 @@ TEST (KernelInitialisation, PrecomputedKernel) {
     using juml::svm::Kernel;
     using juml::svm::KernelType;
     arma::Mat<float> x(3,3);
-    arma::Col<int> y(3);
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             x(i,j) = i + j;
