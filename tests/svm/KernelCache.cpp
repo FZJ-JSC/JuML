@@ -285,6 +285,62 @@ TEST(KernelCacheTest, TestCachedKernelPartialKernelCaching) {
     EXPECT_MAT_EQ(expected, counter.counts);
 }
 
+TEST(KernelCacheTest, TestCachedKernelUncachedEvaluation) {
+    using std::vector;
+    const int N = 3;
+    KernelEvaluationCounter counter(N);
+    auto cachedKernel = juml::svm::KernelCache<KernelEvaluationCounter>(counter, sizeof(float) * N * N, N);
+
+    arma::Mat<unsigned int> expected = arma::Mat<unsigned int>(N,N, arma::fill::zeros);
+
+    EXPECT_MAT_EQ(expected, counter.counts);
+
+    EXPECT_EQ(false, cachedKernel.is_cached(0));
+    EXPECT_EQ(false, cachedKernel.is_cached(1));
+    EXPECT_EQ(false, cachedKernel.is_cached(2));
+
+    //Evaluate kernel without caching
+    EXPECT_FLOAT_EQ(0.0, cachedKernel.evaluate_kernel(0,0));
+
+    //Kernel has been evaluated, but not cached
+    expected = {
+        {1, 0, 0},
+        {0, 0, 0},
+        {0, 0, 0}
+    };
+
+    EXPECT_MAT_EQ(expected, counter.counts);
+
+    EXPECT_EQ(false, cachedKernel.is_cached(0));
+    EXPECT_EQ(false, cachedKernel.is_cached(1));
+    EXPECT_EQ(false, cachedKernel.is_cached(2));
+
+    cachedKernel.get_col(0);
+    expected = {
+        {2, 0, 0},
+        {1, 0, 0},
+        {1, 0, 0}
+    };
+
+    EXPECT_MAT_EQ(expected, counter.counts);
+
+    EXPECT_EQ(true, cachedKernel.is_cached(0));
+    EXPECT_EQ(false, cachedKernel.is_cached(1));
+    EXPECT_EQ(false, cachedKernel.is_cached(2));
+
+    //Kernel Cache status should not change after executing evaluete_kernel
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            cachedKernel.evaluate_kernel(i,j);
+        }
+    }
+
+    EXPECT_EQ(true, cachedKernel.is_cached(0));
+    EXPECT_EQ(false, cachedKernel.is_cached(1));
+    EXPECT_EQ(false, cachedKernel.is_cached(2));
+
+}
+
 
 TEST(KernelCacheTest, TestCachedKernelPrecomputed) {
     using namespace juml::svm;

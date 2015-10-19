@@ -140,6 +140,10 @@ namespace juml {
                     return head[i].data != nullptr;
                 }
 
+                inline kernel_t evaluate_kernel(int i, int j) {
+                    return kernel.evaluate_kernel(i, j);
+                }
+
                 ~KernelCache() {
 #ifdef JUML_SVM_KERNELCACHE_STATISTIC
                     std::cout << "KernelCache deconstructed with: " << std::endl
@@ -221,6 +225,12 @@ namespace juml {
 
                 inline bool is_cached(int i) {
                     return true;
+                }
+
+                inline kernel_t evaluate_kernel(int i, int j) {
+                    //Swap indices, so when keeping i and iterating over j the memory is accessed continuously.
+                    //Because arma stores the matrix columnwise
+                    return kernel.precomputedKernel(j, i);
                 }
 
                 inline const kernel_t* get_col(int col) {
