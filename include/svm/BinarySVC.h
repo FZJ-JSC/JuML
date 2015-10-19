@@ -17,7 +17,9 @@
 #ifndef JUML_SVM_SVCKERNEL_H_
 #define JUML_SVM_SVCKERNEL_H_
 
+#include <mpi.h>
 #include "Kernel.h"
+#include "classification/BaseClassifier.h"
 
 namespace juml {
 	namespace svm {
@@ -41,6 +43,31 @@ namespace juml {
 				return labels[i] * labels[j] * inner.evaluate_kernel(i, j);
 			}
 		}; // SVCKernel
+
+                //! TODO: Describe Me
+                class BinarySVC : public BaseClassifier {
+                protected:
+                    const double C_, degree_, gamma_, coef0_;
+                    const size_t cache_size_;
+                    const KernelType kernelType_;
+                public:
+                    BinarySVC(
+                            double C = 1.0, KernelType kernel = KernelType::RBF,
+                            double degree = 3, double gamma = 0.0, double coef0 =0.0,
+                            size_t cache_size = 200*(2<<10), MPI_Comm comm = MPI_COMM_WORLD)
+                   : C_(C), degree_(degree), gamma_(gamma), coef0_(coef0),
+                     cache_size_(cache_size), kernelType_(kernel), BaseClassifier(comm) {
+
+                    }
+
+                    virtual void fit(Dataset<float>& X, Dataset<int>& y);
+                    virtual Dataset<int> predict(const Dataset<float>& X);
+                    virtual float accuracy(const Dataset<float>& X, const Dataset<int>& y) {
+                        //TODO implement in BaseClassifier using predict?
+                        return 0;
+                    }
+
+                };
 	} // svm
 } // juml
 

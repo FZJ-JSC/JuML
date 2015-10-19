@@ -1,2 +1,3 @@
 FILE(GLOB SVM_SRC *.cpp)
 ADD_LIBRARY(svm SHARED ${SVM_SRC})
+TARGET_LINK_LIBRARIES(svm preprocessing)
