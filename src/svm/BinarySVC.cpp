@@ -26,7 +26,7 @@ namespace juml {
 			}
                         //TODO implement fit
 		}
-		Dataset<int> BinarySVC::predict(const Dataset<float>& X) {
+		Dataset<int> BinarySVC::predict(const Dataset<float>& X) const {
                     //TODO implement predict
 		}
 	} // svm

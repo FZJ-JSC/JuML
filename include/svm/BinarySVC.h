@@ -7,7 +7,7 @@
 *
 * File name: BinarySVC.h
 *
-* Description: Header of class Kernel
+* Description: Header of class BinarySVC
 *
 * Maintainer:
 *
@@ -18,6 +18,7 @@
 #define JUML_SVM_SVCKERNEL_H_
 
 #include <mpi.h>
+//TODO We don't want to include Kernel.h here. It probably should not be part of the public API
 #include "Kernel.h"
 #include "classification/BaseClassifier.h"
 
@@ -66,9 +67,9 @@ namespace juml {
 
                     }
 
-                    virtual void fit(Dataset<float>& X, Dataset<int>& y);
-                    virtual Dataset<int> predict(const Dataset<float>& X);
-                    virtual float accuracy(const Dataset<float>& X, const Dataset<int>& y) {
+                    virtual void fit(Dataset<float>& X, Dataset<int>& y) override;
+                    virtual Dataset<int> predict(const Dataset<float>& X) const override;
+                    virtual float accuracy(const Dataset<float>& X, const Dataset<int>& y) const override {
                         //TODO implement in BaseClassifier using predict?
                         return 0;
                     }
