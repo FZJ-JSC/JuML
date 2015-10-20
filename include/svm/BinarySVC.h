@@ -50,13 +50,19 @@ namespace juml {
                     const double C_, degree_, gamma_, coef0_;
                     const size_t cache_size_;
                     const KernelType kernelType_;
+                    const double weight_positive_, weight_negative_;
                 public:
                     BinarySVC(
                             double C = 1.0, KernelType kernel = KernelType::RBF,
                             double degree = 3, double gamma = 0.0, double coef0 =0.0,
-                            size_t cache_size = 200*(2<<10), MPI_Comm comm = MPI_COMM_WORLD)
+                            size_t cache_size = 200*(2<<10),
+                            double weight_positive = NAN, double weight_negative = NAN,
+                            MPI_Comm comm = MPI_COMM_WORLD)
                    : C_(C), degree_(degree), gamma_(gamma), coef0_(coef0),
-                     cache_size_(cache_size), kernelType_(kernel), BaseClassifier(comm) {
+                     cache_size_(cache_size),
+                     weight_positive_(weight_positive == NAN ? C : weight_positive),
+                     weight_negative_(weight_negative == NAN ? C : weight_negative),
+                     kernelType_(kernel), BaseClassifier(comm) {
 
                     }
 
