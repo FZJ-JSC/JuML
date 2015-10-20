@@ -16,7 +16,7 @@ TEST (KernelInitialisation, LinearKernel) {
         }
     }
 
-    Kernel<KernelType::LINEAR, float> kernel(x);
+    Kernel<KernelType::LINEAR> kernel(x);
 
     ASSERT_EQ(1*1 + 2*2 + 3*3, kernel.evaluate_kernel(0,1));
     ASSERT_EQ(1*1 + 2*2 + 3*3, kernel.evaluate_kernel(1,2));
@@ -37,7 +37,7 @@ TEST (KernelInitialisation, PolyKernel) {
     double gamma = 1;
     double coef0 = 0;
 
-    Kernel<KernelType::POLY, float> kernel(x, degree, gamma, coef0);
+    Kernel<KernelType::POLY> kernel(x, degree, gamma, coef0);
 
     float result = pow(1*1 + 2*2 + 3*3, 2);
 
@@ -57,7 +57,7 @@ TEST (KernelInitialisation, RBFKernel) {
         }
     }
 
-    Kernel<KernelType::RBF, float> kernel(x, 2);
+    Kernel<KernelType::RBF> kernel(x, 2);
 
     float result = exp(-2 * ( 2 * (1 + 4 + 9) - 2 * ( 1 + 4  + 9)));
 
@@ -77,7 +77,7 @@ TEST (KernelInitialisation, PrecomputedKernel) {
         }
     }
 
-    Kernel<KernelType::PRECOMPUTED, float> kernel(x);
+    Kernel<KernelType::PRECOMPUTED> kernel(x);
 
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
@@ -100,10 +100,10 @@ TEST (SpecializedKernel, SVCKernel) {
         }
     }
 
-    Kernel<KernelType::LINEAR, float> kernel(x);
+    Kernel<KernelType::LINEAR> kernel(x);
     std::vector<BinaryLabel> labels = {BinaryLabel::NEGATIVE, BinaryLabel::POSITIVE, BinaryLabel::POSITIVE};
 
-    SVCKernel<Kernel<KernelType::LINEAR, float>> svcKernel(kernel, labels);
+    SVCKernel<Kernel<KernelType::LINEAR>> svcKernel(kernel, labels);
 
     float result = 1 + 4 + 9;
 

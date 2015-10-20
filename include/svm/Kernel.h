@@ -19,6 +19,7 @@
 
 #include <armadillo>
 #include <math.h>
+#include "QMatrix.h"
 
 namespace juml {
 
@@ -28,7 +29,7 @@ namespace juml {
 
         //! Kernel
         //! TODO: Describe me
-        template <KernelType kernel_type, typename kernel_t>
+        template <KernelType kernel_type>
         class Kernel {
         private:
             //! Kernel constructor
@@ -40,10 +41,10 @@ namespace juml {
         }; // Kernel
 
 
-        //! Kernel<KernelType::LINEAR, kernel_t>
+        //! Kernel<KernelType::LINEAR>
         //! TODO: Describe me
-        template <typename kernel_t>
-        class Kernel <KernelType::LINEAR, kernel_t> {
+        template <>
+        class Kernel <KernelType::LINEAR> {
             const arma::Mat<kernel_t>& x;
         public:
             Kernel(arma::Mat<kernel_t>& x_) : x(x_) {
@@ -52,13 +53,13 @@ namespace juml {
             inline kernel_t evaluate_kernel(int i, int j) const {
                 return arma::dot(this->x.col(i), this->x.col(j));
             }
-        }; // Kernel<KernelType::LINEAR, kernel_t>
+        }; // Kernel<KernelType::LINEAR>
 
 
-        //! Kernel<KernelType::POLY, kernel_t>
+        //! Kernel<KernelType::POLY>
         //! TODO: Describe me
-        template <typename kernel_t>
-        class Kernel <KernelType::POLY, kernel_t> {
+        template <>
+        class Kernel <KernelType::POLY> {
             const arma::Mat<kernel_t>& x;
             const int degree;
             const double gamma;
@@ -71,13 +72,13 @@ namespace juml {
             inline kernel_t evaluate_kernel(int i, int j) const {
                 return pow(gamma * arma::dot(x.col(i), x.col(j)) + coef0, degree);
             }
-        }; // Kernel<KernelType::POLY, kernel_t>
+        }; // Kernel<KernelType::POLY>
 
 
-        //! Kernel<KernelType::RBF, kernel_t>
+        //! Kernel<KernelType::RBF>
         //! TODO: Describe me
-        template <typename kernel_t>
-        class Kernel <KernelType::RBF, kernel_t> {
+        template <>
+        class Kernel <KernelType::RBF> {
             const arma::Mat<kernel_t>& x;
             const double gamma;
             arma::Col<kernel_t> x_square;
@@ -96,13 +97,13 @@ namespace juml {
                             )
                         );
             }
-        }; // Kernel<KernelType::RBF, kernel_t>
+        }; // Kernel<KernelType::RBF>
 
 
-        //! Kernel<KernelType::PRECOMPUTED, kernel_t>
+        //! Kernel<KernelType::PRECOMPUTED>
         //! TODO: Describe me
-        template <typename kernel_t>
-        class Kernel <KernelType::PRECOMPUTED, kernel_t> {
+        template <>
+        class Kernel <KernelType::PRECOMPUTED> {
         public:
             const arma::Mat<kernel_t>& precomputed_kernel;
             Kernel(arma::Mat<kernel_t>& kernel)
@@ -112,7 +113,7 @@ namespace juml {
             inline kernel_t evaluate_kernel(int i, int j) const {
                 return precomputed_kernel(i,j);
             }
-        }; // Kernel<KernelType::PRECOMPUTED, kernel_t>
+        }; // Kernel<KernelType::PRECOMPUTED>
 
     } // juml::svm
 }  // juml

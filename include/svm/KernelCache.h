@@ -18,6 +18,7 @@
 #define JUML_SVM_KERNELCACHE_H_
 #include "Kernel.h"
 #include <iostream>
+#include "QMatrix.h"
 
 namespace juml {
 
@@ -25,11 +26,10 @@ namespace juml {
 
         //! KernelCache<Kernel>
         //! TODO: Describe me
-        template <class Kernel> class KernelCache {
+        template <class Kernel> class KernelCache  : public QMatrix {
             const size_t max_bytes;
             Kernel& kernel;
             const unsigned int l;
-            typedef decltype(kernel.evaluate_kernel(0,0)) kernel_t;
 
             // Cache Implementation inspired by libsvm
             // https://github.com/cjlin1/libsvm/blob/50415ead74a20b246b671fc6efdd11256e843207/svm.cpp#L61-L185
@@ -136,11 +136,11 @@ namespace juml {
                     std::cout<<"Cache has space for " << maxCachedColumns << " Kernel Columns" << std::endl;
                 }
 
-                inline bool is_cached(int i) {
+                inline bool is_cached(int i) override {
                     return head[i].data != nullptr;
                 }
 
-                inline kernel_t evaluate_kernel(int i, int j) {
+                inline kernel_t evaluate_kernel(int i, int j) override  {
                     return kernel.evaluate_kernel(i, j);
                 }
 
@@ -158,7 +158,7 @@ namespace juml {
                     delete[] data_space;
                 }
 
-                const kernel_t* get_col(int col) {
+                const kernel_t* get_col(int col) override  {
                     kernel_t *data;
                     if (get_data(col, data)) {
                         //Column already partially cached
@@ -182,7 +182,7 @@ namespace juml {
                     return data;
                 }
 
-                const kernel_t* get_col(int col, std::vector<unsigned int> idxs) {
+                const kernel_t* get_col(int col, std::vector<unsigned int> idxs) override {
                     kernel_t *data;
                     if (get_data(col, data)) {
                         //Column already partially cached
@@ -218,30 +218,30 @@ namespace juml {
 #undef ENTRYMISS
         //! KernelCache<Kernel<KernelType::PRECOMPUTED, kernel_t>>
         //! TODO: Describe me
-        template<typename kernel_t> class KernelCache<Kernel<KernelType::PRECOMPUTED, kernel_t>> {
-            const Kernel<KernelType::PRECOMPUTED, kernel_t> kernel;
+        template<> class KernelCache<Kernel<KernelType::PRECOMPUTED>> : public QMatrix {
+            const Kernel<KernelType::PRECOMPUTED> kernel;
             public:
-                KernelCache(const Kernel<KernelType::PRECOMPUTED, kernel_t>& kernel_) : kernel(kernel_) {}
+                KernelCache(const Kernel<KernelType::PRECOMPUTED>& kernel_) : kernel(kernel_) {}
 
-                inline bool is_cached(int i) {
+                inline bool is_cached(int i) override {
                     return true;
                 }
 
-                inline kernel_t evaluate_kernel(int i, int j) {
+                inline kernel_t evaluate_kernel(int i, int j) override {
                     //Swap indices, so when keeping i and iterating over j the memory is accessed continuously.
                     //Because arma stores the matrix columnwise
-                    return kernel.precomputedKernel(j, i);
+                    return kernel.precomputed_kernel(j, i);
                 }
 
-                inline const kernel_t* get_col(int col) {
+                inline const kernel_t* get_col(int col) override {
                     return kernel.precomputed_kernel.colptr(col);
                 }
 
-                inline const kernel_t* get_col(int col, std::vector<unsigned int> idxs) {
+                inline const kernel_t* get_col(int col, std::vector<unsigned int> idxs) override {
                     return kernel.precomputed_kernel.colptr(col);
                 }
 
-        }; // KernelCache<Kernel<KernelType::PRECOMPUTED, kernel_t>>
+        }; // KernelCache<Kernel<KernelType::PRECOMPUTED>
     }
 }
 
