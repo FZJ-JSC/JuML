@@ -82,6 +82,8 @@ namespace juml {
                     
                     arma::Col<double> support_coefs;
 
+                    double rho, obj_value;
+
                     virtual ~BinarySVC();
 
                 }; // BinarySVC

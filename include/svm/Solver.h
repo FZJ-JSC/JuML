@@ -37,12 +37,15 @@ namespace juml {
             //! \param[in] Q The Kernel Matrix. Might be cached.
             //! \param[in] p
             //! \param[in] y Specifies if the i'th sample is a positive or negative sample
-            //! \param[out] alpha the resulting alpha values will be stored there
-            //! \param[in] weight_positive weight for positive samples
-            //! \param[in] weight_negative weight for negative samples
+            //! \param[in] Cpositive C for positive samples
+            //! \param[in] Cnegative C for negative samples
             //! \param[in] eps stopping tolerance
+            //! \param[out] alpha the resulting alpha values will be stored there
+            //! \param[out] rho $\rho$ will be stored there
+            //! \param[out] obj_value the objective value will be stored here
             virtual void Solve(int l, QMatrix& Q, const arma::Col<double>& p, const std::vector<BinaryLabel>& y,
-                    arma::Col<double>& alpha, double weight_positive, double weight_negative, double eps) const = 0;
+                     double Cpositive, double Cnegative, double eps,
+                     arma::Col<double>& alpha, double *rho, double *obj_value) const = 0;
 
             virtual ~Solver() {
             }
@@ -53,8 +56,11 @@ namespace juml {
         //! See LIBSVM-COPYRIGHT.txt
         class SMOSolver : Solver {
             public:
-            virtual void Solve(int l, QMatrix& Q, const arma::Col<double>& p, const std::vector<BinaryLabel>& y,
-                    arma::Col<double>& alpha, double weight_positive, double weight_negative, double eps) const override;
+                virtual void Solve(int l, QMatrix& Q, const arma::Col<double>& p, const std::vector<BinaryLabel>& y,
+                     double Cpositive, double Cnegative, double eps,
+                     arma::Col<double>& alpha, double *rho, double *obj_value) const override;
+
+
         }; // SMOSolver
     } // svm
 }  // juml

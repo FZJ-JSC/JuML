@@ -144,10 +144,8 @@ namespace juml {
 
         //! SMO Solver inspired by LibSVM's Solver::Solve
         void SMOSolver::Solve(int l, QMatrix& Q, const arma::Col<double>& p, const std::vector<BinaryLabel>& y,
-                    arma::Col<double>& alpha, double weight_positive, double weight_negative, double eps) const {
-            //TODO weight_postive != Cp = weight_positive * C
-            double Cpositive = weight_positive;
-            double Cnegative = weight_negative;
+                     double Cpositive, double Cnegative, double eps,
+                     arma::Col<double>& alpha, double *rho, double *obj_value) const {
             arma::Col<kernel_t> QD(l);
             //Calculate Diagonal of kernel matrix
             for (int i = 0; i < l; i++) {
@@ -326,7 +324,7 @@ namespace juml {
                 //TODO Warning
             }
 
-            //TODO calculate obj value and rho 
+            //TODO calculate obj value and rho
 
             delete[] alpha_status;
         }
