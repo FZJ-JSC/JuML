@@ -26,6 +26,35 @@ namespace juml {
     namespace svm {
 
         enum class KernelType {LINEAR, POLY, RBF, PRECOMPUTED};
+        
+        template <KernelType kernel_type>
+        kernel_t evaluate_kernel(const arma::subview_col<kernel_t>& a, const arma::subview_col<kernel_t>& b, double degree, double gamma, double coef0) {
+            throw std::logic_error("Invalid Kerneltype");
+        }
+
+        template <>
+        inline kernel_t evaluate_kernel <KernelType::LINEAR>(const arma::subview_col<kernel_t>& a, const arma::subview_col<kernel_t>& b, double degree, double gamma, double coef0) {
+            return arma::dot(a, b);
+        }
+
+        template <>
+        inline kernel_t evaluate_kernel <KernelType::POLY>(const arma::subview_col<kernel_t>& a, const arma::subview_col<kernel_t>& b, double degree, double gamma, double coef0) {
+            return  pow(gamma * arma::dot(a, b) + coef0, degree);
+        }
+
+         template <>
+         inline kernel_t evaluate_kernel <KernelType::RBF>(const arma::subview_col<kernel_t>& a, const arma::subview_col<kernel_t>& b, double degree, double gamma, double coef0) {
+            return exp(
+                        - gamma * (
+                            arma::dot(a,a) + arma::dot(b,b) - 2 * arma::dot(a, b)
+                            )
+                        );
+
+        }
+
+
+
+
 
         //! Kernel
         //! TODO: Describe me
@@ -47,7 +76,7 @@ namespace juml {
         class Kernel <KernelType::LINEAR> {
             const arma::Mat<kernel_t>& x;
         public:
-            Kernel(arma::Mat<kernel_t>& x_) : x(x_) {
+            Kernel(const arma::Mat<kernel_t>& x_) : x(x_) {
             }
 
             inline kernel_t evaluate_kernel(int i, int j) const {
@@ -60,17 +89,17 @@ namespace juml {
         //! TODO: Describe me
         template <>
         class Kernel <KernelType::POLY> {
-            const arma::Mat<kernel_t>& x;
-            const int degree;
-            const double gamma;
-            const double coef0;
+            const arma::Mat<kernel_t>& x_;
+            const int degree_;
+            const double gamma_;
+            const double coef0_;
         public:
-            Kernel(arma::Mat<kernel_t>& x_, int degree_, double gamma_, double coef0_)
-                : x(x_), degree(degree_), gamma(gamma_), coef0(coef0_) {
+            Kernel(const arma::Mat<kernel_t>& x, int degree, double gamma, double coef0)
+                : x_(x), degree_(degree), gamma_(gamma), coef0_(coef0) {
             }
 
             inline kernel_t evaluate_kernel(int i, int j) const {
-                return pow(gamma * arma::dot(x.col(i), x.col(j)) + coef0, degree);
+                return pow(gamma_ * arma::dot(x_.col(i), x_.col(j)) + coef0_, degree_);
             }
         }; // Kernel<KernelType::POLY>
 
@@ -83,7 +112,7 @@ namespace juml {
             const double gamma;
             arma::Col<kernel_t> x_square;
         public:
-            Kernel(arma::Mat<kernel_t>& x_, double gamma_)
+            Kernel(const arma::Mat<kernel_t>& x_, double gamma_)
                 : x(x_), gamma(gamma_), x_square(x_.n_rows) {
                 for (int i = 0; i < x.n_rows; i++) {
                     x_square[i] = arma::dot(x.col(i), x.col(i));
@@ -106,7 +135,7 @@ namespace juml {
         class Kernel <KernelType::PRECOMPUTED> {
         public:
             const arma::Mat<kernel_t>& precomputed_kernel;
-            Kernel(arma::Mat<kernel_t>& kernel)
+            Kernel(const arma::Mat<kernel_t>& kernel)
                 : precomputed_kernel(kernel) {
             }
 

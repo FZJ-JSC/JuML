@@ -20,16 +20,11 @@
 #include <mpi.h>
 //TODO We don't want to include Kernel.h here. It probably should not be part of the public API
 #include "Kernel.h"
+#include "Solver.h"
 #include "classification/BaseClassifier.h"
 
 namespace juml {
 	namespace svm {
-		//TODO move to appropiate header file
-		enum class BinaryLabel {POSITIVE = 1, NEGATIVE = -1};
-		inline int operator*(BinaryLabel a, BinaryLabel b) {
-			return (int)a * (int)b;
-		}
-
 		template <class InnerKernel>
 		class SVCKernel {
 			InnerKernel &inner;
@@ -52,6 +47,9 @@ namespace juml {
                     const size_t cache_size_;
                     const KernelType kernelType_;
                     const double weight_positive_, weight_negative_;
+
+                    BinaryLabel predict_single(const arma::subview_col<float>& col) const;
+
                 public:
                     BinarySVC(
                             double C = 1.0, KernelType kernel = KernelType::RBF,
@@ -59,8 +57,9 @@ namespace juml {
                             size_t cache_size = 200*(2<<10),
                             double weight_positive = NAN, double weight_negative = NAN,
                             MPI_Comm comm = MPI_COMM_WORLD)
-                   : C_(C), degree_(degree), gamma_(gamma), coef0_(coef0),
+                        : C_(C), degree_(degree), gamma_(gamma), coef0_(coef0),
                      cache_size_(cache_size),
+                     //TODO Specify weights as mutliplies of C?
                      weight_positive_(weight_positive == NAN ? C : weight_positive),
                      weight_negative_(weight_negative == NAN ? C : weight_negative),
                      kernelType_(kernel), BaseClassifier(comm) {
@@ -74,7 +73,18 @@ namespace juml {
                         return 0;
                     }
 
-                };
+                    //! Number of Support Vectors
+                    int n_support = 0;
+                    //! Indices of support Vectors
+                    arma::uvec support;
+                    //! Support Vectors
+                    arma::Mat<kernel_t> support_vectors;
+                    
+                    arma::Col<double> support_coefs;
+
+                    virtual ~BinarySVC();
+
+                }; // BinarySVC
 	} // svm
 } // juml
 
