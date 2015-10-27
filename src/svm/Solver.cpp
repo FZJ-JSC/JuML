@@ -49,6 +49,41 @@ namespace juml {
             return status == ALPHA_STATUS::FREE;
         }
 
+
+        double calculate_rho(std::vector<BinaryLabel> y, const arma::Col<double> &G, const ALPHA_STATUS* alpha_status) {
+            double r;
+            int nr_free = 0;
+            double ub = INF, lb = -INF, sum_free = 0;
+            int l = G.n_rows;
+
+            for (int i = 0; i < l; i++) {
+                double yG = ((int)y[i]) * G(i);
+                if (is_upper_bound(alpha_status[i])) {
+                    if (y[i] == BinaryLabel::POSITIVE) {
+                        ub = std::min(ub, yG);
+                    } else {
+                        lb = std::max(lb, yG);
+                    }
+                } else if (is_lower_bound(alpha_status[i])) {
+                    if (y[i] == BinaryLabel::POSITIVE) {
+                        ub = std::min(ub, yG);
+                    } else {
+                        lb = std::max(lb, yG);
+                    }
+                } else {
+                    ++nr_free;
+                    sum_free += yG;
+                }
+            }
+            
+            if (nr_free > 0) {
+                r = sum_free / nr_free;
+            } else {
+                r = (ub + lb) / 2;
+            }
+            return r;
+        }
+
         // Return true if already optimal, return 0 otherwise
         bool select_working_set(QMatrix &Q, const std::vector<BinaryLabel> y, const arma::Col<double> &G,
                 const arma::Col<kernel_t> &QD, const ALPHA_STATUS* alpha_status, double eps, int* out_i, int* out_j) {
@@ -324,7 +359,14 @@ namespace juml {
                 //TODO Warning
             }
 
-            //TODO calculate obj value and rho
+            *rho = calculate_rho(y, G, alpha_status);
+
+            //calculate obj value
+            double v = 0;
+            for (int i = 0; i < l; i++) {
+                v += alpha(i) * (G(i) + p(i));
+            }
+            *obj_value =  v / 2;
 
             delete[] alpha_status;
         }

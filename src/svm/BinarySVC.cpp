@@ -113,9 +113,10 @@ namespace juml {
                 kvalue(i) = v;
             }
 #undef EVALKERNELCASE
+ 
+            double sum = arma::dot(this->support_coefs, kvalue) - this->rho;
 
-            //TODO implement prediction based on kvalue
-            return BinaryLabel::POSITIVE;
+            return sum > 0 ? BinaryLabel::POSITIVE : BinaryLabel :: NEGATIVE;
         }
 
         BinarySVC::~BinarySVC() {
