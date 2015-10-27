@@ -113,8 +113,8 @@ namespace juml {
             arma::Col<kernel_t> x_square;
         public:
             Kernel(const arma::Mat<kernel_t>& x_, double gamma_)
-                : x(x_), gamma(gamma_), x_square(x_.n_rows) {
-                for (int i = 0; i < x.n_rows; i++) {
+                : x(x_), gamma(gamma_), x_square(x_.n_cols) {
+                for (int i = 0; i < x.n_cols; i++) {
                     x_square[i] = arma::dot(x.col(i), x.col(i));
                 }
             }

@@ -52,19 +52,21 @@ namespace juml {
             }
 
             QMatrix *Q;
+            void *kernel_;
 
             if (this->kernelType_ == KernelType::LINEAR) {
-                Kernel<KernelType::LINEAR> kernel(Xdata);
-                Q = new KernelCache<Kernel<KernelType::LINEAR>>(kernel, this->cache_size_, l);
+                auto kernel = new Kernel<KernelType::LINEAR>(Xdata);
+                kernel_ = kernel;
+                Q = new KernelCache<Kernel<KernelType::LINEAR>>(*kernel, this->cache_size_, l);
             } else if (this->kernelType_ == KernelType::POLY) {
-                Kernel<KernelType::POLY> kernel(Xdata, this->degree_, this->gamma_, this->coef0_);
-                Q = new KernelCache<Kernel<KernelType::POLY>>(kernel, this->cache_size_, l);
+                auto kernel = new Kernel<KernelType::POLY>(Xdata, this->degree_, this->gamma_, this->coef0_);
+                kernel_ = kernel;
+                Q = new KernelCache<Kernel<KernelType::POLY>>(*kernel, this->cache_size_, l);
             } else if (this->kernelType_ == KernelType::RBF) {
-                Kernel<KernelType::RBF> kernel(Xdata, this->gamma_);
-                Q = new KernelCache<Kernel<KernelType::RBF>>(kernel, this->cache_size_, l);
+                auto kernel = new Kernel<KernelType::RBF>(Xdata, this->gamma_);
+                kernel_ = kernel;
+                Q = new KernelCache<Kernel<KernelType::RBF>>(*kernel, this->cache_size_, l);
             }
-            //XXX: Is 'kernel' still availble for Q or is it deconstructed?
-            //Probably need to create it with 'new' and delete it later.
 
             //TODO: epsilon parameter needs to be set using constructor!
             SMOSolver s;
@@ -85,6 +87,8 @@ namespace juml {
             this->support_coefs = alpha.elem(this->support);
 
             delete Q;
+            //XXX: Deleting a void pointer is bad!
+            delete kernel_;
         }
 
         Dataset<int> BinarySVC::predict(const Dataset<float>& X) const {
