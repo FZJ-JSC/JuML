@@ -6,6 +6,9 @@
     #include "preprocessing/ClassNormalizer.h"
     #include "classification/BaseClassifier.h"
     #include "classification/GaussianNaiveBayes.h"
+    #include "svm/QMatrix.h"
+    #include "svm/Kernel.h"
+    #include "svm/BinarySVC.h"
 %}
 
 /* Wrap std::string */
@@ -29,6 +32,11 @@
 /* Wrap classification */
 %include "classification/BaseClassifier.h"
 %include "classification/GaussianNaiveBayes.h"
+
+/* Wrap SVM */
+%include "svm/QMatrix.h"
+%include "svm/Kernel.h"
+%include "svm/BinarySVC.h"
 
 /* Remove unwanted *_swigregister globals */
 %pythoncode %{
