@@ -29,7 +29,6 @@ namespace juml {
 		class SVCKernel {
 			InnerKernel &inner;
 			std::vector<BinaryLabel> &labels;
-			typedef decltype(inner.evaluate_kernel(0,0)) kernel_t;
 			public:
 			SVCKernel(InnerKernel& inner_, std::vector<BinaryLabel>& labels_)
 			       	: inner(inner_), labels(labels_) {
