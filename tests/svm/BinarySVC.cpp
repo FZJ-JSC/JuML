@@ -5,11 +5,17 @@
 #include <armadillo>
 #include "svm/BinarySVC.h"
 #include "data/Dataset.h"
+#include "svm/Kernel.h"
 
 TEST (BinarySVCTest, 4PointExample) {
 	using juml::Dataset;
 	using juml::svm::BinarySVC;
 	//From http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
+	//         |
+	//         | 2 2
+	// --------+--------
+	//     1 1?|
+	//         |
 	arma::Mat<float> X = { {-1, -1}, {-2, -1}, {1, 1}, {2, 1} };
 	//Transpose, because we need the samples in columns and the features in rows...
 	X = X.t();
@@ -25,6 +31,43 @@ TEST (BinarySVCTest, 4PointExample) {
 	Dataset<int> result = clf.predict(unknown_dataset);
 
 	ASSERT_EQ(1, result.data()(0,0));
+}
+
+TEST (BinarySVCTest, Linear4PointExample) {
+	using juml::Dataset;
+	using juml::svm::BinarySVC;
+	using juml::svm::KernelType;
+	//Example with 4 linear separable points with equal distance
+	//        |
+	//      1 | 2
+	// -------+--------
+	//      1 | 2
+	//        |
+	arma::Mat<float> X = { {-1, -1}, {-1, 1},  {1, -1}, {1, 1} };
+	//Transpose, because we need the samples in columns and the features in rows...
+	X = X.t();
+	arma::Col<int> Y = {1, 1, 2, 2};
+	Dataset<float> X_dataset(X);
+	Dataset<int> Y_dataset(Y);
+	BinarySVC clf(1.0, KernelType::LINEAR);
+	clf.fit(X_dataset, Y_dataset);
+
+
+	arma::Mat<float> unknown = {
+		{-2, -1},
+		{-0.5, 0},
+		{1, 0},
+		{0.6, 2}};
+	unknown = unknown.t();
+	arma::Col<int> expected = {
+		1, 1, 2, 2
+	};
+	Dataset<float> unknown_dataset(unknown);
+	Dataset<int> result = clf.predict(unknown_dataset);
+
+	for (int i = 0; i < 4; i++)
+		ASSERT_EQ(expected(i), result.data()(0,i));
+
 }
 
 int main(int argc, char** argv) {
