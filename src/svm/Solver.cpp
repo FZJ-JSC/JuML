@@ -59,7 +59,7 @@ namespace juml {
             for (int i = 0; i < l; i++) {
                 double yG = ((int)y[i]) * G(i);
                 if (is_upper_bound(alpha_status[i])) {
-                    if (y[i] == BinaryLabel::POSITIVE) {
+                    if (y[i] == BinaryLabel::NEGATIVE) {
                         ub = std::min(ub, yG);
                     } else {
                         lb = std::max(lb, yG);
