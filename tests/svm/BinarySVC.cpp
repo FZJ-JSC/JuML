@@ -70,6 +70,20 @@ TEST (BinarySVCTest, Linear4PointExample) {
 
 }
 
+TEST (BinaryLabelTest, CastToInt) {
+	using juml::svm::BinaryLabel;
+	EXPECT_EQ(-1, (int)BinaryLabel::NEGATIVE);
+	EXPECT_EQ(1, (int)BinaryLabel::POSITIVE);
+}
+
+TEST(BinaryLabelTest, Multiply) {
+	using juml::svm::BinaryLabel;
+	EXPECT_EQ(1, BinaryLabel::POSITIVE * BinaryLabel::POSITIVE);
+	EXPECT_EQ(1, BinaryLabel::NEGATIVE * BinaryLabel::NEGATIVE);
+	EXPECT_EQ(-1, BinaryLabel::POSITIVE * BinaryLabel::NEGATIVE);
+	EXPECT_EQ(-1, BinaryLabel::NEGATIVE * BinaryLabel::POSITIVE);
+}
+
 int main(int argc, char** argv) {
     int result = -1;
     
