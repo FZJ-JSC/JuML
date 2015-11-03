@@ -70,7 +70,7 @@ namespace juml {
 
             //TODO: epsilon parameter needs to be set using constructor!
             SMOSolver s;
-            s.Solve(l, *Q, minus_ones, y_, this->weight_positive_, this->weight_negative_, 1e-3,
+            s.Solve(l, *Q, minus_ones, y_, this->C_ * this->weight_positive_, this->C_ * this->weight_negative_, 1e-3,
                     alpha, &this->rho, &this->obj_value);
 
             double sum_alpha = arma::sum(alpha);

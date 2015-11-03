@@ -54,13 +54,12 @@ namespace juml {
                             double C = 1.0, KernelType kernel = KernelType::RBF,
                             double degree = 3, double gamma = 0.0, double coef0 =0.0,
                             size_t cache_size = 200*(2<<10),
-                            double weight_positive = NAN, double weight_negative = NAN,
+                            double weight_positive = 1.0, double weight_negative = 1.0,
                             MPI_Comm comm = MPI_COMM_WORLD)
                         : C_(C), degree_(degree), gamma_(gamma), coef0_(coef0),
                      cache_size_(cache_size),
-                     //TODO Specify weights as mutliplies of C?
-                     weight_positive_(weight_positive == NAN ? C : weight_positive),
-                     weight_negative_(weight_negative == NAN ? C : weight_negative),
+                     weight_positive_(weight_positive),
+                     weight_negative_(weight_negative),
                      kernelType_(kernel), BaseClassifier(comm) {
 
                     }
