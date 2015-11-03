@@ -48,7 +48,7 @@ namespace juml {
             std::vector<BinaryLabel> y_(l);
             for (int i = 0; i < l; i++) {
                 minus_ones(i) = -1;
-                y_.at(i) = this->class_normalizer_.transform(yVector(i)) == 0 ? BinaryLabel::POSITIVE : BinaryLabel::NEGATIVE;
+                y_.at(i) = this->class_normalizer_.transform(yVector(i)) == 0 ? BinaryLabel::NEGATIVE : BinaryLabel::POSITIVE;
             }
 
             QMatrix *Q;
@@ -96,7 +96,7 @@ namespace juml {
             arma::Mat<int> results = arma::Mat<int>(1, data.n_cols);
             for (int i = 0; i < data.n_cols; i++) {
                 BinaryLabel label = this->predict_single(data.col(i));
-                results(i) = this->class_normalizer_.invert(label == BinaryLabel::POSITIVE ? 0 : 1);
+                results(i) = this->class_normalizer_.invert(label == BinaryLabel::NEGATIVE ? 0 : 1);
             }
             Dataset<int> preds(results);
             return preds;
@@ -117,10 +117,9 @@ namespace juml {
                 kvalue(i) = v;
             }
 #undef EVALKERNELCASE
- 
             double sum = arma::dot(this->support_coefs, kvalue) - this->rho;
 
-            return sum > 0 ? BinaryLabel::POSITIVE : BinaryLabel :: NEGATIVE;
+            return sum > 0 ? BinaryLabel::POSITIVE : BinaryLabel::NEGATIVE;
         }
 
         BinarySVC::~BinarySVC() {
