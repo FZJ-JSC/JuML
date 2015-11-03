@@ -24,6 +24,10 @@ TEST (BinarySVCTest, 4PointExample) {
 	Dataset<int> Y_dataset(Y);
 	BinarySVC clf;
 	clf.fit(X_dataset, Y_dataset);
+	std::cout << "n_support: "<< clf.n_support << " rho: " << clf.rho << " obj_value: " << clf.obj_value << std::endl;
+	std::cout << "Support Vectors:" << std::endl << clf.support_vectors << std::endl;
+	std::cout << "support:" << std::endl << clf.support << std::endl;
+	std::cout << "support_coefs:" << std::endl << clf.support_coefs << std::endl;
 
 
 	arma::Col<float> unknown = {-0.8, -1};
@@ -51,6 +55,11 @@ TEST (BinarySVCTest, Linear4PointExample) {
 	Dataset<int> Y_dataset(Y);
 	BinarySVC clf(1.0, KernelType::LINEAR);
 	clf.fit(X_dataset, Y_dataset);
+
+	std::cout << "n_support: "<< clf.n_support << " rho: " << clf.rho << " obj_value: " << clf.obj_value << std::endl;
+	std::cout << "Support Vectors:" << std::endl << clf.support_vectors << std::endl;
+	std::cout << "support:" << std::endl << clf.support << std::endl;
+	std::cout << "support_coefs:" << std::endl << clf.support_coefs << std::endl;
 
 
 	arma::Mat<float> unknown = {
