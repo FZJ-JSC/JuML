@@ -28,9 +28,9 @@ namespace juml {
 		template <class InnerKernel>
 		class SVCKernel {
 			InnerKernel &inner;
-			std::vector<BinaryLabel> &labels;
+			const std::vector<BinaryLabel> &labels;
 			public:
-			SVCKernel(InnerKernel& inner_, std::vector<BinaryLabel>& labels_)
+			SVCKernel(InnerKernel& inner_, const std::vector<BinaryLabel>& labels_)
 			       	: inner(inner_), labels(labels_) {
 			}
 

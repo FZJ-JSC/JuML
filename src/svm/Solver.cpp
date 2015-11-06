@@ -50,7 +50,7 @@ namespace juml {
         }
 
 
-        double calculate_rho(std::vector<BinaryLabel> y, const arma::Col<double> &G, const ALPHA_STATUS* alpha_status) {
+        double calculate_rho(const std::vector<BinaryLabel>& y, const arma::Col<double> &G, const ALPHA_STATUS* alpha_status) {
             double r;
             int nr_free = 0;
             double ub = INF, lb = -INF, sum_free = 0;
