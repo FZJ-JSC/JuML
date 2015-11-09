@@ -8,7 +8,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
 SET(CMAKE_CXX_COMPILER "mpicxx")
 
 # COMPILER FLAGS
-SET(CMAKE_CXX_FLAGS "-std=c++0x -lhdf5 -lz")
+SET(CMAKE_CXX_FLAGS "-std=c++0x -lhdf5 -lz -larmadillo")
 
 FIND_PACKAGE(Threads)
 FIND_PACKAGE(OpenMP)

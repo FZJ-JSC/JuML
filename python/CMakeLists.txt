@@ -87,5 +87,5 @@ IF(SWIG_FOUND)
     )
 
     SWIG_ADD_MODULE(JuML python JuML.i)
-    SWIG_LINK_LIBRARIES(JuML ${PYTHON_LIBRARIES} preprocessing classification)
+    SWIG_LINK_LIBRARIES(JuML ${PYTHON_LIBRARIES} preprocessing classification svm)
 ENDIF(SWIG_FOUND)
