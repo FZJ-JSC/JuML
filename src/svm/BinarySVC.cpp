@@ -52,20 +52,26 @@ namespace juml {
             }
 
             QMatrix *Q;
-            void *kernel_;
+            void *innerKernel, *svcKernel;
 
             if (this->kernelType_ == KernelType::LINEAR) {
-                auto kernel = new Kernel<KernelType::LINEAR>(Xdata);
-                kernel_ = kernel;
-                Q = new KernelCache<Kernel<KernelType::LINEAR>>(*kernel, this->cache_size_, l);
+                auto innerKernel_ = new Kernel<KernelType::LINEAR>(Xdata);
+                auto svcKernel_ = new SVCKernel<decltype(*innerKernel_)>(*innerKernel_, y_);
+                innerKernel = innerKernel_;
+                svcKernel = svcKernel_;
+                Q = new KernelCache<decltype(*svcKernel_)>(*svcKernel_, this->cache_size_, l);
             } else if (this->kernelType_ == KernelType::POLY) {
-                auto kernel = new Kernel<KernelType::POLY>(Xdata, this->degree_, this->gamma_, this->coef0_);
-                kernel_ = kernel;
-                Q = new KernelCache<Kernel<KernelType::POLY>>(*kernel, this->cache_size_, l);
+                auto innerKernel_ = new Kernel<KernelType::POLY>(Xdata, this->degree_, this->gamma_, this->coef0_);
+                auto svcKernel_ = new SVCKernel<decltype(*innerKernel_)>(*innerKernel_, y_);
+                innerKernel = innerKernel_;
+                svcKernel = svcKernel_;
+                Q = new KernelCache<decltype(*svcKernel_)>(*svcKernel_, this->cache_size_, l);
             } else if (this->kernelType_ == KernelType::RBF) {
-                auto kernel = new Kernel<KernelType::RBF>(Xdata, this->gamma_);
-                kernel_ = kernel;
-                Q = new KernelCache<Kernel<KernelType::RBF>>(*kernel, this->cache_size_, l);
+                auto innerKernel_ = new Kernel<KernelType::RBF>(Xdata, this->gamma_);
+                auto svcKernel_ = new SVCKernel<Kernel<KernelType::RBF>>(*innerKernel_, y_);
+                innerKernel = innerKernel_;
+                svcKernel = svcKernel_;
+                Q = new KernelCache<decltype(*svcKernel_)>(*svcKernel_, this->cache_size_, l);
             }
 
             //TODO: epsilon parameter needs to be set using constructor!
@@ -87,8 +93,17 @@ namespace juml {
             this->support_coefs = alpha.elem(this->support);
 
             delete Q;
-            //XXX: Deleting a void pointer is bad!
-            delete kernel_;
+//Cast Kernel to appropiate Type before deleting.
+#define EVALKERNELCASE(kType) case kType:\
+            delete (Kernel<kType> *)innerKernel;\
+            delete (SVCKernel<Kernel<kType>> *)svcKernel;break
+            switch(this->kernelType_) {
+                EVALKERNELCASE(KernelType::LINEAR);
+                EVALKERNELCASE(KernelType::POLY);
+                EVALKERNELCASE(KernelType::RBF);
+                default: throw std::logic_error("Unsupported kernel type");
+            }
+#undef EVALKERNELCASE
         }
 
         Dataset<int> BinarySVC::predict(const Dataset<float>& X) const {
