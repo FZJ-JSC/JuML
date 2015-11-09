@@ -52,7 +52,7 @@ namespace juml {
                 public:
                     BinarySVC(
                             double C = 1.0, KernelType kernel = KernelType::RBF,
-                            double degree = 3, double gamma = 0.0, double coef0 =0.0,
+                            double degree = 3, double gamma = NAN, double coef0 =0.0,
                             size_t cache_size = 200*(2<<10),
                             double weight_positive = 1.0, double weight_negative = 1.0,
                             MPI_Comm comm = MPI_COMM_WORLD)
