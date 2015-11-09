@@ -39,6 +39,55 @@ TEST (BinarySVCTest, 4PointExample) {
 	ASSERT_EQ(1, result.data()(0,0));
 }
 
+TEST(BinarySVCTest, 4PointExamplePermutations) {
+	using juml::Dataset;
+	using juml::svm::BinarySVC;
+	arma::Mat<float> X = { {-1, -1}, {-2, -1}, {1, 1}, {2, 1} };
+	X = X.t();
+	arma::Col<int> Y = {1, 1, 2, 2};
+	arma::uvec permutation = {3, 2, 1, 0};
+
+	X = X.cols(permutation);
+	Y = Y.rows(permutation);
+
+	Dataset<float> X_dataset(X);
+	Dataset<int> Y_dataset(Y);
+	BinarySVC clf;
+	clf.fit(X_dataset, Y_dataset);
+
+	arma::Col<float> unknown = {-0.8, -1};
+	Dataset<float> unknown_dataset(unknown);
+	Dataset<int> result = clf.predict(unknown_dataset);
+
+	ASSERT_EQ(1, result.data()(0, 0));
+}
+
+
+TEST(BinarySVCTest, 4PointExampleSwappedLabels) {
+	using juml::Dataset;
+	using juml::svm::BinarySVC;
+	arma::Mat<float> X = { {-1, -1}, {-2, -1}, {1, 1}, {2, 1} };
+	X = X.t();
+	arma::Col<int> Y = {2, 2, 1, 1};
+
+	Dataset<float> X_dataset(X);
+	Dataset<int> Y_dataset(Y);
+	BinarySVC clf;
+	clf.fit(X_dataset, Y_dataset);
+
+	std::cout << "n_support: "<< clf.n_support << " rho: " << clf.rho << " obj_value: " << clf.obj_value << std::endl;
+	std::cout << "Support Vectors:" << std::endl << clf.support_vectors << std::endl;
+	std::cout << "support:" << std::endl << clf.support << std::endl;
+	std::cout << "support_coefs:" << std::endl << clf.support_coefs << std::endl;
+
+
+	arma::Col<float> unknown = {-0.8, -1};
+	Dataset<float> unknown_dataset(unknown);
+	Dataset<int> result = clf.predict(unknown_dataset);
+
+	ASSERT_EQ(2, result.data()(0, 0));
+}
+
 TEST (BinarySVCTest, Linear4PointExample) {
 	using juml::Dataset;
 	using juml::svm::BinarySVC;
