@@ -6,6 +6,8 @@
 #include "svm/BinarySVC.h"
 #include "data/Dataset.h"
 #include "svm/Kernel.h"
+#include "svm/KernelCache.h"
+#include "svm/QMatrix.h"
 
 TEST (BinarySVCTest, 4PointExample) {
 	using juml::Dataset;
@@ -85,12 +87,121 @@ TEST (BinaryLabelTest, CastToInt) {
 	EXPECT_EQ(1, (int)BinaryLabel::POSITIVE);
 }
 
+TEST(BinaryLabelTest, BooleanOperators) {
+	using juml::svm::BinaryLabel;
+	EXPECT_EQ(true, BinaryLabel::POSITIVE == BinaryLabel::POSITIVE);
+	EXPECT_EQ(false, BinaryLabel::POSITIVE != BinaryLabel::POSITIVE);
+	EXPECT_EQ(true, BinaryLabel::NEGATIVE == BinaryLabel::NEGATIVE);
+	EXPECT_EQ(false, BinaryLabel::NEGATIVE != BinaryLabel::NEGATIVE);
+}
+
 TEST(BinaryLabelTest, Multiply) {
 	using juml::svm::BinaryLabel;
 	EXPECT_EQ(1, BinaryLabel::POSITIVE * BinaryLabel::POSITIVE);
 	EXPECT_EQ(1, BinaryLabel::NEGATIVE * BinaryLabel::NEGATIVE);
 	EXPECT_EQ(-1, BinaryLabel::POSITIVE * BinaryLabel::NEGATIVE);
 	EXPECT_EQ(-1, BinaryLabel::NEGATIVE * BinaryLabel::POSITIVE);
+	EXPECT_EQ(-0.5, BinaryLabel::NEGATIVE * BinaryLabel::POSITIVE * 0.5);
+}
+
+
+TEST(BinarySVCKernelTest, AllPositive) {
+	using juml::svm::SVCKernel;
+	using juml::svm::Kernel;
+	using juml::svm::BinaryLabel;
+	using juml::svm::KernelType;
+	arma::Mat<float> x(3,3);
+   	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			x(i,j) = i + 1;
+		}
+	}
+	std::vector<BinaryLabel> y = {BinaryLabel::POSITIVE, BinaryLabel::POSITIVE, BinaryLabel::POSITIVE};
+
+	Kernel<KernelType::LINEAR> kernel(x);
+	SVCKernel<decltype(kernel)> svcKernel(kernel, y);
+	for(int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			EXPECT_EQ(kernel.evaluate_kernel(i, j), svcKernel.evaluate_kernel(i, j));
+		}
+	}
+}
+
+TEST(BinarySVCKernelTest, AllNegative) {
+	using juml::svm::SVCKernel;
+	using juml::svm::Kernel;
+	using juml::svm::BinaryLabel;
+	using juml::svm::KernelType;
+	arma::Mat<float> x(3,3);
+   	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			x(i,j) = i + 1;
+		}
+	}
+	std::vector<BinaryLabel> y = {BinaryLabel::NEGATIVE, BinaryLabel::NEGATIVE, BinaryLabel::NEGATIVE};
+
+	Kernel<KernelType::LINEAR> kernel(x);
+	SVCKernel<decltype(kernel)> svcKernel(kernel, y);
+	for(int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			EXPECT_EQ(kernel.evaluate_kernel(i, j), svcKernel.evaluate_kernel(i, j));
+		}
+	}
+}
+
+
+TEST(BinarySVCKernelTest, MixedSamples) {
+	using juml::svm::SVCKernel;
+	using juml::svm::Kernel;
+	using juml::svm::BinaryLabel;
+	using juml::svm::KernelType;
+	arma::Mat<float> x(3,3);
+   	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			x(i,j) = 3*j + i;
+		}
+	}
+	std::vector<BinaryLabel> y = {BinaryLabel::POSITIVE, BinaryLabel::NEGATIVE, BinaryLabel::NEGATIVE};
+
+	Kernel<KernelType::RBF> kernel(x, 3.0);
+	SVCKernel<decltype(kernel)> svcKernel(kernel, y);
+	for(int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			if ((i == 0 || j == 0) && i != j) {
+				EXPECT_EQ(-kernel.evaluate_kernel(i, j), svcKernel.evaluate_kernel(i, j));
+			} else {
+				EXPECT_EQ(kernel.evaluate_kernel(i, j), svcKernel.evaluate_kernel(i, j));
+			}
+		}
+	}
+}
+
+TEST(BinarySVCKernelTest, CachedKernelMixedSamples) {
+	using juml::svm::SVCKernel;
+	using juml::svm::Kernel;
+	using juml::svm::BinaryLabel;
+	using juml::svm::KernelType;
+	using juml::svm::KernelCache;
+	using juml::svm::QMatrix;
+	arma::Mat<float> x(3,3);
+   	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			x(i,j) = 3*j + i;
+		}
+	}
+	std::vector<BinaryLabel> y = {BinaryLabel::POSITIVE, BinaryLabel::NEGATIVE, BinaryLabel::NEGATIVE};
+
+	Kernel<KernelType::RBF> kernel(x, 3.0);
+	SVCKernel<decltype(kernel)> svcKernel(kernel, y);
+	QMatrix *q = new KernelCache<decltype(svcKernel)>(svcKernel, 9 * sizeof(float), 3);
+	for(int i = 0; i < 3; i++) {
+		const float *Q_i = q->get_col(i);
+		for (int j = 0; j < 3; j++) {
+			EXPECT_EQ(svcKernel.evaluate_kernel(i, j), Q_i[j]);
+		}
+	}
+	delete q;
+
 }
 
 int main(int argc, char** argv) {
