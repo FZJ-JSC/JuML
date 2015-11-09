@@ -119,8 +119,9 @@ namespace juml {
 
         BinaryLabel BinarySVC::predict_single(const arma::subview_col<float>& x) const {
             arma::Col<double> kvalue(this->n_support);
+            const double gamma = isnan(this->gamma_) ? 1.0/x.n_rows : this->gamma_;
 #define EVALKERNELCASE(kType) case kType:\
-            v = evaluate_kernel<kType>(this->support_vectors.col(i), x, this->degree_, this->gamma_, this->coef0_);break
+            v = evaluate_kernel<kType>(this->support_vectors.col(i), x, this->degree_, gamma, this->coef0_);break
             for (int i = 0; i < this->n_support; i++) {
                 double v;
                 switch(this->kernelType_) {
