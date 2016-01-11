@@ -17,7 +17,6 @@
 #include <sstream>
 
 #include "data/Dataset.h"
-#include "util/Settings.h"
 
 namespace juml {
     //! Dataset constructor
@@ -34,19 +33,19 @@ namespace juml {
     }
     
     af::dtype Dataset::h5_to_af(hid_t h5_type) {
-             if (H5Tequal(h5_type, H5T_NATIVE_CHAR))   return u8;
-        else if (H5Tequal(h5_type, H5T_NATIVE_UCHAR))  return u8;
-        else if (H5Tequal(h5_type, H5T_NATIVE_B8))     return b8;
-        else if (H5Tequal(h5_type, H5T_NATIVE_SHORT))  return s16;
-        else if (H5Tequal(h5_type, H5T_NATIVE_USHORT)) return u16;
-        else if (H5Tequal(h5_type, H5T_NATIVE_INT))    return s32;
-        else if (H5Tequal(h5_type, H5T_NATIVE_UINT))   return u32;
-        else if (H5Tequal(h5_type, H5T_NATIVE_LONG))   return s64;
+             if (H5Tequal(h5_type, H5T_NATIVE_CHAR))    return u8;
+        else if (H5Tequal(h5_type, H5T_NATIVE_UCHAR))   return u8;
+        else if (H5Tequal(h5_type, H5T_NATIVE_B8))      return b8;
+        else if (H5Tequal(h5_type, H5T_NATIVE_SHORT))   return s16;
+        else if (H5Tequal(h5_type, H5T_NATIVE_USHORT))  return u16;
+        else if (H5Tequal(h5_type, H5T_NATIVE_INT))     return s32;
+        else if (H5Tequal(h5_type, H5T_NATIVE_UINT))    return u32;
+        else if (H5Tequal(h5_type, H5T_NATIVE_LONG))    return s64;
         else if (H5Tequal(h5_type, H5T_NATIVE_LLONG))   return s64;
-        else if (H5Tequal(h5_type, H5T_NATIVE_ULONG))  return u64;
+        else if (H5Tequal(h5_type, H5T_NATIVE_ULONG))   return u64;
         else if (H5Tequal(h5_type, H5T_NATIVE_ULLONG))  return u64;
-        else if (H5Tequal(h5_type, H5T_NATIVE_FLOAT))  return f32;
-        else if (H5Tequal(h5_type, H5T_NATIVE_DOUBLE)) return f64;
+        else if (H5Tequal(h5_type, H5T_NATIVE_FLOAT))   return f32;
+        else if (H5Tequal(h5_type, H5T_NATIVE_DOUBLE))  return f64;
         else if (H5Tequal(h5_type, H5T_NATIVE_LDOUBLE)) return f64;
         throw std::domain_error("Unsupported HDF5 type");
     }
@@ -67,7 +66,7 @@ namespace juml {
             throw std::runtime_error(error.str().c_str());
         }
 
-        // read data set
+        // create dataset handle
         const hid_t data_id = H5Dopen(file_id, this->dataset_.c_str(), H5P_DEFAULT);
         if (data_id < 0) {
             std::stringstream error;
@@ -133,15 +132,13 @@ namespace juml {
             total_size *= dimensions[i];
         }
         
-        // read the data
-        hid_t data_type = H5Dget_type(data_id);
-        hid_t native_type = H5Tget_native_type(data_type, H5T_DIR_ASCEND);
+        // determine the dataset type
+        hid_t native_type = H5Tget_native_type(H5Dget_type(data_id), H5T_DIR_ASCEND);
         af::dtype array_type;
         try {
-            array_type = h5_to_af(data_type);
+            array_type = h5_to_af(native_type);
         } catch(const std::domain_error& e) {
             H5Tclose(native_type);
-            H5Tclose(data_type);
             H5Sclose(mem_space);
             H5Dclose(data_id);
             H5Fclose(file_id);
@@ -149,22 +146,22 @@ namespace juml {
             throw e;        
         }
         
-        // read actual data
+        // read the actual data        
         this->data_ = af::array(af::dim4(n_dims, reinterpret_cast<dim_t*>(chunk_dimensions)), array_type);
-        if (Settings::getInstance().get_backend() == AF_BACKEND_CPU) {
-            H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, this->data_.get());
+        if (af::getBackendId(af::constant(0, 1)) == AF_BACKEND_CPU) {
+            H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, this->data_.device<uint8_t>());
         } else {
             size_t size = this->data_.bytes();
-            char* buffer = new char[size];
+            uint8_t* buffer = new uint8_t[size];
             H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, buffer);
             af_write_array(this->data_.get(), buffer, size, afHost); 
             delete[] buffer;	
-        }        
+        }
+        //TODO: Transpose inplace. [ af::transposeInPlace(this->data_); ]
         this->data_ = this->data_.T();
 
         // release ressources
         H5Tclose(native_type);
-        H5Tclose(data_type);
         H5Sclose(mem_space);
         H5Dclose(data_id);
         H5Fclose(file_id);
