@@ -1,3 +1,4 @@
+ADD_SUBDIRECTORY(data)
 ADD_SUBDIRECTORY(preprocessing)
 ADD_SUBDIRECTORY(classification)
-
+ADD_SUBDIRECTORY(util)

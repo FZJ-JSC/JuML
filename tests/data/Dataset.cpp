@@ -1,4 +1,4 @@
-#include <armadillo>
+#include <arrayfire.h>
 #include <exception>
 #include <iostream>
 #include <gtest/gtest.h>
@@ -6,6 +6,7 @@
 #include <string>
 
 #include "data/Dataset.h"
+#include "util/Settings.h"
 
 const std::string FILE_PATH = "../../../datasets/mpi_ranks.h5";
 const std::string ONE_D_FLOAT = "1D_FLOAT";
@@ -13,49 +14,55 @@ const std::string TWO_D_FLOAT = "2D_FLOAT";
 const std::string ONE_D_INT = "1D_INT";
 const std::string TWO_D_INT = "2D_INT";
 
-TEST (DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_TEST) {
+TEST (DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_CPU_TEST) {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    juml::Dataset<float> data_1D(FILE_PATH, ONE_D_FLOAT);
+    
+    juml::Settings::getInstance().set_backend(AF_BACKEND_CPU);
+    juml::Dataset data_1D(FILE_PATH, ONE_D_FLOAT);  
+    
     data_1D.load_equal_chunks();
-    for (size_t row = 0; row < data_1D.data().n_elem; ++row) {
-        ASSERT_FLOAT_EQ(data_1D.data()[row], (float)rank);
+    for (size_t row = 0; row < data_1D.data().elements(); ++row) {
+        ASSERT_FLOAT_EQ(data_1D.data().host<float>()[row], (float)rank);
     }
 }
 
-TEST (DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_FLOAT_TEST) {
+TEST (DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_FLOAT_CPU_TEST) {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    juml::Dataset<float> data_2D(FILE_PATH, TWO_D_FLOAT);
+    
+    juml::Settings::getInstance().set_backend(AF_BACKEND_CPU);(AF_BACKEND_CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    
     data_2D.load_equal_chunks();
-
-    for (size_t row = 0; row < data_2D.data().n_elem; ++row) {
-        ASSERT_FLOAT_EQ(data_2D.data()[row], (float)rank);
+    for (size_t row = 0; row < data_2D.data().elements(); ++row) {
+        ASSERT_FLOAT_EQ(data_2D.data().host<float>()[row], (float)rank);
     }
 }
 
-TEST (DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_INT_TEST) {
+TEST (DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_INT_CPU_TEST) {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    juml::Dataset<int> data_1D(FILE_PATH, ONE_D_INT);
+    juml::Settings::getInstance().set_backend(AF_BACKEND_CPU);  
+    juml::Dataset data_1D(FILE_PATH, ONE_D_INT);
+    
     data_1D.load_equal_chunks();
-    for (size_t row = 0; row < data_1D.data().n_elem; ++row) {
-        //ASSERT_EQ(data_1D.data()[row], rank);
+    for (size_t row = 0; row < data_1D.data().elements(); ++row) {
+        ASSERT_EQ(data_1D.data().host<int>()[row], rank);
     }
 }
 
-TEST (DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_TEST) {
+TEST (DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_CPU_TEST) {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    juml::Dataset<int> data_2D(FILE_PATH, TWO_D_INT);
+    
+    juml::Settings::getInstance().set_backend(AF_BACKEND_CPU);    
+    juml::Dataset data_2D(FILE_PATH, TWO_D_INT);
+    
     data_2D.load_equal_chunks();
-
-    for (size_t row = 0; row < data_2D.data().n_elem; ++row) {
-        ASSERT_EQ(data_2D.data()[row], rank);
+    for (size_t row = 0; row < data_2D.data().elements(); ++row) {
+        ASSERT_EQ(data_2D.data().host<int>()[row], rank);
     }
 }
 
