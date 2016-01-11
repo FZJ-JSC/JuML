@@ -158,7 +158,7 @@ namespace juml {
             char* buffer = new char[size];
             H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, buffer);
             af_write_array(this->data_.get(), buffer, size, afHost); 
-            delete[] buffer;
+            delete[] buffer;	
         }        
         this->data_ = this->data_.T();
 
