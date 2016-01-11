@@ -24,9 +24,20 @@ TEST (SAMPLE_TEST, TEST_42) {
 
 int main(int argc, char** argv) {
     int result = -1;
+    int rank;
     
     MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     ::testing::InitGoogleTest(&argc, argv);
+    
+    // suppress the output from the other ranks
+    if (rank > 0) {
+        ::testing::UnitTest& unit_test = *::testing::UnitTest::GetInstance();
+        ::testing::TestEventListeners& listeners = unit_test.listeners();
+        delete listeners.Release(listeners.default_result_printer());
+        listeners.Append(new ::testing::EmptyTestEventListener);
+    }
+    
     try {
         result = RUN_ALL_TESTS();
     } catch (const std::exception& e) {
