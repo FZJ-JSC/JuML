@@ -145,11 +145,11 @@ namespace juml {
         return preds;
     }
 
-    float GaussianNaiveBayes::accuracy(const Dataset<float>& X, const Dataset<int>& y) const {
-        const arma::Mat<int>& y_ = y.data();
-        Dataset<int> predictions = this->predict(X);
+    float GaussianNaiveBayes::accuracy(const Dataset& X, const Dataset& y) const {
+        const af:array& y_ = y.data();
+        Dataset predictions = this->predict(X);
 
-        float local_sum = arma::accu(predictions.data() == y_);
+        float local_sum = af::sum(predictions.data() == y_);
         float message[2] = {local_sum, (float)y_.elements()};
         MPI_Allreduce(MPI_IN_PLACE, message, 2, MPI_FLOAT, MPI_SUM, this->comm_);
         const float total_sum = message[0];
