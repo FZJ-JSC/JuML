@@ -18,7 +18,7 @@ TEST_TEMPLATE = """\
 #include <iostream>
 #include <mpi.h>
 
-TEST (SAMPLE_TEST, TEST_42) {
+TEST(SAMPLE_TEST, TEST_42) {
     ASSERT_EQ(42, 42);
 }
 
