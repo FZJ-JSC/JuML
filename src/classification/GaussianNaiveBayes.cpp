@@ -112,23 +112,23 @@ namespace juml {
         delete[] message;
     }
 
-    Dataset<float> GaussianNaiveBayes::predict_probability(const Dataset<float>& X) const {
-        const arma::Mat<float>& X_ = X.data();
-        arma::Mat<float> probabilities = arma::ones<arma::Mat<float>>(X_.n_rows, this->class_normalizer_.n_classes());
+    Dataset<float> GaussianNaiveBayes::predict_probability(const Dataset& X) const {
+        const af::array& X_ = X.data();
+        af::array probabilities = af::constant(1.0, X_.n_rows, this->class_normalizer_.n_classes());
 
         for (size_t i = 0; i < this->prior_.elements(); ++i) {
             const float prior = this->prior_(i);
             probabilities.col(i) *= prior;
 
             #pragma omp parallel for
-            for (size_t row = 0; row < X_.n_rows; ++row) {
-                const arma::Row<float>& mean = this->theta_.row(i);
-                const arma::Row<float>& stddev = this->stddev_.row(i);
-                arma::Row<float> features_probs = gaussian_pdf<float>(X_.row(row), mean, stddev);
-                probabilities(row, i) *= arma::prod(features_probs);
+            for (size_t row = 0; row < X_.dims(0); ++row) {
+                const af::array& mean = this->theta_.row(i);
+                const af::array& stddev = this->stddev_.row(i);
+                af::array features_probs = gaussian_pdf(X_.row(row), mean, stddev);
+                probabilities(row, i) *= af::product(features_probs);
             }
         }
-        return Dataset<float>(probabilities, this->comm_);
+        return Dataset(probabilities, this->comm_);
     }
 
     Dataset<int> GaussianNaiveBayes::predict(const Dataset<float>& X) const {
