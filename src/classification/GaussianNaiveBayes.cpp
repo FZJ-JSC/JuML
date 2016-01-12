@@ -131,17 +131,17 @@ namespace juml {
         return Dataset(probabilities, this->comm_);
     }
 
-    Dataset<int> GaussianNaiveBayes::predict(const Dataset<float>& X) const {
-        const arma::Mat<float>& X_ = X.data();
+    Dataset<int> GaussianNaiveBayes::predict(const Dataset& X) const {
+        const af::array& X_ = X.data();
 
-        Dataset<float> probabilities = this->predict_probability(X);
-        arma::Col<int> predictions(X_.n_rows);
-        arma::Col<unsigned int> max_index = argmax(probabilities.data(), 1);
+        Dataset probabilities = this->predict_probability(X);
+        af::array predictions(X_.n_rows);
+        af::array max_index = argmax(probabilities.data(), 1);
 
         for (size_t i = 0; i < max_index.elements(); ++i) {
             predictions(i) = this->class_normalizer_.invert(max_index(i));
         }
-        Dataset<int> preds(predictions, this->comm_);
+        Dataset preds(predictions, this->comm_);
         return preds;
     }
 
