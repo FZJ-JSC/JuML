@@ -13,10 +13,6 @@
  * Email: phil.glock@gmail.com
  */
 
-#include <exception>
-#include <sstream>
-#include <iostream>
-
 #include "preprocessing/ClassNormalizer.h"
 
 namespace juml {
@@ -25,12 +21,13 @@ namespace juml {
         MPI_Comm_size(comm, &this->mpi_size_);
     }
 
-    void ClassNormalizer::index(const Dataset<int>& y) {
-        this->class_mapping_.clear();
-        arma::Mat<int> local_class_labels = arma::unique(y.data());
-
+    void ClassNormalizer::index(const Dataset& y) {
+        af::Backend currentBackend = af::getBackendId(af::constant(0, 1));
+        
+        this->class_mapping_.clear();        
+        af::array local_class_labels = af::setUnique(y.data().as(s64));   
         // send the local number of classes to all processes
-        int n_classes = local_class_labels.n_elem;
+        int n_classes = local_class_labels.elements();
         int* n_classes_per_processor = new int[this->mpi_size_];
         MPI_Allgather(&n_classes, 1, MPI_INT, n_classes_per_processor, 1, MPI_INT, this->comm_);
 
@@ -38,6 +35,7 @@ namespace juml {
         int* displacements = new int[this->mpi_size_];
         displacements[0] = 0;
         int total_n_classes = 0;
+        
         for (int i = 1; i < this->mpi_size_; ++i) {
             total_n_classes += n_classes_per_processor[i - 1];
             displacements[i] = total_n_classes;
@@ -45,12 +43,20 @@ namespace juml {
         total_n_classes += n_classes_per_processor[this->mpi_size_ - 1];
 
         // exchange class labels
-        int* total_classes = new int[total_n_classes];
-        MPI_Allgatherv(local_class_labels.memptr(), n_classes, MPI_INT, total_classes, n_classes_per_processor, displacements, MPI_INT, this->comm_);
+        intl* total_classes = new intl[total_n_classes];
+        if(currentBackend == AF_BACKEND_CPU) {
+            MPI_Allgatherv(local_class_labels.device<intl>(), n_classes, MPI_LONG_LONG, total_classes, n_classes_per_processor, displacements, MPI_LONG_LONG, this->comm_);
+            local_class_labels.unlock();
+        }
+        else {
+            dim_t* buffer = local_class_labels.host<intl>();         
+            MPI_Allgatherv(buffer, n_classes, MPI_LONG_LONG, total_classes, n_classes_per_processor, displacements, MPI_LONG_LONG, this->comm_);            
+        }
 
         // compute global unique classes
-        arma::Col<int> global_classes(total_classes, total_n_classes, false, true);
-        this->class_labels_ = arma::unique(global_classes);
+        af::array global_classes(total_n_classes, total_classes);
+        
+        this->class_labels_ = af::setUnique(global_classes);
 
         // release mpi buffers
         delete[] total_classes;
@@ -58,20 +64,10 @@ namespace juml {
         delete[] n_classes_per_processor;
 
         // map original classes to normalized ones
-        for (int label = 0; label < this->class_labels_.n_elem; ++label) {
-            auto original_class = this->class_labels_(label);
+        for (int label = 0; label < this->class_labels_.elements(); ++label) {
+            auto original_class = this->class_labels_(label).scalar<intl>();
             this->class_mapping_[original_class] = label;
         }
-    }
-
-    int ClassNormalizer::transform(int class_label) const {
-        auto found = this->class_mapping_.find(class_label);
-        if (found == this->class_mapping_.end()) {
-            std::stringstream message;
-            message << "Class " << class_label << " not found";
-            throw std::invalid_argument(message.str().c_str());
-        }
-        return found->second;
     }
 } // namespace juml
 
