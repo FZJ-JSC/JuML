@@ -135,7 +135,9 @@ namespace juml {
 
         Dataset probabilities = this->predict_probability(X);
         af::array predictions(X_.dims(0));
-        af::array max_index = argmax(probabilities.data(), 1);
+        af::array max_index = af::constant(0.0, X_.dims(0));
+        af::array max_val = af::constant(0.0, X_.dims(0));
+        af::max(max_val, max_index, probabilities.data(), 1);
 
         for (size_t i = 0; i < max_index.elements(); ++i) {
             predictions(i) = this->class_normalizer_.invert(max_index(i));
