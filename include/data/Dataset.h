@@ -43,12 +43,13 @@ namespace juml {
         void load_equal_chunks();
 
         virtual inline af::array& data() { return this->data_; }
+        virtual inline const af::array& data() const { return this->data_; } 
         
-        virtual inline size_t  n_samples() const {
+        virtual inline dim_t  n_samples() const {
             return this->data_.numdims() == 0 ? 0 : this->data_.dims(0);
         }
         
-        virtual inline size_t  n_features() const {
+        virtual inline dim_t  n_features() const {
             return this->n_samples() == 0 ? 0 : this->data_.elements() / this->data_.dims(0);
         }
         

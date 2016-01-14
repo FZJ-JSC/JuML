@@ -30,7 +30,7 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_CPU_TEST) {
     
     data_1D.load_equal_chunks();
     for (size_t row = 0; row < data_1D.data().elements(); ++row) {
-        ASSERT_FLOAT_EQ(data_1D.data().device<float>()[row], (float)this->rank_);
+        ASSERT_FLOAT_EQ(data_1D.data()(row).scalar<float>(), (float)this->rank_);
     }
 }
 
@@ -40,7 +40,7 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_FLOAT_CPU_TEST) {
     
     data_2D.load_equal_chunks();
     for (size_t row = 0; row < data_2D.data().elements(); ++row) {
-        ASSERT_FLOAT_EQ(data_2D.data().device<float>()[row], (float)this->rank_);
+        ASSERT_FLOAT_EQ(data_2D.data()(row).scalar<float>(), (float)this->rank_);
     }
 }
 
@@ -50,7 +50,7 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_INT_CPU_TEST) {
     
     data_1D.load_equal_chunks();
     for (size_t row = 0; row < data_1D.data().elements(); ++row) {
-        ASSERT_EQ(data_1D.data().device<int>()[row], this->rank_);
+        ASSERT_EQ(data_1D.data()(row).scalar<int>(), this->rank_);
     }
 }
 

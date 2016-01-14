@@ -13,6 +13,7 @@
 * Email: murxman@gmail.com
 */
 
+#include <cstdint>
 #include <stdexcept>
 #include <sstream>
 
@@ -150,6 +151,7 @@ namespace juml {
         this->data_ = af::array(af::dim4(n_dims, reinterpret_cast<dim_t*>(chunk_dimensions)), array_type);
         if (af::getBackendId(af::constant(0, 1)) == AF_BACKEND_CPU) {
             H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, this->data_.device<uint8_t>());
+            this->data_.unlock();
         } else {
             size_t size = this->data_.bytes();
             uint8_t* buffer = new uint8_t[size];
@@ -158,7 +160,8 @@ namespace juml {
             delete[] buffer;	
         }
         //TODO: Transpose inplace. [ af::transposeInPlace(this->data_); ]
-        this->data_ = this->data_.T();
+        if (n_dims > 1)
+            this->data_ = this->data_.T();
 
         // release ressources
         H5Tclose(native_type);
