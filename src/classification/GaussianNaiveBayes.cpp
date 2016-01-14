@@ -17,7 +17,6 @@
 
 #include "classification/GaussianNaiveBayes.h"
 #include "stats/Distributions.h"
-#include "utils/operations.h"
 
 namespace juml {
     void GaussianNaiveBayes::fit(Dataset& X, Dataset& y) {
@@ -29,19 +28,19 @@ namespace juml {
         const af::array& y_ = y.data();
 
         const int n_classes = this->class_normalizer_.n_classes();
-        this->class_counts_.zeros(n_classes);
-        this->prior_.zeros(n_classes);
-        this->theta_.zeros(n_classes, X_.n_cols);
-        this->stddev_.zeros(n_classes, X_.n_cols);
+        this->class_counts_ = af::constant(0.0, n_classes);
+        this->prior_ = af::constant(0.0, n_classes);
+        this->theta_ = af::constant(0.0, n_classes, X_.dims(1));
+        this->stddev_ = af::constant(0.0, n_classes, X_.dims(1));
 
         #pragma omp parallel
         {
             af::array class_counts = af::constant(0.0, n_classes);
             af::array priors = af::constant(0.0, n_classes);
-            af::array theta = (0.0, n_classes, X_.n_cols);
+            af::array theta = af::constant(0.0, n_classes, X_.dims(1));
 
             #pragma omp for nowait
-            for (size_t row = 0; row < X_.n_rows ; ++row) {
+            for (size_t row = 0; row < X_.dims(0) ; ++row) {
                 const size_t class_index = this->class_normalizer_.transform(y_(row));
 
                 ++class_counts(class_index);
@@ -58,7 +57,7 @@ namespace juml {
         }
 
         // copy variables into one array and use only one mpi call
-        const size_t n_floats = n_classes * (2 + X_.n_cols) + 1;
+        const size_t n_floats = n_classes * (2 + X_.dims(1)) + 1;
         float* message = new float[n_floats];
 
         // create message
@@ -84,12 +83,12 @@ namespace juml {
         // calculate standard deviation for each feature
         #pragma omp parallel
         {
-            af::array stddev(0.0, n_classes, X_.n_cols);
+            af::array stddev = af::constant(0.0, n_classes, X_.dims(1));
             #pragma omp for nowait
-            for (size_t row = 0; row < X_.n_rows; ++row) {
+            for (size_t row = 0; row < X_.dims(0); ++row) {
                 const size_t class_index = this->class_normalizer_.transform(y_(row));
                 af::array deviation = X_.row(row) - this->theta_.row(class_index);
-                stddev.row(class_index) += arma::pow(deviation, 2);
+                stddev.row(class_index) += af::pow(deviation, 2);
             }
 
             #pragma omp critical
@@ -112,9 +111,9 @@ namespace juml {
         delete[] message;
     }
 
-    Dataset<float> GaussianNaiveBayes::predict_probability(const Dataset& X) const {
+    Dataset GaussianNaiveBayes::predict_probability(const Dataset& X) const {
         const af::array& X_ = X.data();
-        af::array probabilities = af::constant(1.0, X_.n_rows, this->class_normalizer_.n_classes());
+        af::array probabilities = af::constant(1.0, X_.dims(0), this->class_normalizer_.n_classes());
 
         for (size_t i = 0; i < this->prior_.elements(); ++i) {
             const float prior = this->prior_(i);
@@ -131,11 +130,11 @@ namespace juml {
         return Dataset(probabilities, this->comm_);
     }
 
-    Dataset<int> GaussianNaiveBayes::predict(const Dataset& X) const {
+    Dataset GaussianNaiveBayes::predict(const Dataset& X) const {
         const af::array& X_ = X.data();
 
         Dataset probabilities = this->predict_probability(X);
-        af::array predictions(X_.n_rows);
+        af::array predictions(X_.dims(0));
         af::array max_index = argmax(probabilities.data(), 1);
 
         for (size_t i = 0; i < max_index.elements(); ++i) {
@@ -146,7 +145,7 @@ namespace juml {
     }
 
     float GaussianNaiveBayes::accuracy(const Dataset& X, const Dataset& y) const {
-        const af:array& y_ = y.data();
+        const af::array& y_ = y.data();
         Dataset predictions = this->predict(X);
 
         float local_sum = af::sum(predictions.data() == y_);
