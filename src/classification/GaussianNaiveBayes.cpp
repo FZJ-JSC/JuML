@@ -28,23 +28,23 @@ namespace juml {
         const af::array& y_ = y.data();
 
         const int n_classes = this->class_normalizer_.n_classes();
-        this->class_counts_ = af::constant(0.0, n_classes);
-        this->prior_ = af::constant(0.0, n_classes);
-        this->theta_ = af::constant(0.0, n_classes, X_.dims(1));
-        this->stddev_ = af::constant(0.0, n_classes, X_.dims(1));
+        this->class_counts_ = af::constant(0.0f, n_classes);
+        this->prior_ = af::constant(0.0f, n_classes);
+        this->theta_ = af::constant(0.0f, n_classes, X_.dims(1));
+        this->stddev_ = af::constant(0.0f, n_classes, X_.dims(1));
 
         #pragma omp parallel
         {
-            af::array class_counts = af::constant(0.0, n_classes);
-            af::array priors = af::constant(0.0, n_classes);
-            af::array theta = af::constant(0.0, n_classes, X_.dims(1));
+            af::array class_counts = af::constant(0.0f, n_classes);
+            af::array priors = af::constant(0.0f, n_classes);
+            af::array theta = af::constant(0.0f, n_classes, X_.dims(1));
 
             #pragma omp for nowait
             for (size_t row = 0; row < X_.dims(0) ; ++row) {
                 const size_t class_index = this->class_normalizer_.transform(y_(row));
 
-                ++class_counts(class_index);
-                ++priors(class_index);
+                class_counts(class_index) += 1;
+                priors(class_index) += 1;
                 theta.row(class_index) += X_.row(row);
             }
 
@@ -60,10 +60,13 @@ namespace juml {
         const size_t n_floats = n_classes * (2 + X_.dims(1)) + 1;
         float* message = new float[n_floats];
 
+        float* _p_class_counts = this->class_counts_.host<float>();
+        float* _p_prior = this->prior_.host<float>();
+        float* _p_theta = this->theta_.host<float>();
         // create message
-        std::copy(this->class_counts_.get(), this->class_counts_.get() + n_classes, message);
-        std::copy(this->prior_.get(), this->prior_.get() + n_classes, message + n_classes);
-        std::copy(this->theta_.get(), this->theta_.get() + this->theta_.elements(), message + n_classes * 2);
+        std::copy(_p_class_counts, _p_class_counts + n_classes, message);
+        std::copy(_p_prior, _p_prior + n_classes, message + n_classes);
+        std::copy(_p_theta, _p_theta + this->theta_.elements(), message + n_classes * 2);
         message[n_floats - 1] = (float)y_.elements();
 
         // reduce to obtain global view
@@ -83,7 +86,7 @@ namespace juml {
         // calculate standard deviation for each feature
         #pragma omp parallel
         {
-            af::array stddev = af::constant(0.0, n_classes, X_.dims(1));
+            af::array stddev = af::constant(0.0f, n_classes, X_.dims(1));
             #pragma omp for nowait
             for (size_t row = 0; row < X_.dims(0); ++row) {
                 const size_t class_index = this->class_normalizer_.transform(y_(row));
@@ -99,9 +102,10 @@ namespace juml {
 
         // exchange the standard deviations values
         const size_t n_stddev = n_classes * X_.dims(1);
-        std::copy(this->stddev_.get(), this->stddev_.get() + n_stddev, message);
+        float* _p_stddev = this->stddev_.host<float>();
+        std::copy(_p_stddev, _p_stddev + n_stddev, message);
         MPI_Allreduce(MPI_IN_PLACE, message, n_stddev, MPI_FLOAT, MPI_SUM, this->comm_);
-        std::copy(message, message + n_stddev, this->stddev_.get());
+        std::copy(message, message + n_stddev, _p_stddev);
 
         // normalize standard deviation by class counts and calculate root (not variance)
         this->stddev_.cols(0, af::end) /= this->class_counts_;
@@ -113,10 +117,10 @@ namespace juml {
 
     Dataset GaussianNaiveBayes::predict_probability(const Dataset& X) const {
         const af::array& X_ = X.data();
-        af::array probabilities = af::constant(1.0, X_.dims(0), this->class_normalizer_.n_classes());
+        af::array probabilities = af::constant(1.0f, X_.dims(0), this->class_normalizer_.n_classes());
 
         for (size_t i = 0; i < this->prior_.elements(); ++i) {
-            const float prior = this->prior_(i);
+            const float prior = this->prior_(i).scalar<float>();
             probabilities.col(i) *= prior;
 
             #pragma omp parallel for
@@ -135,12 +139,12 @@ namespace juml {
 
         Dataset probabilities = this->predict_probability(X);
         af::array predictions(X_.dims(0));
-        af::array max_index = af::constant(0.0, X_.dims(0));
-        af::array max_val = af::constant(0.0, X_.dims(0));
+        af::array max_index = af::constant(0, X_.dims(0));
+        af::array max_val = af::constant(0.0f, X_.dims(0));
         af::max(max_val, max_index, probabilities.data(), 1);
 
         for (size_t i = 0; i < max_index.elements(); ++i) {
-            predictions(i) = this->class_normalizer_.invert(max_index(i));
+            predictions(i) = this->class_normalizer_.invert(max_index(i).scalar<int>());
         }
         Dataset preds(predictions, this->comm_);
         return preds;
