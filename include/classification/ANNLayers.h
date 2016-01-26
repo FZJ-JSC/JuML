@@ -5,17 +5,18 @@ namespace juml {
 	namespace ann {
 		class Layer {
 			protected:
-				af::array lastOutput;
 				af::array weights;
 				af::array weights_update;
+				af::array bias;
+				af::array bias_update;
+				af::array lastOutput;
 			public:
 				Layer(int input_size, int node_count) :
-					weights(af::randu(input_size + 1, node_count)),
-					weights_update(af::constant(0, input_size + 1, node_count)),
-					lastOutput(node_count)
-				{
-
-				}
+					weights(af::randu(input_size, node_count)),
+					weights_update(af::constant(0, input_size, node_count)),
+					bias(af::randu(node_count)),
+					bias_update(af::constant(0, node_count)),
+					lastOutput(node_count) {}
 				virtual const af::array& forward(const af::array& input) const = 0;
 				/**
 				 * Update weights_update by backpropagation with the input, that produced the last output, the delta value for the expected output and the learningrate.
