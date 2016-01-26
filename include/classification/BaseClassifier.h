@@ -16,7 +16,6 @@
 #ifndef BASECLASSIFIER_H
 #define BASECLASSIFIER_H
 
-#include <armadillo>
 #include <mpi.h>
 
 #include "data/Dataset.h"
@@ -37,12 +36,15 @@ namespace juml {
             MPI_Comm_rank(this->comm_, &this->mpi_rank_);
         };
 
-        virtual inline void fit(Dataset<float>& X, Dataset<int>& y) {
+        virtual inline void fit(Dataset& X, Dataset& y) {
             this->class_normalizer_.index(y);
         };
 
-        virtual Dataset<int> predict(const Dataset<float>& X) const = 0;
-        virtual float accuracy(const Dataset<float>& X, const Dataset<int>& y) const = 0;
+        virtual Dataset predict(const Dataset& X) const = 0;
+        virtual float accuracy(const Dataset& X, const Dataset& y) const = 0;
+
+	virtual ~BaseClassifier() {
+	}
     };
 } // namespace juml
 
