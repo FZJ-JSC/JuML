@@ -20,6 +20,8 @@
 #define JUML_CLASSIFICATION_ANN_H_
 
 #include <mpi.h>
+#include <vector>
+#include "classification/ANNLayers.h"
 
 #include "classification/BaseClassifier.h"
 #include "data/Dataset.h"
@@ -27,7 +29,10 @@
 namespace juml {
 	//TODO: interface class for ANN-layer
 	class SequentialNeuralNet : BaseClassifier {
-		public: 
+		protected:
+			std::vector<ann::Layer*> &layers;
+		public:
+			SequentialNeuralNet(std::vector<ann::Layer*> &layers_, MPI_Comm comm=MPI_COMM_WORLD) :  BaseClassifier(comm), layers(layers_) {}
 			//TODO: Constructor that takes vector of layers
 			void fit(Dataset& X, Dataset& y) override;
 			Dataset predict(const Dataset& X) const override;
