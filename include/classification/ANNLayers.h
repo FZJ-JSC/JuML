@@ -46,11 +46,15 @@ namespace juml {
 
 				/**
 				 * Update weights_update by backpropagation with the input, that produced the last output, the delta value for the expected output and the learningrate.
+				 * Result will be written into lastOutput!
 				 */
 				virtual const af::array& backwards(
 						const af::array& input,
 						const af::array& delta) = 0;
 
+				/**
+				 * Return the last output of the layer or the last delta value, depending on if forward or backwards was caled last.
+				 */
 				inline const af::array& getLastOutput() const {
 					return lastOutput;
 				}
@@ -76,10 +80,12 @@ namespace juml {
 			const af::array& backwards(
 					const af::array& input,
 					const af::array& lastDelta) override {
-				af::array d = lastDelta * sigmoid_deriv(lastOutput);
+				af::array d = lastDelta * sigmoid_deriv(this->lastOutput);
 				this->weights_update += matmul(input, d);
 				this->bias_update += d;
 				this->update_count += 1;
+				this->lastOutput = af::matmul(this->weights, lastDelta);
+				return this->lastOutput;
 			}
 		};
 	}
