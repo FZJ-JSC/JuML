@@ -37,6 +37,31 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 	throw std::runtime_error("not yet implemented");
 }
 
+void SequentialNeuralNet::forward_all(const af::array& input) {
+	auto itbefore = this->layers.begin();
+	//Constructor ensures there is at least one layer
+	(*itbefore)->forward(input);
+	auto it = this->layers.begin();
+	it++;
+	for (; it != this->layers.end(); it++, itbefore++) {
+		(*it)->forward((*itbefore)->getLastOutput());
+	}
+}
+
+void SequentialNeuralNet::backwards_all(const af::array& input, const af::array& delta) {
+	if (this->layers.size() == 1) {
+		this->layers[0]->backwards(input, delta);
+	} else {
+		int i = this->layers.size() - 1;
+		this->layers[i]->backwards(this->layers[i - 1]->getLastOutput(), delta);
+		for (i--; i > 0; i--) {
+			//LastOutput of layer i+1 now contains the delta
+			this->layers[i]->backwards(this->layers[i - 1]->getLastOutput(), this->layers[i + 1]->getLastOutput());
+		}
+		this->layers[0]->backwards(input, this->layers[1]->getLastOutput());
+	}
+}
+
 float SequentialNeuralNet::accuracy(const Dataset& X, const Dataset& y) const {
 	throw std::runtime_error("not yet implemented");
 }

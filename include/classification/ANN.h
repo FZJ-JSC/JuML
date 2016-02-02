@@ -31,6 +31,8 @@ namespace juml {
 	class SequentialNeuralNet : BaseClassifier {
 		protected:
 			std::vector<ann::Layer*> &layers;
+			void forward_all(const af::array& input);
+			void backwards_all(const af::array& input, const af::array& delta);
 		public:
 			SequentialNeuralNet(std::vector<ann::Layer*> &layers_, MPI_Comm comm=MPI_COMM_WORLD) :  BaseClassifier(comm), layers(layers_) {
 				if (this->layers.size() == 0) {
