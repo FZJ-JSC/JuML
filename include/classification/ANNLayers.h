@@ -64,7 +64,8 @@ namespace juml {
 
 		//TODO implement a template-'FunctionLayer' with template-spezialisations for different activation functions?
 
-		class SigmoidLayer : Layer {
+		class SigmoidLayer : public Layer {
+			public: 
 			SigmoidLayer(int input_size, int node_count) : Layer(input_size, node_count) {}
 
 			inline af::array sigmoid_deriv(af::array &out) {
@@ -72,7 +73,7 @@ namespace juml {
 			}
 
 			const af::array& forward(const af::array& input) override {
-				af::array sumOfWeightedInputs = af::matmul(this->weights, input) + this->bias;
+				af::array sumOfWeightedInputs = af::matmulTN(this->weights, input) + this->bias;
 				this->lastOutput = af::sigmoid(sumOfWeightedInputs);
 				return lastOutput;
 			}
@@ -81,7 +82,7 @@ namespace juml {
 					const af::array& input,
 					const af::array& lastDelta) override {
 				af::array d = lastDelta * sigmoid_deriv(this->lastOutput);
-				this->weights_update += matmul(input, d);
+				this->weights_update += matmulNT(input, d);
 				this->bias_update += d;
 				this->update_count += 1;
 				this->lastOutput = af::matmul(this->weights, lastDelta);
