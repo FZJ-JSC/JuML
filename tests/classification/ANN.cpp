@@ -13,9 +13,9 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	using juml::SequentialNeuralNet;
 	float X[] = {
 		0, 0, 1,
-		0, 1, 1,
+		1, 1, 1,
 		1, 0, 1,
-		1, 1, 1};
+		0, 1, 1};
 	float y[] = {0, 1, 1, 0};
 	af::array Xarray = af::array(4, 3, X).T();
 	af::array yarray = af::array(4, y);
