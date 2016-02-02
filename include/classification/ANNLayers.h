@@ -12,12 +12,15 @@ namespace juml {
 				af::array lastOutput;
 				int update_count = 0;
 			public:
-				Layer(int input_size, int node_count) :
-					weights(af::randu(input_size, node_count)),
-					weights_update(af::constant(0, input_size, node_count)),
-					bias(af::randu(node_count)),
-					bias_update(af::constant(0, node_count)),
-					lastOutput(node_count) {}
+				const int input_count;
+				const int node_count;
+				Layer(int input_count_, int node_count_) :
+					weights(af::randu(input_count_, node_count_)),
+					weights_update(af::constant(0, input_count_, node_count_)),
+					bias(af::randu(node_count_)),
+					bias_update(af::constant(0, node_count_)),
+					lastOutput(node_count_),
+		       			input_count(input_count_), node_count(node_count_) {}
 
 				void updateWeights(float learningrate) {
 					if (update_count == 0) return;

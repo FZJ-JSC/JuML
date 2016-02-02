@@ -32,8 +32,11 @@ namespace juml {
 		protected:
 			std::vector<ann::Layer*> &layers;
 		public:
-			SequentialNeuralNet(std::vector<ann::Layer*> &layers_, MPI_Comm comm=MPI_COMM_WORLD) :  BaseClassifier(comm), layers(layers_) {}
-			//TODO: Constructor that takes vector of layers
+			SequentialNeuralNet(std::vector<ann::Layer*> &layers_, MPI_Comm comm=MPI_COMM_WORLD) :  BaseClassifier(comm), layers(layers_) {
+				if (this->layers.size() == 0) {
+					throw std::runtime_error("Need at least 1 layer");
+				}
+			}
 			void fit(Dataset& X, Dataset& y) override;
 			Dataset predict(const Dataset& X) const override;
 			float accuracy(const Dataset& X, const Dataset& y) const override;
