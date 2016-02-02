@@ -24,11 +24,11 @@ Dataset SequentialNeuralNet::predict(const Dataset& X) const  {
 }
 
 void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
-	X.load_equal_chunks();
+	//X.load_equal_chunks();
 	if (X.data().dims(0) != this->layers[0]->input_count) {
 		throw std::runtime_error("Number of features does not match inputs to neural net in first layer");
 	}
-	y.load_equal_chunks();
+	//y.load_equal_chunks();
 	if (X.data().dims(1) != y.data().dims(0)) {
 		throw std::runtime_error("X and y do not match");
 	}
@@ -38,7 +38,7 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 	if (normalizer.n_classes() != this->layers.back()->node_count) {
 		throw std::runtime_error("Number of nodes in last layer does not match number of classes");
 	}
-	throw std::runtime_error("not yet implemented");
+
 	const int max_iterations = 200; //TODO: User-specify this value
 	const float learningrate = 1;
 	af::array& Xdata = X.data();
@@ -47,11 +47,12 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 	const int n_features = Xdata.dims(0);
 	af::array target = af::constant(0.0f, normalizer.n_classes());
 
-
+	//TODO use matrix-matrix multiply for batches of inputs
 	for (int iteration = 0; iteration < max_iterations; iteration++) {
 		for (int i = 0; i < n_samples; i++) {
 			//TODO: Class labels probably need to be transformed!
-			target = af::iota(normalizer.n_classes()) == ydata(i);
+			//TODO need to generate target vector
+			//target = af::iota(normalizer.n_classes()) == ydata(i);
 			af::array sample = Xdata(af::span, i);
 			this->forward_all(sample);
 			af::array delta = this->layers.back()->getLastOutput() - target;
