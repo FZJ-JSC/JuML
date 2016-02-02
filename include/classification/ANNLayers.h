@@ -73,18 +73,22 @@ namespace juml {
 			}
 
 			const af::array& forward(const af::array& input) override {
+				// transpose(IxN) * I + N = NxI * I + N = N
 				af::array sumOfWeightedInputs = af::matmulTN(this->weights, input) + this->bias;
 				this->lastOutput = af::sigmoid(sumOfWeightedInputs);
 				return lastOutput;
 			}
 
 			const af::array& backwards(
-					const af::array& input,
-					const af::array& lastDelta) override {
+					const af::array& input /* column with input_count rows */,
+					const af::array& lastDelta /* column with node_count rows */) override {
+				// scalar_mult(N, N) = N 
 				af::array d = lastDelta * sigmoid_deriv(this->lastOutput);
+				// I * transpose(d) = (Ix1) * transpose(Nx1) = (Ix1)*(1xN) = IxN
 				this->weights_update += matmulNT(input, d);
 				this->bias_update += d;
 				this->update_count += 1;
+				// IxN * N = I;
 				this->lastOutput = af::matmul(this->weights, lastDelta);
 				return this->lastOutput;
 			}
