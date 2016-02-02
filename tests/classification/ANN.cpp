@@ -21,7 +21,7 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	af::array yarray = af::array(4, y);
 	Dataset Xset(Xarray);
 	Dataset yset(yarray);
-	std::vector<Layer*> layers = { new SigmoidLayer(3, 4), new SigmoidLayer(4,2) };
+	std::vector<Layer*> layers = { new SigmoidLayer(3, 4), new SigmoidLayer(4,1) };
 	SequentialNeuralNet net(layers);
 	net.fit(Xset, yset);
 	//TODO check result

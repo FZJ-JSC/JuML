@@ -33,11 +33,11 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 		throw std::runtime_error("X and y do not match");
 	}
 
-	ClassNormalizer normalizer(this->comm_);
+/*	ClassNormalizer normalizer(this->comm_);
 	normalizer.index(y);
 	if (normalizer.n_classes() != this->layers.back()->node_count) {
 		throw std::runtime_error("Number of nodes in last layer does not match number of classes");
-	}
+	}*/
 
 	const int max_iterations = 200; //TODO: User-specify this value
 	const float learningrate = 1;
@@ -45,7 +45,7 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 	af::array ydata = y.data();
 	const int n_samples = Xdata.dims(1);
 	const int n_features = Xdata.dims(0);
-	af::array target = af::constant(0.0f, normalizer.n_classes());
+	af::array target(this->layers.back()->node_count);
 
 	//TODO use matrix-matrix multiply for batches of inputs
 	for (int iteration = 0; iteration < max_iterations; iteration++) {
@@ -53,6 +53,7 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 			//TODO: Class labels probably need to be transformed!
 			//TODO need to generate target vector
 			//target = af::iota(normalizer.n_classes()) == ydata(i);
+			target = ydata(i);
 			af::array sample = Xdata(af::span, i);
 			this->forward_all(sample);
 			af::array delta = this->layers.back()->getLastOutput() - target;
