@@ -18,7 +18,6 @@
 
 #include <arrayfire.h>
 #include <cstdint>
-#include <map>
 #include <mpi.h>
 #include <stdexcept>
 #include <sstream>
@@ -31,42 +30,43 @@ namespace juml {
     class ClassNormalizer {
     protected:
         af::array class_labels_;
-        std::map<intl, intl> class_mapping_;
         MPI_Comm comm_;
         int mpi_rank_;
         int mpi_size_;
+        
     public:
         ClassNormalizer(MPI_Comm comm=MPI_COMM_WORLD);
 
+        const af::array& classes() const;
         void index(const Dataset& y);
-
-        inline dim_t n_classes() const {
-            return this->class_labels_.elements();
-        }
-
+        
         template <typename T>
-        intl transform(T class_label) const {
-            auto found = this->class_mapping_.find(class_label);
-            if (found == this->class_mapping_.end()) {
-                std::stringstream message;
-                message << "Class " << class_label << " not found";
-                throw std::invalid_argument(message.str().c_str());
-            }
-            return found->second;
-        }
-
-        inline intl invert(int transformed_label) const {
+        T invert(const intl transformed_label) const {
             if (transformed_label < 0 || transformed_label > this->n_classes()) {
                 std::stringstream message;
                 message << "Class " << transformed_label << " not found";
                 throw std::invalid_argument(message.str().c_str());
             }
-            return this->class_labels_(transformed_label).scalar<intl>();
+            af::array::array_proxy index = this->class_labels_(transformed_label);
+            
+            return static_cast<T>(index.scalar<intl>());
         }
+        af::array invert(const af::array& transformed_labels) const;
+        
+        dim_t n_classes() const;
 
-        inline const af::array& classes() const {
-            return this->class_labels_;
+        template <typename T>
+        intl transform(const T class_label) const {
+            af::array indices = af::where(this->class_labels_ == class_label);
+            if (indices.elements() != 1) {
+                std::stringstream message;
+                message << "Class " << class_label << " not found";
+                throw std::invalid_argument(message.str().c_str());
+            }
+            
+            return static_cast<intl>(indices.scalar<unsigned int>());
         }
+        af::array transform(const af::array& class_labels) const;
     }; // ClassNormalizer
 }  // juml
 #endif // CLASS_NORMALIZER_H

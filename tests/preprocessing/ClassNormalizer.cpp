@@ -29,7 +29,7 @@ TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_CPU) {
             continue;
         }
         ASSERT_EQ(class_normalizer.transform(original), transformed);
-        ASSERT_EQ(class_normalizer.invert(transformed), original);
+        ASSERT_EQ(class_normalizer.invert<int>(transformed), original);
     }
 }
 
@@ -53,7 +53,7 @@ TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_OPENCL) {
             continue;
         }
         ASSERT_EQ(class_normalizer.transform(original), transformed);
-        ASSERT_EQ(class_normalizer.invert(transformed), original);
+        ASSERT_EQ(class_normalizer.invert<int>(transformed), original);
     }
 }
 
@@ -79,7 +79,7 @@ TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_CUDA) {
             continue;
         }
         ASSERT_EQ(class_normalizer.transform(original), transformed);
-        ASSERT_EQ(class_normalizer.invert(transformed), original);
+        ASSERT_EQ(class_normalizer.invert<int>(transformed), original);
     }
 }
 
