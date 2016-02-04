@@ -54,9 +54,8 @@ namespace juml {
     void Dataset::load_equal_chunks() {
         // create access list for parallel IO
         hid_t access_plist = H5Pcreate(H5P_FILE_ACCESS);
-        if (access_plist < 0) {
+        if (access_plist < 0)
             throw std::runtime_error("Could not create file access property list");
-        }
         H5Pset_fapl_mpio(access_plist, this->comm_, MPI_INFO_NULL);
 
         // create file handle 
@@ -98,11 +97,10 @@ namespace juml {
         hsize_t offset = 0;
         hsize_t chunk_size = (dimensions[0] / this->mpi_size_);
 
-        if (overlap > this->mpi_rank_) {
+        if (overlap > this->mpi_rank_)
             chunk_size += 1;
-        } else {
+        else
             offset = overlap;
-        }
 
         hsize_t position = offset + this->mpi_rank_ * chunk_size;
         hsize_t chunk_dimensions[n_dims];
@@ -116,9 +114,8 @@ namespace juml {
 
         // create memory space
         hid_t mem_space = H5Screate_simple(n_dims, chunk_dimensions, NULL);
-        if (mem_space < 0) {
+        if (mem_space < 0)
             throw std::runtime_error("Could not create memory space");
-        }
         
         // select hyperslab
         herr_t err = H5Sselect_hyperslab(file_space_id, H5S_SELECT_SET, row_col_offset, NULL, chunk_dimensions, NULL);
@@ -129,9 +126,8 @@ namespace juml {
         }
 
         size_t total_size = chunk_size;
-        for (int i = 1; i < n_dims; ++i) {
+        for (int i = 1; i < n_dims; ++i)
             total_size *= dimensions[i];
-        }
         
         // determine the dataset type
         hid_t native_type = H5Tget_native_type(H5Dget_type(data_id), H5T_DIR_ASCEND);
@@ -159,7 +155,7 @@ namespace juml {
             af_write_array(this->data_.get(), buffer, size, afHost); 
             delete[] buffer;	
         }
-        //TODO: Transpose inplace. [ af::transposeInPlace(this->data_); ]
+        
         if (n_dims > 1)
             this->data_ = this->data_.T();
 
@@ -169,6 +165,22 @@ namespace juml {
         H5Dclose(data_id);
         H5Fclose(file_id);
         H5Pclose(access_plist);
-    }    
+    }
+    
+    af::array& Dataset::data() {
+        return this->data_;
+    }
+    
+    const af::array& Dataset::data() const {
+        return this->data_;
+    }
+    
+    dim_t Dataset::n_samples() const {
+        return this->data_.numdims() == 0 ? 0 : this->data_.dims(0);
+    }
+    
+    dim_t Dataset::n_features() const {
+        return this->n_samples() == 0 ? 0 : this->data_.elements() / this->data_.dims(0);
+    }
 } // namespace juml
 
