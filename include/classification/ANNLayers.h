@@ -73,8 +73,12 @@ namespace juml {
 			}
 
 			const af::array& forward(const af::array& input) override {
-				// transpose(IxN) * I + N = NxI * I + N = N
-				af::array sumOfWeightedInputs = af::matmulTN(this->weights, input) + this->bias;
+				// matmul(transpose(IxN), (Ixb)) + (Nx1) =
+				// matmul(         (NxI), (Ixb)) + (Nx1) = (Nxb) + (Nx1) 
+				af::array sumOfWeightedInputs = af::matmulTN(this->weights, input);// + this->bias;
+				gfor(af::seq i, sumOfWeightedInputs.dims(1)) {
+					sumOfWeightedInputs(af::span, i) += this->bias;
+				}
 				this->lastOutput = af::sigmoid(sumOfWeightedInputs);
 				return lastOutput;
 			}

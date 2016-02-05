@@ -29,7 +29,7 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 		throw std::runtime_error("Number of features does not match inputs to neural net in first layer");
 	}
 	//y.load_equal_chunks();
-	if (X.data().dims(1) != y.data().dims(0)) {
+	if (X.data().dims(1) != y.data().dims(1)) {
 		throw std::runtime_error("X and y do not match");
 	}
 
@@ -45,16 +45,17 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 	af::array ydata = y.data();
 	const int n_samples = Xdata.dims(1);
 	const int n_features = Xdata.dims(0);
+	const int batchsize = 2;
 	af::array target(this->layers.back()->node_count);
 
 	//TODO use matrix-matrix multiply for batches of inputs
 	for (int iteration = 0; iteration < max_iterations; iteration++) {
-		for (int i = 0; i < n_samples; i++) {
+		for (int i = 0; i < n_samples; i += batchsize) {
 			//TODO: Class labels probably need to be transformed!
 			//TODO need to generate target vector
 			//target = af::iota(normalizer.n_classes()) == ydata(i);
-			target = ydata(i);
-			af::array sample = Xdata(af::span, i);
+			target = ydata(af::span, af::seq(i, i+batchsize - 1));
+			af::array sample = Xdata(af::span, af::seq(i, i+batchsize - 1));
 			this->forward_all(sample);
 			af::array delta = this->layers.back()->getLastOutput() - target;
 			this->backwards_all(sample, delta );

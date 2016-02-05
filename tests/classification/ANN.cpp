@@ -18,7 +18,8 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 		0, 1, 1};
 	float y[] = {0, 1, 1, 0};
 	af::array Xarray = af::array(4, 3, X).T();
-	af::array yarray = af::array(4, y);
+	//row vector, because the target output vector is in columns, but our output only has 1 value
+	af::array yarray = af::array(1, 4, y);
 	Dataset Xset(Xarray);
 	Dataset yset(yarray);
 	std::vector<Layer*> layers = { new SigmoidLayer(3, 4), new SigmoidLayer(4,1) };
