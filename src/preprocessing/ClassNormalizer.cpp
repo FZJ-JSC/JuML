@@ -16,13 +16,14 @@
 #include "preprocessing/ClassNormalizer.h"
 
 namespace juml {
-    ClassNormalizer::ClassNormalizer(MPI_Comm comm) : comm_(comm) {
+    ClassNormalizer::ClassNormalizer(MPI_Comm comm) 
+      : comm_(comm), class_labels_(new af::array()) {
         MPI_Comm_rank(comm, &this->mpi_rank_);
         MPI_Comm_size(comm, &this->mpi_size_);
     }
     
     const af::array& ClassNormalizer::classes() const {
-        return this->class_labels_;
+        return *this->class_labels_;
     }
 
     void ClassNormalizer::index(const Dataset& y) {
@@ -59,7 +60,8 @@ namespace juml {
 
         // compute global unique classes
         af::array global_classes(total_n_classes, total_classes);
-        this->class_labels_ = af::setUnique(global_classes);
+        delete this->class_labels_;
+        this->class_labels_ = new af::array(af::setUnique(global_classes));
 
         // release mpi buffers
         delete[] total_classes;
@@ -67,34 +69,20 @@ namespace juml {
         delete[] n_classes_per_processor;
     }
     
-    af::array ClassNormalizer::invert(const af::array& transformed_labels) const  {
-        af::Backend currentBackend = af::getBackendId(af::constant(0, 1));
-        af::setBackend(af::getBackendId(transformed_labels));
-        af::array labels(this->class_labels_);
-        af::setBackend(currentBackend);
-        
-        return labels(transformed_labels);
+    af::array ClassNormalizer::invert(const af::array& transformed_labels) const  {        
+        return (*this->class_labels_)(transformed_labels);
     }
     
     dim_t ClassNormalizer::n_classes() const {
-        return this->class_labels_.elements();
+        return this->class_labels_->elements();
     }
     
     af::array ClassNormalizer::transform(const af::array& class_labels) const {
-        // memorize current backend
-        af::Backend currentBackend = af::getBackendId(af::constant(0, 1));
-        // get the class labels to be on the same backend as input
-        af::setBackend(af::getBackendId(class_labels));
-        // make a copy of the class label map
-        af::array labels(this->class_labels_);
-        // restore previous backend
-        af::setBackend(currentBackend);
-        
         af::array transformed_labels = af::constant(-1, class_labels.dims(), s64);
-        gfor (af::seq i, labels.elements()) {
-            transformed_labels(labels(i) == class_labels) = i;
+        for (dim_t i = 0; i < this->class_labels_->elements(); ++i) {
+            transformed_labels((*this->class_labels_)(i).scalar<intl>() == class_labels) = i;
         }
-        
+      
         // still some labels -1? that means they could not be transformed - error
         if (af::anyTrue<bool>(transformed_labels == -1)) {
             std::stringstream message;
@@ -102,6 +90,10 @@ namespace juml {
         }
         
         return transformed_labels;
-    }   
+    }
+    
+    ClassNormalizer::~ClassNormalizer() {
+        delete this->class_labels_;
+    }
 } // namespace juml
 

@@ -29,7 +29,7 @@ namespace juml {
     //! TODO: Describe me
     class ClassNormalizer {
     protected:
-        af::array class_labels_;
+        af::array* class_labels_;
         MPI_Comm comm_;
         int mpi_rank_;
         int mpi_size_;
@@ -47,7 +47,7 @@ namespace juml {
                 message << "Class " << transformed_label << " not found";
                 throw std::invalid_argument(message.str().c_str());
             }
-            af::array::array_proxy index = this->class_labels_(transformed_label);
+            af::array::array_proxy index = (*this->class_labels_)(transformed_label);
             
             return static_cast<T>(index.scalar<intl>());
         }
@@ -57,7 +57,7 @@ namespace juml {
 
         template <typename T>
         intl transform(const T class_label) const {
-            af::array indices = af::where(this->class_labels_ == class_label);
+            af::array indices = af::where((*this->class_labels_) == class_label);
             if (indices.elements() != 1) {
                 std::stringstream message;
                 message << "Class " << class_label << " not found";
@@ -67,6 +67,8 @@ namespace juml {
             return static_cast<intl>(indices.scalar<unsigned int>());
         }
         af::array transform(const af::array& class_labels) const;
+        
+        ~ClassNormalizer();
     }; // ClassNormalizer
 }  // juml
 #endif // CLASS_NORMALIZER_H
