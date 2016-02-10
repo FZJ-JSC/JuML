@@ -22,13 +22,13 @@
 namespace juml {
     //! Dataset constructor
     Dataset::Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm)
-        : filename_(filename), dataset_(dataset), comm_(comm) {
+        : filename_(filename), dataset_(dataset), comm_(comm), data_(new af::array()) {
         MPI_Comm_rank(this->comm_, &this->mpi_rank_);
         MPI_Comm_size(this->comm_, &this->mpi_size_);
     }
 
     Dataset::Dataset(af::array& data, MPI_Comm comm)
-        : data_(data), comm_(comm) {
+        : data_(new af::array(data)), comm_(comm) {
         MPI_Comm_rank(this->comm_, &this->mpi_rank_);
         MPI_Comm_size(this->comm_, &this->mpi_size_);    
     }
@@ -143,21 +143,26 @@ namespace juml {
             throw e;        
         }
         
-        // read the actual data        
-        this->data_ = af::array(af::dim4(n_dims, reinterpret_cast<dim_t*>(chunk_dimensions)), array_type);
+        // read the actual data
+        delete this->data_;
+        this->data_ = new af::array(af::dim4(n_dims, reinterpret_cast<dim_t*>(chunk_dimensions)), array_type);
         if (af::getBackendId(af::constant(0, 1)) == AF_BACKEND_CPU) {
-            H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, this->data_.device<uint8_t>());
-            this->data_.unlock();
+            H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, this->data_->device<uint8_t>());
+            this->data_->unlock();
         } else {
-            size_t size = this->data_.bytes();
+            size_t size = this->data_->bytes();
             uint8_t* buffer = new uint8_t[size];
             H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, buffer);
-            af_write_array(this->data_.get(), buffer, size, afHost); 
+            af_write_array(this->data_->get(), buffer, size, afHost); 
             delete[] buffer;	
         }
         
         if (n_dims > 1)
-            this->data_ = this->data_.T();
+        {
+            af::array* old_pointer = this->data_;
+            this->data_ = new af::array(this->data_->T());
+            delete old_pointer;
+        }
 
         // release ressources
         H5Tclose(native_type);
@@ -168,19 +173,23 @@ namespace juml {
     }
     
     af::array& Dataset::data() {
-        return this->data_;
+        return *this->data_;
     }
     
     const af::array& Dataset::data() const {
-        return this->data_;
+        return *this->data_;
     }
     
     dim_t Dataset::n_samples() const {
-        return this->data_.numdims() == 0 ? 0 : this->data_.dims(0);
+        return this->data_->numdims() == 0 ? 0 : this->data_->dims(0);
     }
     
     dim_t Dataset::n_features() const {
-        return this->n_samples() == 0 ? 0 : this->data_.elements() / this->data_.dims(0);
+        return this->n_samples() == 0 ? 0 : this->data_->elements() / this->data_->dims(0);
+    }
+    
+    Dataset::~Dataset() {
+        delete this->data_;
     }
 } // namespace juml
 

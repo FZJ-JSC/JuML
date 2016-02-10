@@ -16,8 +16,8 @@
 #ifndef DATASET_H
 #define DATASET_H
 
-#include <hdf5.h>
 #include <arrayfire.h>
+#include <hdf5.h>
 #include <mpi.h>
 #include <string>
 
@@ -26,7 +26,7 @@ namespace juml {
     //! TODO: Describe me
     class Dataset {
     protected:
-        af::array data_;
+        af::array* data_;
         const std::string filename_;
         const std::string dataset_;
         const MPI_Comm comm_;
@@ -45,7 +45,9 @@ namespace juml {
         virtual af::array& data();
         virtual const af::array& data() const;
         virtual dim_t n_samples() const;
-        virtual dim_t n_features() const;        
+        virtual dim_t n_features() const;  
+        
+        virtual ~Dataset();      
     }; // Dataset
 }  // juml
 #endif // DATASET_H
