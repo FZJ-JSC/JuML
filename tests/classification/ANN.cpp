@@ -30,6 +30,24 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 
 }
 
+
+static const std::string FILE_PATH = "../../../datasets/iris.h5";
+static const std::string SAMPLES = "samples";
+static const std::string LABELS = "labels";
+
+
+TEST(ANN_TEST, IRIS_TEST) {
+	using juml::ann::Layer;
+	using juml::ann::SigmoidLayer;
+	std::vector<Layer*> layers = {new SigmoidLayer(4, 100), new SigmoidLayer(100, 1)};
+	juml::SequentialNeuralNet net(layers);
+	juml::Dataset X(FILE_PATH, SAMPLES);
+	juml::Dataset y(FILE_PATH, LABELS);
+
+	net.fit(X, y);
+}
+
+
 int main(int argc, char** argv) {
     int result = -1;
     int rank;
