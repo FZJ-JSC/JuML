@@ -24,11 +24,15 @@ Dataset SequentialNeuralNet::predict(const Dataset& X) const  {
 }
 
 void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
-	//X.load_equal_chunks();
+	X.load_equal_chunks();
 	if (X.data().dims(0) != this->layers[0]->input_count) {
-		throw std::runtime_error("Number of features does not match inputs to neural net in first layer");
+		std::stringstream errMsg;
+		errMsg << "Number of features (" << X.data().dims(0) 
+			<< ") does not match inputs to neural net in first layer ("
+			<< this->layers[0]->input_count << ")";
+		throw std::runtime_error(errMsg.str());
 	}
-	//y.load_equal_chunks();
+	y.load_equal_chunks();
 	if (X.data().dims(1) != y.data().dims(1)) {
 		throw std::runtime_error("X and y do not match");
 	}

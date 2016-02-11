@@ -52,6 +52,8 @@ namespace juml {
     }
 
     void Dataset::load_equal_chunks() {
+        //Data already loaded
+        if (this->data_.elements() > 0) return;
         // create access list for parallel IO
         hid_t access_plist = H5Pcreate(H5P_FILE_ACCESS);
         if (access_plist < 0) {
