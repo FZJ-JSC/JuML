@@ -34,7 +34,13 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 	}
 	y.load_equal_chunks();
 	if (X.data().dims(1) != y.data().dims(1)) {
-		throw std::runtime_error("X and y do not match");
+		std::stringstream errMsg;
+		errMsg << "Number of samples ("
+			<< X.data().dims(1)
+			<< ") does not match number of labels ("
+			<< y.data().dims(1)
+			<< ")";
+		throw std::runtime_error(errMsg.str());
 	}
 
 /*	ClassNormalizer normalizer(this->comm_);
