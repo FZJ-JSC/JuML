@@ -161,9 +161,7 @@ namespace juml {
             af_write_array(this->data_.get(), buffer, size, afHost); 
             delete[] buffer;	
         }
-        //TODO: Transpose inplace. [ af::transposeInPlace(this->data_); ]
-        if (n_dims > 1)
-            this->data_ = this->data_.T();
+        this->data_ = this->data_.T();
 
         // release ressources
         H5Tclose(native_type);
