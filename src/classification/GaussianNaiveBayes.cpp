@@ -52,7 +52,7 @@ namespace juml {
         this->prior_ = this->class_counts_;
         
         // copy variables into one array and use only one mpi call
-        const dim_t n_floats = n_classes * (2 + X_.elements()) + 1;
+        const dim_t n_floats = n_classes * (2 + X.n_features()) + 1;
         float* message = new float[n_floats];
         
         // create message

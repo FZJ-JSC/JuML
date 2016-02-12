@@ -14,7 +14,7 @@ static const std::string LABELS = "labels";
 
 static const float PRIORS[3] = {0.33333333, 0.33333333, 0.33333333};
 static const float THETA[3][4] = {{5.00599957, 3.41800022, 1.46399999, 0.24399997},
-                                  {5.93599940, 2.76999998, 4.26000023, 1.32599986},
+                                  {5.93600180, 2.76999998, 4.26000023, 1.32599986},
                                   {6.58799934, 2.97400022, 5.55200052, 2.02600026}};
                                     
 static const float STDDEV[3][4] = {{0.34894692, 0.3771949,  0.17176733, 0.10613199},
@@ -36,7 +36,7 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, IRIS_CPU_TEST) {
     for (int row = 0; row < 3; ++row) {
         ASSERT_FLOAT_EQ(prior(row).scalar<float>(), PRIORS[row]);
         for (int col = 0; col < 4; ++col) {
-            ASSERT_FLOAT_EQ(theta(row, col).scalar<float>(), THETA[row][col]);
+            ASSERT_NEAR(theta(row, col).scalar<float>(), THETA[row][col], 0.001);
             ASSERT_FLOAT_EQ(stddev(row, col).scalar<float>(), STDDEV[row][col]);
         }
     }
@@ -57,7 +57,7 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, IRIS_OPENCL_TEST) {
     for (int row = 0; row < 3; ++row) {
         ASSERT_FLOAT_EQ(prior(row).scalar<float>(), PRIORS[row]);
         for (int col = 0; col < 4; ++col) {
-            ASSERT_FLOAT_EQ(theta(row, col).scalar<float>(), THETA[row][col]);
+            ASSERT_NEAR(theta(row, col).scalar<float>(), THETA[row][col], 0.001);
             ASSERT_FLOAT_EQ(stddev(row, col).scalar<float>(), STDDEV[row][col]);
         }
     }
@@ -80,7 +80,7 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, IRIS_CUDA_TEST) {
     for (int row = 0; row < 3; ++row) {
         ASSERT_FLOAT_EQ(prior(row).scalar<float>(), PRIORS[row]);
         for (int col = 0; col < 4; ++col) {
-            ASSERT_FLOAT_EQ(theta(row, col).scalar<float>(), THETA[row][col]);
+            ASSERT_NEAR(theta(row, col).scalar<float>(), THETA[row][col], 0.001);
             ASSERT_FLOAT_EQ(stddev(row, col).scalar<float>(), STDDEV[row][col]);
         }
     }
