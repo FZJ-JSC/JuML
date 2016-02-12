@@ -104,7 +104,7 @@ namespace juml {
         delete[] message;
     }
 
-    Dataset GaussianNaiveBayes::predict_probability(const Dataset& X) const {
+    Dataset GaussianNaiveBayes::predict_probability(Dataset& X) const {
         const dim_t n_classes = this->class_normalizer_.n_classes();
         af::setBackend(static_cast<af::Backend>(this->backend_.get()));
         af::array probabilities = af::constant(1.0f, X.n_samples(), n_classes);
@@ -125,7 +125,7 @@ namespace juml {
         return Dataset(probabilities, this->comm_);
     }
 
-    Dataset GaussianNaiveBayes::predict(const Dataset& X) const {
+    Dataset GaussianNaiveBayes::predict(Dataset& X) const {
         Dataset probabilities = this->predict_probability(X);
         
         af::array values(X.n_samples());
@@ -137,7 +137,7 @@ namespace juml {
         return Dataset(locations_orig, this->comm_);
     }
 
-    float GaussianNaiveBayes::accuracy(const Dataset& X, const Dataset& y) const {
+    float GaussianNaiveBayes::accuracy(Dataset& X, Dataset& y) const {
         float local_results[2];
         Dataset predictions = this->predict(X);
         

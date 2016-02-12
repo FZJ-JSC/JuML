@@ -16,32 +16,46 @@
 #ifndef KMEANS_H
 #define KMEANS_H
 
-#include <armadillo>
+#include <arrayfire.h>
+#include <mpi.h>
 
-#include "clustering/BaseClassifier.h"
+#include "core/Definitions.h"
+#include "clustering/BaseClusterer.h"
+#include "data/Dataset.h"
 
 namespace juml {
     //! KMeans
     //! TODO: Describe me
-    class KMeans : public BaseClassifier {
+    class KMeans : public BaseClusterer {
     public:
         enum Method {
             RANDOM,
-            KMEANS_PLUS_PLUS,
-            GIVEN
+            KMEANS_PLUS_PLUS
         };
+        
+    protected:
+        af::array centroids_;        
+        
+        uint k_;
+        uint max_iter_;
+        Method initialization_;
+        float tolerance_;
+        
+        void initialize_random_centroids(const af::array& data);
+        void initialize_kpp_centroids(const af::array& data);
+        
+    public:
         //! KMeans constructor
         //!
         //!
         KMeans(unsigned int k, 
                unsigned int max_iter=100, 
-               unsigned n_init=1, 
-               Method init=RANDOM, 
-               float tolerance=1e-3, 
-               int random_seed, 
-               const arma::Mat<float>& centroids);
-        
-        
+               Method initialization=RANDOM, 
+               float tolerance=1e-3,
+               int backend=Backend::CPU, 
+               MPI_Comm comm=MPI_COMM_WORLD);        
+        virtual void fit(Dataset& X);
+        virtual Dataset predict(Dataset& X) const;
     }; // KMeans
 }  // juml
 #endif // KMEANS_H

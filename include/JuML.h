@@ -15,5 +15,6 @@
 
 #include "data/Dataset.h"
 #include "classification/GaussianNaiveBayes.h"
+#include "clustering/KMeans.h"
 #include "stats/Distributions.h"
 
