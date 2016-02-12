@@ -16,8 +16,8 @@
 #include "classification/BaseClassifier.h"
 
 namespace juml {
-    BaseClassifier::BaseClassifier(Backend backend, MPI_Comm comm)
-      : backend_(backend), comm_(comm), class_normalizer_(comm) {
+    BaseClassifier::BaseClassifier(int backend, MPI_Comm comm)
+      : Algorithm(backend), comm_(comm), class_normalizer_(comm) {
         MPI_Comm_rank(this->comm_, &this->mpi_rank_);
         MPI_Comm_size(this->comm_, &this->mpi_size_);
     };

@@ -1,4 +1,4 @@
 FILE(GLOB CLASSIFICATION_SRC *.cpp)
 ADD_LIBRARY(classification SHARED ${CLASSIFICATION_SRC})
-TARGET_LINK_LIBRARIES(classification preprocessing)
+TARGET_LINK_LIBRARIES(classification preprocessing core)
 

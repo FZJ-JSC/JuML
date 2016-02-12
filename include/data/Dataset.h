@@ -26,7 +26,7 @@ namespace juml {
     //! TODO: Describe me
     class Dataset {
     protected:
-        af::array* data_;
+        af::array data_;
         const std::string filename_;
         const std::string dataset_;
         const MPI_Comm comm_;
@@ -45,9 +45,7 @@ namespace juml {
         virtual af::array& data();
         virtual const af::array& data() const;
         virtual dim_t n_samples() const;
-        virtual dim_t n_features() const;  
-        
-        virtual ~Dataset();      
+        virtual dim_t n_features() const;
     }; // Dataset
 }  // juml
 #endif // DATASET_H

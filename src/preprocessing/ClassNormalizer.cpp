@@ -17,13 +17,13 @@
 
 namespace juml {
     ClassNormalizer::ClassNormalizer(MPI_Comm comm) 
-      : comm_(comm), class_labels_(new af::array()) {
+      : comm_(comm) {
         MPI_Comm_rank(comm, &this->mpi_rank_);
         MPI_Comm_size(comm, &this->mpi_size_);
     }
     
     const af::array& ClassNormalizer::classes() const {
-        return *this->class_labels_;
+        return this->class_labels_;
     }
 
     void ClassNormalizer::index(const Dataset& y) {
@@ -60,8 +60,7 @@ namespace juml {
 
         // compute global unique classes
         af::array global_classes(total_n_classes, total_classes);
-        delete this->class_labels_;
-        this->class_labels_ = new af::array(af::setUnique(global_classes));
+        this->class_labels_ = af::setUnique(global_classes);
 
         // release mpi buffers
         delete[] total_classes;
@@ -70,30 +69,22 @@ namespace juml {
     }
     
     af::array ClassNormalizer::invert(const af::array& transformed_labels) const  {        
-        return (*this->class_labels_)(transformed_labels);
+        return this->class_labels_(transformed_labels);
     }
     
     dim_t ClassNormalizer::n_classes() const {
-        return this->class_labels_->elements();
+        return this->class_labels_.elements();
     }
     
-    af::array ClassNormalizer::transform(const af::array& class_labels) const {
-        af::array transformed_labels = af::constant(-1, class_labels.dims(), s64);
-        for (dim_t i = 0; i < this->class_labels_->elements(); ++i) {
-            transformed_labels((*this->class_labels_)(i).scalar<intl>() == class_labels) = i;
-        }
-      
-        // still some labels -1? that means they could not be transformed - error
-        if (af::anyTrue<bool>(transformed_labels == -1)) {
-            std::stringstream message;
-            throw std::invalid_argument("Could not convert all of the labels");
+    af::array ClassNormalizer::transform(const af::array& original_labels) const {
+        af::array transformed_labels = af::constant(-1, original_labels.dims(), s64);
+        for (dim_t i = 0; i < this->class_labels_.elements(); ++i) {
+            intl label = this->class_labels_(i).scalar<intl>();
+            af::array indices = original_labels ==  label;
+            af::replace(transformed_labels, indices, i);
         }
         
         return transformed_labels;
-    }
-    
-    ClassNormalizer::~ClassNormalizer() {
-        delete this->class_labels_;
     }
 } // namespace juml
 
