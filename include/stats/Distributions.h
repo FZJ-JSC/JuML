@@ -16,29 +16,30 @@
 #ifndef DISTRIBUTIONS_H
 #define DISTRIBUTIONS_H
 
-#include <armadillo>
-#include <math.h>
+#include <arrayfire.h>
 
 namespace juml {
     template <typename T>
-    T gaussian_pdf(T x, T mean, T stddev) {
-        const T sigma = std::pow(stddev, 2);
-        const T prob = 1.0 / std::sqrt(2.0 * M_PI * sigma);
-        const T e = std::exp(-std::pow(x - mean, 2) / (2.0 * sigma));
+    T gaussian_pdf(const T& X, const T& mean, const T& stddev) {
+        af::array result = gaussian_pdf(af::constant(X, 1), af::constant(mean, 1), af::constant(stddev, 1));
+        return *(result.host<T>());
+    }
+
+    template <>
+    af::array gaussian_pdf(const af::array& X, const af::array& means, const af::array& stddevs) {
+        af::array sigma = af::pow(stddevs, 2);
+        af::array prob = 1.0 / af::sqrt(2.0 * af::Pi * sigma);        
+        af::array e = af::exp(af::pow(X - means, 2) / (-2.0 * sigma));
 
         return prob * e;
     }
-
-    template <typename T>
-    arma::Row<T> gaussian_pdf(const arma::Row<T>& X, const arma::Row<T>& means, const arma::Row<T>& stddevs) {
-        arma::Row<T> probs(X.n_elem);
-
-        for (size_t i = 0; i < X.n_elem; ++i) {
-            probs(i) = gaussian_pdf(X(i), means(i), stddevs(i));
-        }
-
-        return probs;
+    
+    template <>
+    double gaussian_pdf(const double& X, const double& mean, const double& stddev) {
+        af::array result = gaussian_pdf(af::constant(X, 1, f64), af::constant(mean, 1, f64), af::constant(stddev, 1, f64));
+        return *(result.host<double>());
     }
 } // juml
 
 #endif // DISTRIBUTIONS_H
+

@@ -16,7 +16,7 @@
 #ifndef GAUSSIANNAIVEBAYES_H
 #define GAUSSIANNAIVEBAYES_H
 
-#include <armadillo>
+#include <arrayfire.h>
 #include <mpi.h>
 
 #include "classification/BaseClassifier.h"
@@ -25,31 +25,24 @@
 namespace juml {
     class GaussianNaiveBayes : public BaseClassifier {
     protected:
-        arma::Col<float> class_counts_;
-        arma::Col<float> prior_;
-        arma::Mat<float> theta_;
-        arma::Mat<float> stddev_;
+        af::array class_counts_;
+        af::array prior_;
+        af::array stddev_;
+        af::array theta_;
 
     public:
-        void fit(Dataset<float>& X, Dataset<int>& y);
-        Dataset<int> predict(const Dataset<float>& X) const;
-        Dataset<float> predict_probability(const Dataset<float>& X) const;
-        float accuracy(const Dataset<float>& X, const Dataset<int>& y) const;
+        GaussianNaiveBayes(int backend=Backend::CUDA, MPI_Comm comm=MPI_COMM_WORLD);
+    
+        virtual void fit(Dataset& X, Dataset& y);
+        virtual Dataset predict(const Dataset& X) const;
+        virtual Dataset predict_probability(const Dataset& X) const;
+        virtual float accuracy(const Dataset& X, const Dataset& y) const;
 
-        inline const arma::Col<float>& class_counts() const {
-            return this->class_counts_;
-        };
-        inline const arma::Col<float>& prior() const {
-            return this->prior_;
-        };
-        inline const arma::Mat<float>& theta() const {
-            return this->theta_;
-        };
-        inline const arma::Mat<float>& stddev() const {
-            return this->stddev_;
-        };
+        const af::array& class_counts() const;
+        const af::array& prior() const;
+        const af::array& stddev() const;
+        const af::array& theta() const;
     };
 } // namespace juml
 
 #endif // GAUSSIANNAIVEBAYES_H
-
