@@ -21,6 +21,7 @@
 
 #include <mpi.h>
 #include <vector>
+#include <memory> //For unique_ptr
 #include "classification/ANNLayers.h"
 
 #include "classification/BaseClassifier.h"
@@ -30,11 +31,11 @@ namespace juml {
 	//TODO: interface class for ANN-layer
 	class SequentialNeuralNet : BaseClassifier {
 		protected:
-			std::vector<ann::Layer*> &layers;
+			std::vector<std::unique_ptr<ann::Layer>> &layers;
 			void forward_all(const af::array& input);
 			void backwards_all(const af::array& input, const af::array& delta);
 		public:
-			SequentialNeuralNet(std::vector<ann::Layer*> &layers_, MPI_Comm comm=MPI_COMM_WORLD) :  BaseClassifier(comm), layers(layers_) {
+			SequentialNeuralNet(int backend, std::vector<std::unique_ptr<ann::Layer>> &layers_, MPI_Comm comm=MPI_COMM_WORLD) :  BaseClassifier(backend, comm), layers(layers_) {
 				if (this->layers.size() == 0) {
 					throw std::runtime_error("Need at least 1 layer");
 				}
