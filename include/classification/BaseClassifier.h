@@ -18,33 +18,25 @@
 
 #include <mpi.h>
 
+#include "core/Algorithm.h"
 #include "data/Dataset.h"
 #include "preprocessing/ClassNormalizer.h"
 
 namespace juml {
-    class BaseClassifier {
-    protected:
-        MPI_Comm comm_;
+    class BaseClassifier : public Algorithm {
+    protected:        
         ClassNormalizer class_normalizer_;
-        int mpi_size_;
+        
+        MPI_Comm comm_;
         int mpi_rank_;
+        int mpi_size_;
 
     public:
-        BaseClassifier(MPI_Comm comm=MPI_COMM_WORLD) 
-            : comm_(comm), class_normalizer_(comm) {
-            MPI_Comm_size(this->comm_, &this->mpi_size_);
-            MPI_Comm_rank(this->comm_, &this->mpi_rank_);
-        };
+        BaseClassifier(int backend, MPI_Comm comm=MPI_COMM_WORLD);
 
-        virtual inline void fit(Dataset& X, Dataset& y) {
-            this->class_normalizer_.index(y);
-        };
-
+        virtual void fit(Dataset& X, Dataset& y);
         virtual Dataset predict(const Dataset& X) const = 0;
         virtual float accuracy(const Dataset& X, const Dataset& y) const = 0;
-
-	virtual ~BaseClassifier() {
-	}
     };
 } // namespace juml
 
