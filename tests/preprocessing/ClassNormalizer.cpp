@@ -92,7 +92,7 @@ TEST (CLASS_NORMALIZER_TEST, VECTOR_MAPPING_TEST_CPU) {
     juml::ClassNormalizer class_normalizer;
     class_normalizer.index(labels);
 
-    auto transformed = class_normalizer.transform(labels.data());
+    af::array transformed = class_normalizer.transform(labels.data());
     ASSERT_TRUE(af::allTrue<bool>(class_normalizer.invert(transformed) == labels.data()));
 }
 
@@ -104,7 +104,7 @@ TEST (CLASS_NORMALIZER_TEST, VECTOR_MAPPING_TEST_OPENCL) {
     juml::ClassNormalizer class_normalizer;
     class_normalizer.index(labels);
 
-    auto transformed = class_normalizer.transform(labels.data());
+    af::array transformed = class_normalizer.transform(labels.data());
     ASSERT_TRUE(af::allTrue<bool>(class_normalizer.invert(transformed) == labels.data()));
 }
 
@@ -118,7 +118,7 @@ TEST (CLASS_NORMALIZER_TEST, VECTOR_MAPPING_TEST_CUDA) {
     juml::ClassNormalizer class_normalizer;
     class_normalizer.index(labels);
 
-    auto transformed = class_normalizer.transform(labels.data());
+    af::array transformed = class_normalizer.transform(labels.data());
     ASSERT_TRUE(af::allTrue<bool>(class_normalizer.invert(transformed) == labels.data()));
 }
 
