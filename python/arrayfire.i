@@ -24,7 +24,14 @@ import_array();
         PyErr_SetString(PyExc_ValueError,"Input object is not an array");
         return NULL;
     }
-    $1=new af::array(toAF(temp));
+    $1=toAF(temp);
+}
+
+%typemap(freearg)
+( const af::array & ),
+(       af::array & ) 
+{
+   free($1);
 }
 
 %typemap(out)

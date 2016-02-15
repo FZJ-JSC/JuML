@@ -3,12 +3,14 @@
 #include <numpy/arrayobject.h>
 #include <numpy/ndarraytypes.h>
 
-af::array toAF(PyArrayObject* np_array)
+af::array* toAF(PyArrayObject* np_array)
 {  
     int ndims = PyArray_NDIM(np_array);
     if(ndims > 4)        
+    {
         PyErr_SetString(PyExc_ValueError,"Not more than 4 dimensions suported");
-        return af::array();
+        return NULL;
+    }
     npy_intp dims[ndims];
     std::copy(PyArray_DIMS(np_array), PyArray_DIMS(np_array)+ndims,dims);
     if(PyArray_IS_C_CONTIGUOUS(np_array))
@@ -33,13 +35,13 @@ af::array toAF(PyArrayObject* np_array)
         default : 
         {
             PyErr_SetString(PyExc_ValueError,"The provided type is not supported");
-            return af::array();
+            return NULL;
         }
     }   
-    af::array ret = af::array(dimensions, type);
-    ret.write(data, PyArray_NBYTES(np_array));
+    af::array* ret = new af::array(dimensions, type);
+    ret->write(data, PyArray_NBYTES(np_array));
     if(PyArray_IS_C_CONTIGUOUS(np_array))
-        ret = ret.T();
+        ret = new af::array(ret->T());
     return ret;
 }
 
@@ -48,31 +50,31 @@ PyObject* toNumpy(af::array* af_array)
     int ndims = af_array->numdims();
     npy_intp dims[ndims];
     for (int i = 0; i < ndims; i++) 
-        dims[i] = (npy_intp)af_array->dims(i);
+        dims[i] = af_array->dims(i);
     
-    void* data;
+    void* data = new char[af_array->bytes()];
+    af_array->host(data);
     
     int type;
     switch(af_array->type())
     {   
-        case b8 : type = NPY_BOOL; data = af_array->host<unsigned char>(); break;
-        case s16 : type = NPY_INT16; data = af_array->host<short>(); break;
-        case s32 : type = NPY_INT32; data = af_array->host<int>(); break;
-        case s64 : type = NPY_INT64; data = af_array->host<long long>(); break;
-       case u8 : type = NPY_UINT8; data = af_array->host<unsigned char>(); break;
-        case u16 : type = NPY_UINT16; data = af_array->host<unsigned short>(); break;
-        case u32 : type = NPY_UINT32; data = af_array->host<unsigned int>(); break;
-        case u64 : type = NPY_UINT64; data = af_array->host<unsigned long long>(); break;
-        case f32 : type = NPY_FLOAT32; data = af_array->host<float>(); break;
-        case f64 : type = NPY_FLOAT64; data = af_array->host<double>(); break;
-        case c32 : type = NPY_COMPLEX64; data = af_array->host<float>(); break;
-        case c64 : type = NPY_COMPLEX128; data = af_array->host<double>(); break;
+        case b8 : type = NPY_BOOL; break;
+        case s16 : type = NPY_INT16; break;
+        case s32 : type = NPY_INT32; break;
+        case s64 : type = NPY_INT64; break;
+        case u8 : type = NPY_UINT8; break;
+        case u16 : type = NPY_UINT16; break;
+        case u32 : type = NPY_UINT32; break;
+        case u64 : type = NPY_UINT64; break;
+        case f32 : type = NPY_FLOAT32; break;
+        case f64 : type = NPY_FLOAT64; break;
+        case c32 : type = NPY_COMPLEX64; break;
+        case c64 : type = NPY_COMPLEX128; break;
         default : 
         {
             PyErr_SetString(PyExc_ValueError,"The provided type is not supported");
             return NULL;
         }
     }
-    std::cout << ndims << std::endl;   
     return PyArray_SimpleNewFromData(ndims, dims, type, data);
 }
