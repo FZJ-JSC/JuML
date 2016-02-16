@@ -51,7 +51,7 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_CPU_TEST) {
     for (size_t row = 0; row < data_1D.data().elements(); ++row) {
         ASSERT_FLOAT_EQ(data_1D.data()(row).scalar<float>(), (float)this->rank_);
     }
-    ASSERT_TRUE(false) << "TODO: Fix 1D Test";
+    FAIL() << "TODO: Fix 1D Test";
 }
 
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_FLOAT_CPU_TEST) {
@@ -72,7 +72,7 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_INT_CPU_TEST) {
     for (size_t row = 0; row < data_1D.data().elements(); ++row) {
         ASSERT_EQ(data_1D.data()(row).scalar<int>(), this->rank_);
     }
-    ASSERT_TRUE(false) << "TODO: Fix 1D Test";
+    FAIL() << "TODO: Fix 1D Test";
 }
 
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_CPU_TEST) {
@@ -95,7 +95,7 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_OPENCL_TEST) {
     for (size_t row = 0; row < data_1D.data().elements(); ++row) {
         ASSERT_FLOAT_EQ(data_ptr[row], (float)this->rank_);
     }
-    ASSERT_TRUE(false) << "TODO: Fix 1D Test";
+    FAIL() << "TODO: Fix 1D Test";
 }
 
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_FLOAT_OPENCL_TEST) {
@@ -120,7 +120,7 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_INT_OPENCL_TEST) {
     for (size_t row = 0; row < data_1D.data().elements(); ++row) {
         ASSERT_EQ(data_ptr[row], this->rank_);
     }
-    ASSERT_TRUE(false) << "TODO: Fix 1D Test";
+    FAIL() << "TODO: Fix 1D Test";
 }
 
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_OPENCL_TEST) {
@@ -147,7 +147,7 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_CUDA_TEST) {
         ASSERT_FLOAT_EQ(data_ptr[row], (float)this->rank_);
     }
 
-    ASSERT_TRUE(false) << "TODO: Fix 1D Test";
+    FAIL() << "TODO: Fix 1D Test";
 }
 
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_FLOAT_CUDA_TEST) {
@@ -172,7 +172,7 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_INT_CUDA_TEST) {
     for (size_t row = 0; row < data_1D.data().elements(); ++row) {
         ASSERT_EQ(data_ptr[row], this->rank_);
     }
-    ASSERT_TRUE(false) << "TODO: Fix 1D Test";
+    FAIL() << "TODO: Fix 1D Test";
 }
 
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_CUDA_TEST) {
