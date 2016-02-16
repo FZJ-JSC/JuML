@@ -31,7 +31,7 @@ import_array();
 ( const af::array & ),
 (       af::array & ) 
 {
-   free($1);
+   delete $1;
 }
 
 %typemap(out)

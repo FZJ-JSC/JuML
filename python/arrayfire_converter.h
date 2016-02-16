@@ -41,7 +41,10 @@ af::array* toAF(PyArrayObject* np_array)
     af::array* ret = new af::array(dimensions, type);
     ret->write(data, PyArray_NBYTES(np_array));
     if(PyArray_IS_C_CONTIGUOUS(np_array))
-        ret = new af::array(ret->T());
+    {   af::array transposed = ret->T();
+        delete ret;
+        ret = new af::array(transposed);
+    }
     return ret;
 }
 
@@ -76,5 +79,7 @@ PyObject* toNumpy(af::array* af_array)
             return NULL;
         }
     }
-    return PyArray_SimpleNewFromData(ndims, dims, type, data);
+    PyObject* array = PyArray_SimpleNewFromData(ndims, dims, type, data);
+    PyArray_ENABLEFLAGS((PyArrayObject*) array, NPY_OWNDATA);
+    return array;
 }
