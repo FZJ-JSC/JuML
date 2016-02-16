@@ -24,7 +24,7 @@ import_array();
         PyErr_SetString(PyExc_ValueError,"Input object is not an array");
         return NULL;
     }
-    $1=toAF(temp);
+    $1=toAF(temp,false);
 }
 
 %typemap(freearg)
@@ -38,5 +38,5 @@ import_array();
 ( const af::array & ),
 (       af::array & ) 
 {
-    $result = toNumpy($1);
+    $result = toNumpy($1,false);
 }
