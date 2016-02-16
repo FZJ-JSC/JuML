@@ -29,7 +29,7 @@ namespace juml {
 					this->weights -= learningrate * this->weights_update;
 				        this->bias -= learningrate * this->bias_update;
 
-					this->weights_update(af::span) = 0;
+					this->weights_update(af::span, af::span) = 0;
 					this->bias_update(af::span) = 0;
 					this->update_count = 0;
 				}
