@@ -185,11 +185,11 @@ namespace juml {
     }
     
     dim_t Dataset::n_samples() const {
-        return this->data_.numdims() == 0 ? 0 : this->data_.dims(0);
+        return this->data_.dims(1);
     }
     
     dim_t Dataset::n_features() const {
-        return this->n_samples() == 0 ? 0 : this->data_.elements() / this->data_.dims(0);
+        return this->data_.dims(0);
     }
 } // namespace juml
 
