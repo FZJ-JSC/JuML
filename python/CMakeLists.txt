@@ -81,11 +81,7 @@ IF(SWIG_FOUND)
     SET_SOURCE_FILES_PROPERTIES(JuML.i PROPERTIES SWIG_FLAGS  "-wall;-c++")
 
     FILE(GLOB JuML_HEADER ${JuML_INLUDE_DIRECTORIES}/*/*.h)
-    SET(SWIG_MODULE_JuML_EXTRA_DEPS 
-        ${JuML_HEADER}
-        armanpy.hpp
-    )
 
     SWIG_ADD_MODULE(JuML python JuML.i)
-    SWIG_LINK_LIBRARIES(JuML ${PYTHON_LIBRARIES} preprocessing classification)
+    SWIG_LINK_LIBRARIES(JuML ${PYTHON_LIBRARIES} core data preprocessing classification ${AF_LIBS})
 ENDIF(SWIG_FOUND)
