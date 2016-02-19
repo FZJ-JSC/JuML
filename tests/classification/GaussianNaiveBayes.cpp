@@ -36,8 +36,8 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, IRIS_CPU_TEST) {
     for (int row = 0; row < 3; ++row) {
         ASSERT_FLOAT_EQ(prior(row).scalar<float>(), PRIORS[row]);
         for (int col = 0; col < 4; ++col) {
-            ASSERT_NEAR(theta(row, col).scalar<float>(), THETA[row][col], 0.001);
-            ASSERT_FLOAT_EQ(stddev(row, col).scalar<float>(), STDDEV[row][col]);
+            ASSERT_NEAR(theta(col, row).scalar<float>(), THETA[row][col], 0.001);
+            ASSERT_FLOAT_EQ(stddev(col, row).scalar<float>(), STDDEV[row][col]);
         }
     }
     ASSERT_FLOAT_EQ(gnb.accuracy(X, y), ACCURACY);
@@ -57,8 +57,8 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, IRIS_OPENCL_TEST) {
     for (int row = 0; row < 3; ++row) {
         ASSERT_FLOAT_EQ(prior(row).scalar<float>(), PRIORS[row]);
         for (int col = 0; col < 4; ++col) {
-            ASSERT_NEAR(theta(row, col).scalar<float>(), THETA[row][col], 0.001);
-            ASSERT_FLOAT_EQ(stddev(row, col).scalar<float>(), STDDEV[row][col]);
+            ASSERT_NEAR(theta(col, row).scalar<float>(), THETA[row][col], 0.001);
+            ASSERT_FLOAT_EQ(stddev(col, row).scalar<float>(), STDDEV[row][col]);
         }
     }
     ASSERT_FLOAT_EQ(gnb.accuracy(X, y), ACCURACY);
@@ -80,8 +80,8 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, IRIS_CUDA_TEST) {
     for (int row = 0; row < 3; ++row) {
         ASSERT_FLOAT_EQ(prior(row).scalar<float>(), PRIORS[row]);
         for (int col = 0; col < 4; ++col) {
-            ASSERT_NEAR(theta(row, col).scalar<float>(), THETA[row][col], 0.001);
-            ASSERT_FLOAT_EQ(stddev(row, col).scalar<float>(), STDDEV[row][col]);
+            ASSERT_NEAR(theta(col, row).scalar<float>(), THETA[row][col], 0.001);
+            ASSERT_FLOAT_EQ(stddev(col, row).scalar<float>(), STDDEV[row][col]);
         }
     }
     ASSERT_FLOAT_EQ(gnb.accuracy(X, y), ACCURACY);
