@@ -8,20 +8,20 @@
 #include "classification/GaussianNaiveBayes.h"
 #include "data/Dataset.h"
 
-static const std::string FILE_PATH = "../../../datasets/iris.h5";
+static const std::string FILE_PATH = JUML_DATASETS"/iris.h5";
 static const std::string SAMPLES = "samples";
 static const std::string LABELS = "labels";
 
-static const float PRIORS[3] = {0.33333333, 0.33333333, 0.33333333};
-static const float THETA[3][4] = {{5.00599957, 3.41800022, 1.46399999, 0.24399997},
-                                  {5.93600180, 2.76999998, 4.26000023, 1.32599986},
-                                  {6.58799934, 2.97400022, 5.55200052, 2.02600026}};
+static const float PRIORS[3] = {0.33333333f, 0.33333333f, 0.33333333f};
+static const float THETA[3][4] = {{5.00599957f, 3.41800022f, 1.46399999f, 0.24399997f},
+                                  {5.93600180f, 2.76999998f, 4.26000023f, 1.32599986f},
+                                  {6.58799934f, 2.97400022f, 5.55200052f, 2.02600026f}};
                                     
-static const float STDDEV[3][4] = {{0.34894692, 0.3771949,  0.17176733, 0.10613199},
-                                   {0.51098338, 0.31064451, 0.46518815, 0.19576517},
-                                   {0.62948868, 0.31925543, 0.5463478,  0.27188972}};
+static const float STDDEV[3][4] = {{0.34894692f, 0.37719490f, 0.17176733f, 0.10613199f},
+                                   {0.51098338f, 0.31064451f, 0.46518815f, 0.19576517f},
+                                   {0.62948868f, 0.31925543f, 0.54634780f, 0.27188972f}};
                                    
-static const float ACCURACY = 0.95999999999999996;
+static const float ACCURACY = 0.95999999999999996f;
 
 TEST (GAUSSIAN_NAIVE_BAYES_TEST, IRIS_CPU_TEST) {
     juml::GaussianNaiveBayes gnb(juml::Backend::CPU);

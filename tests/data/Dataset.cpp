@@ -8,7 +8,7 @@
 
 #include "data/Dataset.h"
 
-const std::string FILE_PATH   = "../../../datasets/mpi_ranks.h5";
+const std::string FILE_PATH   = JUML_DATASETS"/mpi_ranks.h5";
 const std::string ONE_D_FLOAT = "1D_FLOAT";
 const std::string TWO_D_FLOAT = "2D_FLOAT";
 const std::string ONE_D_INT   = "1D_INT";
@@ -24,7 +24,7 @@ public:
     }
 };
 
-const std::string FILE_PATH_ROWNUMBER = "../../../datasets/rownumInColumns5x3.h5";
+const std::string FILE_PATH_ROWNUMBER = JUML_DATASETS"/rownumInColumns5x3.h5";
 const std::string ROWNUMBER_SETNAME = "testset";
 
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_SINGLE_PROCESS) {
@@ -33,14 +33,10 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_SINGLE_PROCESS) {
     juml::Dataset data(FILE_PATH_ROWNUMBER, ROWNUMBER_SETNAME, MPI_COMM_SELF);
 
     data.load_equal_chunks();
-    // this is currently not the case ! the matrix is read as 5 x 3
-    //file contains 5 rows and 3 columns. We should read it as 5 columns and 3 rows
     ASSERT_EQ(5, data.data().dims(0)) << "Number of Columns in File does not match number of Rows in Dataset";
     ASSERT_EQ(3, data.data().dims(1)) << "Number of Rows in File does not match number of Columns in Dataset";
 
-    af::print("data", data.data());
     for (int row = 0; row < 5; ++row) {
-        af::print("row created", af::transpose(af::constant(row, 3, s32)));
         ASSERT_TRUE(af::sum<int>(data.data().row(row) != af::transpose(af::constant(row, 3, s32))) == 0) << "row " << row << " does not only contain the row number";
     }
 }
