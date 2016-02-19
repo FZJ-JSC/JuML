@@ -145,9 +145,14 @@ namespace juml {
         }
         
         // initialize the array, swap the row and column dimensions before (HDF5 row-major, AF column-major)
-        if (n_dims > 1)
+        af::dim4 arrayDim4;
+        if (n_dims > 1) {
             std::swap<hsize_t>(chunk_dimensions[0], chunk_dimensions[1]);
-        this->data_ = af::array(af::dim4(n_dims, reinterpret_cast<dim_t*>(chunk_dimensions)), array_type);
+            arrayDim4 = af::dim4(n_dims, reinterpret_cast<dim_t*>(chunk_dimensions));
+        } else if (n_dims == 1) {
+            arrayDim4 = af::dim4(1, chunk_dimensions[0]);
+        }
+        this->data_ = af::array(arrayDim4, array_type);
         
         // read the actual data
         if (af::getBackendId(af::constant(0, 1)) == AF_BACKEND_CPU) {
@@ -160,8 +165,6 @@ namespace juml {
             af_write_array(this->data_.get(), buffer, size, afHost); 
             delete[] buffer;	
         }
-        if (n_dims > 1)
-            this->data_ = this->data_.T();
 
         // release ressources
         H5Tclose(native_type);
@@ -180,11 +183,11 @@ namespace juml {
     }
     
     dim_t Dataset::n_samples() const {
-        return this->data_.numdims() == 0 ? 0 : this->data_.dims(0);
+        return this->data_.dims(1);
     }
     
     dim_t Dataset::n_features() const {
-        return this->n_samples() == 0 ? 0 : this->data_.elements() / this->data_.dims(0);
+        return this->data_.dims(0);
     }
 } // namespace juml
 

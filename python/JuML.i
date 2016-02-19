@@ -2,6 +2,7 @@
 
 %{
     #define SWIG_FILE_WITH_INIT
+    #include "core/Algorithm.h"
     #include "data/Dataset.h"
     #include "preprocessing/ClassNormalizer.h"
     #include "classification/BaseClassifier.h"
@@ -15,13 +16,15 @@
 %include mpi4py/mpi4py.i
 %mpi4py_typemap(Comm, MPI_Comm);
 
-/*Wrap Armadillo*/
-%include "armanpy.i"
+/* Wrap arrayfire */
+%include arrayfire.i
+
+/*Wrap Core*/
+%include "core/Algorithm.h"
+%include "core/Definitions.h"
 
 /* Wrap Dataset*/
 %include "data/Dataset.h"
-%template(IntDataset) juml::Dataset<int>;
-%template(FloatDataset) juml::Dataset<float>;
 
 /* Wrap preprocessing */
 %include "preprocessing/ClassNormalizer.h"

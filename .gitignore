@@ -89,3 +89,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Idea IDEs
+*.idea
