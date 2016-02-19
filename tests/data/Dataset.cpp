@@ -33,11 +33,11 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_SINGLE_PROCESS) {
     juml::Dataset data(FILE_PATH_ROWNUMBER, ROWNUMBER_SETNAME, MPI_COMM_SELF);
 
     data.load_equal_chunks();
-    ASSERT_EQ(5, data.data().dims(0)) << "Number of Columns in File does not match number of Rows in Dataset";
-    ASSERT_EQ(3, data.data().dims(1)) << "Number of Rows in File does not match number of Columns in Dataset";
+    ASSERT_EQ(3, data.data().dims(0)) << "Number of Columns in File does not match number of Rows in Dataset";
+    ASSERT_EQ(5, data.data().dims(1)) << "Number of Rows in File does not match number of Columns in Dataset";
 
-    for (int row = 0; row < 5; ++row) {
-        ASSERT_TRUE(af::sum<int>(data.data().row(row) != af::transpose(af::constant(row, 3, s32))) == 0) << "row " << row << " does not only contain the row number";
+    for (int col = 0; col < 5; ++col) {
+        ASSERT_TRUE(af::sum<int>(data.data().col(col) != af::constant(col, 3, s32)) == 0) << "col " << col << " does not only contain the row number";
     }
 }
 
