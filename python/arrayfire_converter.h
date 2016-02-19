@@ -1,9 +1,12 @@
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include <arrayfire.h> 
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <numpy/ndarraytypes.h>
 
-af::array* toAF(PyArrayObject* np_array)
+
+af::array* toAF(PyArrayObject* np_array, bool copy=true)
 {  
     int ndims = PyArray_NDIM(np_array);
     if(ndims > 4)        
@@ -13,10 +16,10 @@ af::array* toAF(PyArrayObject* np_array)
     }
     npy_intp dims[ndims];
     std::copy(PyArray_DIMS(np_array), PyArray_DIMS(np_array)+ndims,dims);
-    if(PyArray_IS_C_CONTIGUOUS(np_array))
+    bool c_style = PyArray_IS_C_CONTIGUOUS(np_array);
+    if(c_style)
         std::swap(dims[0],dims[1]);
-    af::dim4 dimensions(ndims,(dim_t*)dims); 
-    char* data = (char*)PyArray_DATA(np_array);
+    af::dim4 dimensions(ndims,(dim_t*)dims);    
     af::dtype type;
     switch(PyArray_TYPE(np_array))
     {   
@@ -38,25 +41,36 @@ af::array* toAF(PyArrayObject* np_array)
             return NULL;
         }
     }   
-    af::array* ret = new af::array(dimensions, type);
-    ret->write(data, PyArray_NBYTES(np_array));
-    if(PyArray_IS_C_CONTIGUOUS(np_array))
-    {   af::array transposed = ret->T();
-        delete ret;
-        ret = new af::array(transposed);
+    
+    char* data = (char*)PyArray_DATA(np_array);
+    af::array* ret;
+    if (copy || af::getBackendId(af::constant(0,1)) != AF_BACKEND_CPU || c_style)
+    {
+        ret = new af::array(dimensions, type);
+        ret->write(data, PyArray_NBYTES(np_array));
+        if(c_style)
+        {  
+            af::array transposed = ret->T();
+            delete ret;
+            ret = new af::array(transposed);
+        }
+    }
+    else
+    {
+        af_array* arr;
+        af_device_array(arr, data, ndims, (long long*)dims, type);
+        ret = new af::array(arr);
+        ret->lock();
     }
     return ret;
 }
 
-PyObject* toNumpy(af::array* af_array)
+PyObject* toNumpy(af::array* af_array, bool copy = true)
 {  
     int ndims = af_array->numdims();
     npy_intp dims[ndims];
     for (int i = 0; i < ndims; i++) 
         dims[i] = af_array->dims(i);
-    
-    void* data = new char[af_array->bytes()];
-    af_array->host(data);
     
     int type;
     switch(af_array->type())
@@ -79,7 +93,20 @@ PyObject* toNumpy(af::array* af_array)
             return NULL;
         }
     }
+    void* data;
+    bool owner = true;
+    if(!copy && af::getBackendId(*af_array) == AF_BACKEND_CPU)
+    { 
+        data = af_array->device<char>();
+        owner = false;
+    }
+    else
+    {
+        data = new char[af_array->bytes()];
+        af_array->host(data);
+    }
     PyObject* array = PyArray_SimpleNewFromData(ndims, dims, type, data);
-    PyArray_ENABLEFLAGS((PyArrayObject*) array, NPY_OWNDATA);
+    if(owner)
+        PyArray_ENABLEFLAGS((PyArrayObject*) array, NPY_ARRAY_OWNDATA);
     return array;
 }

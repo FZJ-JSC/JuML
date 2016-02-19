@@ -25,7 +25,7 @@ namespace juml {
     {}
     
     void GaussianNaiveBayes::fit(Dataset& X, Dataset& y) {
-        af::setBackend(static_cast<af::Backend>(this->backend_.get()));        
+        af::setBackend(static_cast<af::Backend>(this->backend_.get()));
         
         X.load_equal_chunks();
         y.load_equal_chunks();

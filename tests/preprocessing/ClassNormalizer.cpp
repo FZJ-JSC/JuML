@@ -7,7 +7,7 @@
 #include "data/Dataset.h"
 #include "preprocessing/ClassNormalizer.h"
 
-static const std::string FILE_PATH = "../../../datasets/random_class_labels.h5";
+static const std::string FILE_PATH = JUML_DATASETS"/random_class_labels.h5";
 static const std::string DATA_SET = "labels";
 
 TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_CPU) {
