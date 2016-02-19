@@ -35,10 +35,10 @@ namespace juml {
         const af::array& y_ = y.data();
         
         const dim_t n_classes = this->class_normalizer_.n_classes();
-        this->class_counts_ = af::constant(0.0f, n_classes);
-        this->prior_ = af::constant(0.0f, n_classes);
-        this->theta_ = af::constant(0.0f, n_classes, X.n_features());
-        this->stddev_ = af::constant(0.0f, n_classes, X.n_features());
+        this->class_counts_ = af::constant(0.0f, 1, n_classes);
+        this->prior_ = af::constant(0.0f, 1, n_classes);
+        this->theta_ = af::constant(0.0f, X.n_features(), n_classes);
+        this->stddev_ = af::constant(0.0f, X.n_features(), n_classes);
         
         af::array transformed_labels = this->class_normalizer_.transform(y_);
         for (int label = 0; label < n_classes; ++label) {
@@ -46,8 +46,8 @@ namespace juml {
             this->class_counts_(label) = af::sum<int>(class_index);
             if (!af::anyTrue<bool>(this->class_counts_(label)))
                 continue;
-            af::array accumulated = af::sum(X_(class_index, af::span), 0);
-            this->theta_.row(label) = accumulated;
+            af::array accumulated = af::sum(X_(af::span, class_index), 1);
+            this->theta_.col(label) = accumulated;
         }
         this->prior_ = this->class_counts_;
         
@@ -72,8 +72,8 @@ namespace juml {
         // extract reduced class counts, prior and theta from message
         const intl total_n_y = (intl) message[n_floats - 1];
         this->prior_ /= total_n_y;        
-        gfor (af::seq column, X.n_features()) {
-            this->theta_(af::span, column) /= this->class_counts_;  
+        gfor (af::seq row, X.n_features()) {
+            this->theta_(row, af::span) /= this->class_counts_;
         }
         
         // calculate standard deviation for each feature
@@ -81,22 +81,22 @@ namespace juml {
             af::array class_index = (transformed_labels == label);
             if (!af::anyTrue<bool>(class_index))
                 continue;
-            af::array samples = X_(class_index, af::span);               
+            af::array samples = X_(af::span, class_index);
             af::gforSet(true);
-                af::array deviations = af::pow(samples - this->theta_(label, af::span), 2);
+                af::array deviations = af::pow(samples - this->theta_(af::span, label), 2);
             af::gforSet(false);
-            this->stddev_(label, af::span) = af::sum(deviations, 0);
+            this->stddev_(af::span, label) = af::sum(deviations, 1);
         }
         
         // exchange the standard deviations values
-        const size_t n_stddev = n_classes * X_.dims(1);
+        const size_t n_stddev = n_classes * X_.dims(0);
         this->stddev_.host(reinterpret_cast<void*>(message));
         MPI_Allreduce(MPI_IN_PLACE, message, n_stddev, MPI_FLOAT, MPI_SUM, this->comm_);
         this->stddev_.write(message, n_stddev * sizeof(float));
         
         // normalize standard deviation by class counts and calculate root (not variance)
-        gfor (af::seq column, X.n_features()) {
-            this->stddev_(af::span, column) /= this->class_counts_;
+        gfor (af::seq row, X.n_features()) {
+            this->stddev_(row, af::span) /= this->class_counts_;
         }
         this->stddev_ = af::sqrt(this->stddev_);
         
@@ -107,18 +107,18 @@ namespace juml {
     Dataset GaussianNaiveBayes::predict_probability(const Dataset& X) const {
         const dim_t n_classes = this->class_normalizer_.n_classes();
         af::setBackend(static_cast<af::Backend>(this->backend_.get()));
-        af::array probabilities = af::constant(1.0f, X.n_samples(), n_classes);
+        af::array probabilities = af::constant(1.0f, n_classes, X.n_samples());
         
         const af::array& X_ = X.data();
         gfor (af::seq sample, X.n_samples()) {
-            probabilities(sample, af::span) *= this->prior_.T();
+            probabilities(af::span, sample) *= this->prior_.T();
             
             for (int label = 0; label < n_classes; ++label) {
-                af::array mean = this->theta_(label, af::span);
-                af::array stddev = this->stddev_(label, af::span);
-                af::array X_row = X_(sample, af::span);
+                af::array mean = this->theta_(af::span, label);
+                af::array stddev = this->stddev_(af::span, label);
+                af::array X_row = X_(af::span, sample);
                 af::array class_probability = gaussian_pdf(X_row, mean, stddev);
-                probabilities(sample, label) = af::product(class_probability, 1);
+                probabilities(label, sample) = af::product(class_probability, 0);
             }
         }
         
@@ -131,7 +131,7 @@ namespace juml {
         af::array values(X.n_samples());
         af::array locations(X.n_samples());
         
-        af::max(values, locations, probabilities.data(), 1);
+        af::max(values, locations, probabilities.data(), 0);
         af::array locations_orig = this->class_normalizer_.invert(locations);
                 
         return Dataset(locations_orig, this->comm_);

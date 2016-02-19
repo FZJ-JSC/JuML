@@ -33,11 +33,11 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_SINGLE_PROCESS) {
     juml::Dataset data(FILE_PATH_ROWNUMBER, ROWNUMBER_SETNAME, MPI_COMM_SELF);
 
     data.load_equal_chunks();
-    ASSERT_EQ(5, data.data().dims(0)) << "Number of Columns in File does not match number of Rows in Dataset";
-    ASSERT_EQ(3, data.data().dims(1)) << "Number of Rows in File does not match number of Columns in Dataset";
+    ASSERT_EQ(3, data.data().dims(0)) << "Number of Columns in File does not match number of Rows in Dataset";
+    ASSERT_EQ(5, data.data().dims(1)) << "Number of Rows in File does not match number of Columns in Dataset";
 
-    for (int row = 0; row < 5; ++row) {
-        ASSERT_TRUE(af::sum<int>(data.data().row(row) != af::transpose(af::constant(row, 3, s32))) == 0) << "row " << row << " does not only contain the row number";
+    for (int col = 0; col < 5; ++col) {
+        ASSERT_TRUE(af::sum<int>(data.data().col(col) != af::constant(col, 3, s32)) == 0) << "col " << col << " does not only contain the row number";
     }
 }
 
@@ -46,8 +46,8 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_CPU_TEST) {
     juml::Dataset data_1D(FILE_PATH, ONE_D_FLOAT);
 
     data_1D.load_equal_chunks();
-    for (size_t row = 0; row < data_1D.data().elements(); ++row) {
-        ASSERT_FLOAT_EQ(data_1D.data()(row).scalar<float>(), (float)this->rank_);
+    for (size_t col = 0; col < data_1D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_1D.data().col(col) == (float)this->rank_));
     }
 }
 
@@ -56,8 +56,8 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_FLOAT_CPU_TEST) {
     juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
 
     data_2D.load_equal_chunks();
-    for (size_t row = 0; row < data_2D.data().elements(); ++row) {
-        ASSERT_FLOAT_EQ(data_2D.data()(row).scalar<float>(), (float)this->rank_);
+    for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == (float)this->rank_));
     }
 }
 
@@ -66,8 +66,8 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_INT_CPU_TEST) {
     juml::Dataset data_1D(FILE_PATH, ONE_D_INT);
 
     data_1D.load_equal_chunks();
-    for (size_t row = 0; row < data_1D.data().elements(); ++row) {
-        ASSERT_EQ(data_1D.data()(row).scalar<int>(), this->rank_);
+    for (size_t col = 0; col < data_1D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_1D.data().col(col) == this->rank_));
     }
 }
 
@@ -76,8 +76,8 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_CPU_TEST) {
     juml::Dataset data_2D(FILE_PATH, TWO_D_INT);
 
     data_2D.load_equal_chunks();
-    for (size_t row = 0; row < data_2D.data().elements(); ++row) {
-        ASSERT_EQ(data_2D.data().device<int>()[row], this->rank_);
+    for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
+	ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == this->rank_));
     }
 }
 
@@ -87,9 +87,8 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_OPENCL_TEST) {
     juml::Dataset data_1D(FILE_PATH, ONE_D_FLOAT);
 
     data_1D.load_equal_chunks();
-    float* data_ptr =  data_1D.data().host<float>();
-    for (size_t row = 0; row < data_1D.data().elements(); ++row) {
-        ASSERT_FLOAT_EQ(data_ptr[row], (float)this->rank_);
+    for (size_t col = 0; col < data_1D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_1D.data().col(col) == (float)this->rank_));
     }
 }
 
@@ -98,9 +97,8 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_FLOAT_OPENCL_TEST) {
     juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
 
     data_2D.load_equal_chunks();
-    float* data_ptr =  data_2D.data().host<float>();
-    for (size_t row = 0; row < data_2D.data().elements(); ++row) {
-        ASSERT_FLOAT_EQ(data_ptr[row], (float)this->rank_);
+    for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == (float)this->rank_));
     }
 }
 
@@ -112,10 +110,10 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_INT_OPENCL_TEST) {
     juml::Dataset data_1D(FILE_PATH, ONE_D_INT);
 
     data_1D.load_equal_chunks();
-    int* data_ptr =  data_1D.data().host<int>();
-    for (size_t row = 0; row < data_1D.data().elements(); ++row) {
-        ASSERT_EQ(data_ptr[row], this->rank_);
+    for (size_t col = 0; col < data_1D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_1D.data().col(col) == this->rank_));
     }
+
 }
 
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_OPENCL_TEST) {
@@ -124,9 +122,8 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_OPENCL_TEST) {
 
     data_2D.load_equal_chunks();
 
-    int* data_ptr =  data_2D.data().host<int>();
-    for (size_t row = 0; row < data_2D.data().elements(); ++row) {
-        ASSERT_EQ(data_ptr[row], this->rank_);
+    for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == this->rank_));
     }
 }
 #endif
@@ -138,9 +135,8 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_CUDA_TEST) {
     juml::Dataset data_1D(FILE_PATH, ONE_D_FLOAT);
 
     data_1D.load_equal_chunks();
-    float* data_ptr =  data_1D.data().host<float>();
-    for (size_t row = 0; row < data_1D.data().elements(); ++row) {
-        ASSERT_FLOAT_EQ(data_ptr[row], (float)this->rank_);
+    for (size_t col = 0; col < data_1D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_1D.data().col(col) == (float)this->rank_));
     }
 }
 
@@ -149,9 +145,8 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_FLOAT_CUDA_TEST) {
     juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
 
     data_2D.load_equal_chunks();
-    float* data_ptr =  data_2D.data().host<float>();
-    for (size_t row = 0; row < data_2D.data().elements(); ++row) {
-        ASSERT_FLOAT_EQ(data_ptr[row], (float)this->rank_);
+    for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == (float)this->rank_));
     }
 }
 
@@ -163,9 +158,8 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_INT_CUDA_TEST) {
     juml::Dataset data_1D(FILE_PATH, ONE_D_INT);
 
     data_1D.load_equal_chunks();
-    int* data_ptr =  data_1D.data().host<int>();
-    for (size_t row = 0; row < data_1D.data().elements(); ++row) {
-        ASSERT_EQ(data_ptr[row], this->rank_);
+    for (size_t col = 0; col < data_1D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_1D.data().col(col) == this->rank_));
     }
 }
 
@@ -175,9 +169,8 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_CUDA_TEST) {
 
     data_2D.load_equal_chunks();
 
-    int* data_ptr =  data_2D.data().host<int>();
-    for (size_t row = 0; row < data_2D.data().elements(); ++row) {
-        ASSERT_EQ(data_ptr[row], this->rank_);
+    for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == this->rank_));
     }
 }
 #endif
