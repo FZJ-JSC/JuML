@@ -81,6 +81,16 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_CPU_TEST) {
     }
 }
 
+TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_PREVENT_RELOAD_CPU_TEST) {
+    af::setBackend(AF_BACKEND_CPU);
+    juml::Dataset data_1D(FILE_PATH, ONE_D_INT);
+    int status = data_1D.load_equal_chunks();
+    ASSERT_EQ(status, 0);
+
+    status = data_1D.load_equal_chunks();
+    ASSERT_EQ(status, 1);
+}
+
 #ifdef JUML_OPENCL
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_OPENCL_TEST) {
     af::setBackend(AF_BACKEND_OPENCL);
