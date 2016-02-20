@@ -33,6 +33,19 @@ namespace juml {
         MPI_Comm_rank(this->comm_, &this->mpi_rank_);
         MPI_Comm_size(this->comm_, &this->mpi_size_);    
     }
+
+    time_t Dataset::modified_time() {
+        struct stat info;
+        int status;
+
+        status = stat(this->filename_.c_str(), &info);
+        if (status != 0) {
+            std::stringstream error;
+            error << "Could not open file " << this->filename_;
+            throw std::runtime_error(error.str().c_str());
+        }
+        return info.st_mtim.tv_sec;
+    }
     
     af::dtype Dataset::h5_to_af(hid_t h5_type) {
              if (H5Tequal(h5_type, H5T_NATIVE_CHAR))    return u8;
@@ -52,7 +65,16 @@ namespace juml {
         throw std::domain_error("Unsupported HDF5 type");
     }
 
-    void Dataset::load_equal_chunks() {
+    int Dataset::load_equal_chunks() {
+        time_t mod_time = this->modified_time();
+        if (mod_time <= this->loading_time_) {
+            std::cout << "not loaded" << std::endl;
+            return 1;
+        }
+        else {
+            this->loading_time_ = mod_time;
+            std::cout << "loaded" << std::endl;
+        }
         // create access list for parallel IO
         hid_t access_plist = H5Pcreate(H5P_FILE_ACCESS);
         if (access_plist < 0)
@@ -172,6 +194,8 @@ namespace juml {
         H5Dclose(data_id);
         H5Fclose(file_id);
         H5Pclose(access_plist);
+
+        return 0;
     }
     
     af::array& Dataset::data() {

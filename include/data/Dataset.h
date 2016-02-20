@@ -18,8 +18,10 @@
 
 #include <arrayfire.h>
 #include <hdf5.h>
+#include <limits>
 #include <mpi.h>
 #include <string>
+#include <sys/stat.h>
 
 namespace juml {
     //! Dataset
@@ -29,6 +31,7 @@ namespace juml {
         af::array data_;
         const std::string filename_;
         const std::string dataset_;
+        time_t loading_time_ = std::numeric_limits<time_t>::min();
         const MPI_Comm comm_;
         int mpi_rank_;
         int mpi_size_;
@@ -39,8 +42,9 @@ namespace juml {
         //! Dataset constructor
         Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm=MPI_COMM_WORLD);        
         Dataset(af::array& data, MPI_Comm comm=MPI_COMM_WORLD);
-       
-        void load_equal_chunks();
+
+        time_t modified_time();
+        int load_equal_chunks();
 
         virtual af::array& data();
         virtual const af::array& data() const;
