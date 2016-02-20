@@ -68,12 +68,10 @@ namespace juml {
     int Dataset::load_equal_chunks() {
         time_t mod_time = this->modified_time();
         if (mod_time <= this->loading_time_) {
-            std::cout << "not loaded" << std::endl;
             return 1;
         }
         else {
             this->loading_time_ = mod_time;
-            std::cout << "loaded" << std::endl;
         }
         // create access list for parallel IO
         hid_t access_plist = H5Pcreate(H5P_FILE_ACCESS);
