@@ -34,7 +34,7 @@ namespace juml {
         MPI_Comm_size(this->comm_, &this->mpi_size_);    
     }
 
-    time_t Dataset::modified_time() {
+    time_t Dataset::modified_time() const {
         struct stat info;
         int status;
 
@@ -45,6 +45,10 @@ namespace juml {
             throw std::runtime_error(error.str().c_str());
         }
         return info.st_mtim.tv_sec;
+    }
+
+    time_t Dataset::loading_time() const {
+        return this->loading_time_;
     }
     
     af::dtype Dataset::h5_to_af(hid_t h5_type) {

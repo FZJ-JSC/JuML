@@ -42,7 +42,8 @@ namespace juml {
         Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm=MPI_COMM_WORLD);        
         Dataset(af::array& data, MPI_Comm comm=MPI_COMM_WORLD);
 
-        time_t modified_time();
+        time_t modified_time() const;
+        time_t loading_time() const;
         void load_equal_chunks(bool force=false);
 
         virtual af::array& data();
