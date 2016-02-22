@@ -71,7 +71,7 @@ namespace juml {
 
     void Dataset::load_equal_chunks(bool force=false) {
         time_t mod_time = this->modified_time();
-        if (force && mod_time <= this->loading_time_) {
+        if (!force && mod_time <= this->loading_time_) {
             return ;
         }
         else {
