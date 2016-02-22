@@ -18,7 +18,6 @@
 
 #include <arrayfire.h>
 #include <hdf5.h>
-#include <limits>
 #include <mpi.h>
 #include <string>
 #include <sys/stat.h>
@@ -31,7 +30,7 @@ namespace juml {
         af::array data_;
         const std::string filename_;
         const std::string dataset_;
-        time_t loading_time_ = std::numeric_limits<time_t>::min();
+        time_t loading_time_ = 0;
         const MPI_Comm comm_;
         int mpi_rank_;
         int mpi_size_;
