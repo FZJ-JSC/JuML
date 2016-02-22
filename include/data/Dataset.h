@@ -43,7 +43,7 @@ namespace juml {
         Dataset(af::array& data, MPI_Comm comm=MPI_COMM_WORLD);
 
         time_t modified_time();
-        int load_equal_chunks();
+        void load_equal_chunks(bool force=false);
 
         virtual af::array& data();
         virtual const af::array& data() const;

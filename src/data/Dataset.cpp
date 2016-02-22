@@ -65,10 +65,10 @@ namespace juml {
         throw std::domain_error("Unsupported HDF5 type");
     }
 
-    int Dataset::load_equal_chunks() {
+    void Dataset::load_equal_chunks(bool force=false) {
         time_t mod_time = this->modified_time();
-        if (mod_time <= this->loading_time_) {
-            return 1;
+        if (force && mod_time <= this->loading_time_) {
+            return ;
         }
         else {
             this->loading_time_ = mod_time;
@@ -192,8 +192,6 @@ namespace juml {
         H5Dclose(data_id);
         H5Fclose(file_id);
         H5Pclose(access_plist);
-
-        return 0;
     }
     
     af::array& Dataset::data() {
