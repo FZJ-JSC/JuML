@@ -76,9 +76,7 @@ namespace juml {
 				// matmul(transpose(IxN), (Ixb)) + (Nx1) =
 				// matmul(         (NxI), (Ixb)) + (Nx1) = (Nxb) + (Nx1) 
 				af::array sumOfWeightedInputs = af::matmulTN(this->weights, input);// + this->bias;
-				gfor(af::seq i, sumOfWeightedInputs.dims(1)) {
-					sumOfWeightedInputs(af::span, i) += this->bias;
-				}
+				sumOfWeightedInputs += af::tile(this->bias, 1, sumOfWeightedInputs.dims(1));
 				this->lastOutput = af::sigmoid(sumOfWeightedInputs);
 				return lastOutput;
 			}
