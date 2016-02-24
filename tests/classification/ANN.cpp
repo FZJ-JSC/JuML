@@ -23,9 +23,9 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	af::array yarray = af::array(1, 4, y);
 	Dataset Xset(Xarray);
 	Dataset yset(yarray);
-	std::vector<std::unique_ptr<Layer>> layers;
-	layers.push_back(std::unique_ptr<Layer>(new SigmoidLayer(3, 4)));
-	layers.push_back(std::unique_ptr<Layer>(new SigmoidLayer(4,1)));
+	std::vector<std::shared_ptr<Layer>> layers;
+	layers.push_back(std::shared_ptr<Layer>(new SigmoidLayer(3, 4)));
+	layers.push_back(std::shared_ptr<Layer>(new SigmoidLayer(4,1)));
 	SequentialNeuralNet net(AF_BACKEND_CPU, layers);
 	net.fit(Xset, yset);
 	//TODO check result
@@ -42,9 +42,9 @@ static const std::string LABELS = "labels";
 TEST(ANN_TEST, IRIS_TEST) {
 	using juml::ann::Layer;
 	using juml::ann::SigmoidLayer;
-	std::vector<std::unique_ptr<Layer>> layers;
-	layers.push_back(std::unique_ptr<Layer>(new SigmoidLayer(4, 100)));
-	layers.push_back(std::unique_ptr<Layer>(new SigmoidLayer(100, 1)));
+	std::vector<std::shared_ptr<Layer>> layers;
+	layers.push_back(std::shared_ptr<Layer>(new SigmoidLayer(4, 100)));
+	layers.push_back(std::shared_ptr<Layer>(new SigmoidLayer(100, 1)));
 	juml::SequentialNeuralNet net(AF_BACKEND_CPU, layers);
 	juml::Dataset X(FILE_PATH, SAMPLES);
 	juml::Dataset y(FILE_PATH, LABELS);
