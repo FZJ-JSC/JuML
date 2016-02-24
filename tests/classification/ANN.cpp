@@ -57,7 +57,7 @@ TEST(ANN_TES, TEST_XOR) {
 }
 
 
-static const std::string FILE_PATH = "../../../datasets/iris.h5";
+static const std::string FILE_PATH = "../../../datasets/iris_ann.h5";
 static const std::string SAMPLES = "samples";
 static const std::string LABELS = "labels";
 
@@ -67,7 +67,7 @@ TEST(ANN_TEST, IRIS_TEST) {
 	using juml::ann::SigmoidLayer;
 	std::vector<std::shared_ptr<Layer>> layers;
 	layers.push_back(std::shared_ptr<Layer>(new SigmoidLayer(4, 100)));
-	layers.push_back(std::shared_ptr<Layer>(new SigmoidLayer(100, 1)));
+	layers.push_back(std::shared_ptr<Layer>(new SigmoidLayer(100, 3)));
 	juml::SequentialNeuralNet net(AF_BACKEND_CPU, layers);
 	juml::Dataset X(FILE_PATH, SAMPLES);
 	juml::Dataset y(FILE_PATH, LABELS);
