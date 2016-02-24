@@ -93,6 +93,7 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_FLOAT_TEST_OPENCL) {
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_DOUBLE_TEST_OPENCL) {
     af::setBackend(AF_BACKEND_OPENCL);
+    if (!af::isDoubleAvailable(af::getDevice())) {return;}
     
     // normal bell curve
     ASSERT_DOUBLE_EQ(juml::gaussian_pdf(-0.5, 0.0, 1.0), 0.35206532676429952);
@@ -115,11 +116,15 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_NAN_TEST_OPENCL) {
 
     // passing NaN values
     ASSERT_TRUE(std::isnan(juml::gaussian_pdf(float_nan,  0.0f, 1.0f)));
-    ASSERT_TRUE(std::isnan(juml::gaussian_pdf(double_nan, 0.0,  1.0)));
+    if (af::isDoubleAvailable(af::getDevice())) {
+        ASSERT_TRUE(std::isnan(juml::gaussian_pdf(double_nan, 0.0,  1.0)));
+    }
     
     // zero standard deviation
     ASSERT_TRUE(std::isnan(juml::gaussian_pdf(0.5f, 0.0f, 0.0f)));
-    ASSERT_TRUE(std::isnan(juml::gaussian_pdf(0.5,  0.0,  0.0)));
+    if (af::isDoubleAvailable(af::getDevice())) {
+        ASSERT_TRUE(std::isnan(juml::gaussian_pdf(0.5,  0.0,  0.0)));
+    }
 }
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_VECTOR_TEST_OPENCL) {
@@ -163,6 +168,7 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_FLOAT_TEST_CUDA) {
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_DOUBLE_TEST_CUDA) {
     af::setBackend(AF_BACKEND_CUDA);
+    if (!af::isDoubleAvailable(af::getDevice())) {return;}
     
     // normal bell curve
     ASSERT_DOUBLE_EQ(juml::gaussian_pdf(-0.5, 0.0, 1.0), 0.35206532676429952);
@@ -185,11 +191,15 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_NAN_TEST_CUDA) {
 
     // passing NaN values
     ASSERT_TRUE(std::isnan(juml::gaussian_pdf(float_nan,  0.0f, 1.0f)));
-    ASSERT_TRUE(std::isnan(juml::gaussian_pdf(double_nan, 0.0,  1.0)));
+    if (af::isDoubleAvailable(af::getDevice())) {
+        ASSERT_TRUE(std::isnan(juml::gaussian_pdf(double_nan, 0.0,  1.0)));
+    }
     
     // zero standard deviation
     ASSERT_TRUE(std::isnan(juml::gaussian_pdf(0.5f, 0.0f, 0.0f)));
-    ASSERT_TRUE(std::isnan(juml::gaussian_pdf(0.5,  0.0,  0.0)));
+    if (af::isDoubleAvailable(af::getDevice())) {
+        ASSERT_TRUE(std::isnan(juml::gaussian_pdf(0.5,  0.0,  0.0)));
+    }
 }
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_VECTOR_TEST_CUDA) {
