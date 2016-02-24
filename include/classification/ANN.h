@@ -39,6 +39,29 @@ namespace juml {
 				if (this->layers.size() == 0) {
 					throw std::runtime_error("Need at least 1 layer");
 				}
+				auto it = layers.begin();
+				int before_node_count = (*it)->node_count;
+				it++;
+				int i = 1;
+				for(;it != layers.end();it++) {
+					if (before_node_count != (*it)->input_count) {
+						std::stringstream errMsg;
+						errMsg 
+							<< "Layer Mismatch: Layer " 
+							<< (i - 1)
+							<< " has "
+							<< before_node_count
+							<< " Nodes, but the next layer expects "
+							<< (*it)->input_count 
+							<< " inputs";
+						throw std::runtime_error(errMsg.str());
+
+
+					}
+					before_node_count = (*it)->node_count;
+					i += 1;
+				}
+
 			}
 			void fit(Dataset& X, Dataset& y) override;
 			Dataset predict(const Dataset& X) const override;

@@ -52,6 +52,21 @@ TEST(ANN_TEST, IRIS_TEST) {
 	net.fit(X, y);
 }
 
+TEST(ANN_TEST, INCOMPATIBLE_LAYERS) {
+	using juml::ann::Layer;
+	using juml::ann::SigmoidLayer;
+	std::vector<std::shared_ptr<Layer>> layers;
+	layers.push_back(std::make_shared<SigmoidLayer>(4, 5));
+	layers.push_back(std::make_shared<SigmoidLayer>(3, 2));
+	try {
+		juml::SequentialNeuralNet(0, layers);
+		FAIL() << "SequentialNeuralNet Constructor did not notice incompatible layers";
+	} catch(...) {
+		SUCCEED();
+		//TODO: Check for explicit Exception type
+	}
+}
+
 
 int main(int argc, char** argv) {
     int result = -1;
