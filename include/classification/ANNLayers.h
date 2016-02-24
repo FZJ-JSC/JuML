@@ -1,6 +1,7 @@
 #ifndef JUML_ANNLAYERS_H_
 #define JUML_ANNLAYERS_H_
 #include<arrayfire.h>
+#include<iostream>
 namespace juml {
 	namespace ann {
 		class Layer {
@@ -59,7 +60,11 @@ namespace juml {
 					return lastOutput;
 				}
 
-				virtual ~Layer() {};
+				virtual ~Layer() {
+#ifndef NDEBUG
+					std::cout << "Layer Deconstructor called" << std::endl;
+#endif
+				};
 		};
 
 		//TODO implement a template-'FunctionLayer' with template-spezialisations for different activation functions?
