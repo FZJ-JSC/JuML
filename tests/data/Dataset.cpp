@@ -90,6 +90,17 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_PREVENT_RELOAD_CPU_TEST) {
     ASSERT_GT(data_1D.loading_time(), loading_time);
 }
 
+TEST_F(DATASET_TEST, CREATE_FROM_ARRAY) {
+    af::setBackend(AF_BACKEND_CPU);
+    af::array data = af::constant(1, 4, 4);
+
+    juml::Dataset set(data);
+    ASSERT_TRUE(af::allTrue<bool>(set.data() == data));
+
+    // call load_equal_chunks, nothing is done
+    set.load_equal_chunks();
+}
+
 #ifdef JUML_OPENCL
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_OPENCL_TEST) {
     af::setBackend(AF_BACKEND_OPENCL);
