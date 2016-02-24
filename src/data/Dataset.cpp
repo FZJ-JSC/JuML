@@ -70,6 +70,9 @@ namespace juml {
     }
 
     void Dataset::load_equal_chunks(bool force) {
+        if (this->filename_.empty()) {
+            return ;
+        }
         time_t mod_time = this->modified_time();
         if (!force && mod_time <= this->loading_time_) {
             return ;
