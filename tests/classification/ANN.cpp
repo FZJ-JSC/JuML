@@ -33,6 +33,29 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 
 }
 
+TEST(ANN_TES, TEST_XOR) {
+	using juml::Dataset;
+	using juml::ann::Layer;
+	using juml::ann::SigmoidLayer;
+	using juml::SequentialNeuralNet;
+
+	float X[] = {
+		0, 0, 1, 1,
+		0, 1, 0, 1
+	};
+	float y[] = {0, 1, 1, 0};
+	af::array Xarray = af::array(2, 4, X);
+	af::array yarray = af::array(1, 4, y);
+	Dataset Xset(Xarray);
+	Dataset yset(yarray);
+
+	std::vector<std::shared_ptr<Layer>> layers;
+	layers.push_back(std::make_shared<SigmoidLayer>(2, 2));
+	layers.push_back(std::make_shared<SigmoidLayer>(2, 1));
+	SequentialNeuralNet net(0, layers);
+	net.fit(Xset, yset);
+}
+
 
 static const std::string FILE_PATH = "../../../datasets/iris.h5";
 static const std::string SAMPLES = "samples";
