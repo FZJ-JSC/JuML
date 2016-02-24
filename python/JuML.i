@@ -7,10 +7,14 @@
     #include "preprocessing/ClassNormalizer.h"
     #include "classification/BaseClassifier.h"
     #include "classification/GaussianNaiveBayes.h"
+    #include "classification/ANN.h"
+    #include "classification/ANNLayers.h"
 %}
 
 /* Wrap std::string */
 %include std_string.i
+
+%include std_vector.i
 
 /* Wrap mpi4py */
 %include mpi4py/mpi4py.i
@@ -29,9 +33,18 @@
 /* Wrap preprocessing */
 %include "preprocessing/ClassNormalizer.h"
 
+%include <std_shared_ptr.i>
+
 /* Wrap classification */
 %include "classification/BaseClassifier.h"
 %include "classification/GaussianNaiveBayes.h"
+%shared_ptr(juml::ann::Layer)
+%shared_ptr(juml::ann::SigmoidLayer)
+namespace std {
+    %template(LayerVector) std::vector<std::shared_ptr<juml::ann::Layer>>;
+}
+%include "classification/ANNLayers.h"
+%include "classification/ANN.h"
 
 /* Remove unwanted *_swigregister globals */
 %pythoncode %{
