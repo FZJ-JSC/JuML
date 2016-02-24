@@ -8,7 +8,7 @@
 
 #include "data/Dataset.h"
 
-const std::string FILE_PATH   = "../../../datasets/mpi_ranks.h5";
+const std::string FILE_PATH   = JUML_DATASETS"/mpi_ranks.h5";
 const std::string ONE_D_FLOAT = "1D_FLOAT";
 const std::string TWO_D_FLOAT = "2D_FLOAT";
 const std::string ONE_D_INT   = "1D_INT";
@@ -24,7 +24,7 @@ public:
     }
 };
 
-const std::string FILE_PATH_ROWNUMBER = "../../../datasets/rownumInColumns5x3.h5";
+const std::string FILE_PATH_ROWNUMBER = JUML_DATASETS"/rownumInColumns5x3.h5";
 const std::string ROWNUMBER_SETNAME = "testset";
 
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_SINGLE_PROCESS) {
@@ -33,11 +33,9 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_SINGLE_PROCESS) {
     juml::Dataset data(FILE_PATH_ROWNUMBER, ROWNUMBER_SETNAME, MPI_COMM_SELF);
 
     data.load_equal_chunks();
-    //file contains 5 rows and 3 columns. We should read it as 5 columns and 3 rows
     ASSERT_EQ(3, data.data().dims(0)) << "Number of Columns in File does not match number of Rows in Dataset";
     ASSERT_EQ(5, data.data().dims(1)) << "Number of Rows in File does not match number of Columns in Dataset";
 
-    af::print("data", data.data());
     for (int col = 0; col < 5; ++col) {
         ASSERT_TRUE(af::sum<int>(data.data().col(col) != af::constant(col, 3, s32)) == 0) << "col " << col << " does not only contain the row number";
     }
@@ -81,6 +79,15 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_CPU_TEST) {
     for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
 	ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == this->rank_));
     }
+}
+
+TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_PREVENT_RELOAD_CPU_TEST) {
+    af::setBackend(AF_BACKEND_CPU);
+    juml::Dataset data_1D(FILE_PATH, ONE_D_INT);
+    time_t loading_time = data_1D.loading_time();
+    ASSERT_EQ(loading_time, 0);
+    data_1D.load_equal_chunks();
+    ASSERT_GT(data_1D.loading_time(), loading_time);
 }
 
 #ifdef JUML_OPENCL

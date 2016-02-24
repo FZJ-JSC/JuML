@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <armadillo>
 #include <cmath>
 #include <limits>
 
