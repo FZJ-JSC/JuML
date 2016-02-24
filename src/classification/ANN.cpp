@@ -17,6 +17,7 @@
 
 #include "classification/ANN.h"
 #include <stdexcept>
+#include <iostream>
 namespace juml {
 
 Dataset SequentialNeuralNet::predict(const Dataset& X) const  {
@@ -68,7 +69,9 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 			af::array sample = Xdata(af::span, af::seq(i, i+batchsize - 1));
 			this->forward_all(sample);
 			af::array delta = this->layers.back()->getLastOutput() - target;
-			this->backwards_all(sample, delta );
+			this->backwards_all(sample, delta);
+			double error = af::sum<float>(af::sum(delta * delta));
+			std::cout << "Error: " << error << std::endl;
 		}
 		for (auto it = this->layers.begin(); it != this->layers.end(); ++it) {
 			(*it)->updateWeights(learningrate);
