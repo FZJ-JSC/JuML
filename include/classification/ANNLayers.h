@@ -96,7 +96,7 @@ namespace juml {
 				// (Nx1) += (Nxb) 
 				// TODO: Check if this sum-update is the right aproach.
 				this->bias_update += af::sum(d, 1);
-				this->update_count += 1;
+				this->update_count += input.dims(1);
 				// matmul(IxN, Nxb) = Ixb;
 				this->lastOutput = af::matmul(this->weights, lastDelta);
 				return this->lastOutput;

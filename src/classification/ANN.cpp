@@ -56,8 +56,8 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 	af::array ydata = y.data();
 	const int n_samples = Xdata.dims(1);
 	const int n_features = Xdata.dims(0);
-	const int batchsize = 2;
-	af::array target(this->layers.back()->node_count);
+	const int batchsize = 1;
+	af::array target(this->layers.back()->node_count, batchsize);
 
 	//TODO use matrix-matrix multiply for batches of inputs
 	for (int iteration = 0; iteration < max_iterations; iteration++) {
@@ -66,11 +66,15 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 			//TODO: Class labels probably need to be transformed!
 			//TODO need to generate target vector
 			//target = af::iota(normalizer.n_classes()) == ydata(i);
+			// (Number of Nodes in last layer=O)xb
 			target = ydata(af::span, af::seq(i, i+batchsize - 1));
+			// Fxb
 			af::array sample = Xdata(af::span, af::seq(i, i+batchsize - 1));
 			this->forward_all(sample);
+			// Oxb = Oxb - Oxb
 			af::array delta = this->layers.back()->getLastOutput() - target;
 			this->backwards_all(sample, delta);
+			// 1x1 += sum(sum(Oxb)) = sum(1xb) = 1x1
 			error += af::sum(af::sum(delta * delta));
 		}
 		std::cout << "Error: " << (af::sum<float>(error)) << std::endl;
