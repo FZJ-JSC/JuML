@@ -20,7 +20,7 @@
 #include <iostream>
 namespace juml {
 
-Dataset SequentialNeuralNet::predict(const Dataset& X) const  {
+Dataset SequentialNeuralNet::predict(Dataset& X) const  {
 	throw std::runtime_error("not yet implemented");
 }
 
@@ -105,7 +105,7 @@ void SequentialNeuralNet::backwards_all(const af::array& input, const af::array&
 	}
 }
 
-float SequentialNeuralNet::accuracy(const Dataset& X, const Dataset& y) const {
+float SequentialNeuralNet::accuracy(Dataset& X, Dataset& y) const {
 	throw std::runtime_error("not yet implemented");
 }
 

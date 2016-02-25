@@ -28,7 +28,6 @@
 #include "data/Dataset.h"
 
 namespace juml {
-	//TODO: interface class for ANN-layer
 	class SequentialNeuralNet : public BaseClassifier {
 		protected:
 			std::vector<std::shared_ptr<ann::Layer>> &layers;
@@ -64,8 +63,8 @@ namespace juml {
 
 			}
 			void fit(Dataset& X, Dataset& y) override;
-			Dataset predict(const Dataset& X) const override;
-			float accuracy(const Dataset& X, const Dataset& y) const override;
+			Dataset predict(Dataset& X) const override;
+			float accuracy(Dataset& X, Dataset& y) const override;
 	};
 }
 
