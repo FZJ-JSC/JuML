@@ -34,9 +34,9 @@ namespace juml {
         GaussianNaiveBayes(int backend=Backend::CUDA, MPI_Comm comm=MPI_COMM_WORLD);
     
         virtual void fit(Dataset& X, Dataset& y);
-        virtual Dataset predict(const Dataset& X) const;
-        virtual Dataset predict_probability(const Dataset& X) const;
-        virtual float accuracy(const Dataset& X, const Dataset& y) const;
+        virtual Dataset predict(Dataset& X) const;
+        virtual Dataset predict_probability(Dataset& X) const;
+        virtual float accuracy(Dataset& X, Dataset& y) const;
 
         const af::array& class_counts() const;
         const af::array& prior() const;
