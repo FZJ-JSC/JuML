@@ -69,15 +69,43 @@ namespace juml {
 				};
 		};
 
+		enum class Activation { Sigmoid, Linear };
+
+		template<Activation T>
+		inline af::array activation(const af::array& in) {
+			throw std::runtime_error("Not implemented");
+		}
+
+		template<Activation T>
+		inline af::array activation_deriv(const af::array& out) {
+			throw std::runtime_error("Not implemented");
+		}
+//Linear:
+		template<>
+		inline af::array activation<Activation::Linear>(const af::array& in) {
+			return in;
+		}
+
+		template<>
+		inline af::array activation_deriv<Activation::Linear>(const af::array& out) {
+			return af::constant(1.0f, out.dims(0), out.dims(1));
+		}
+
+//Sigmoid:
+		template<>
+		inline af::array activation<Activation::Sigmoid>(const af::array& in) {
+			return af::sigmoid(in);
+		}
+		template<>
+		inline af::array activation_deriv<Activation::Sigmoid>(const af::array &out) {
+			return out * (1 - out);
+		}
+
 		//TODO implement a template-'FunctionLayer' with template-spezialisations for different activation functions?
-
-		class SigmoidLayer : public Layer {
+		template<Activation T>
+		class FunctionLayer: public Layer {
 			public: 
-			SigmoidLayer(int input_size, int node_count) : Layer(input_size, node_count) {}
-
-			inline af::array sigmoid_deriv(af::array &out) {
-				return out * (1 - out);
-			}
+			FunctionLayer(int input_size, int node_count) : Layer(input_size, node_count) {}
 
 			const af::array& forward(const af::array& input) override {
 				// matmul(transpose(IxN), (Ixb))  =
@@ -85,7 +113,7 @@ namespace juml {
 				af::array sumOfWeightedInputs = af::matmulTN(this->weights, input);
 				// Nxb += tile(Nx1, 1, b) = Nxb
 				sumOfWeightedInputs += af::tile(this->bias, 1, sumOfWeightedInputs.dims(1));
-				this->lastOutput = af::sigmoid(sumOfWeightedInputs);
+				this->lastOutput = activation<T>(sumOfWeightedInputs);
 				return lastOutput;
 			}
 
@@ -93,7 +121,7 @@ namespace juml {
 					const af::array& input /* column with input_count rows and batchsize columns*/,
 					const af::array& lastDelta /* column with node_count rows and batchsize columns */) override {
 				// scalar_mult(Nxb, Nxb) = Nxb
-				af::array d = lastDelta * sigmoid_deriv(this->lastOutput);
+				af::array d = lastDelta * activation_deriv<T>(this->lastOutput);
 				// matmul(Ixb, transpose(Nxb)) = matmul(Ixb, bxN) = (Ixb)*(bxN) = IxN
 				this->weights_update += matmulNT(input, d);
 				// (Nx1) += sum(Nxb, 1) = Nx1

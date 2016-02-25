@@ -9,8 +9,9 @@
 TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	using juml::Dataset;
 	using juml::ann::Layer;
-	using juml::ann::SigmoidLayer;
+	using juml::ann::FunctionLayer;
 	using juml::SequentialNeuralNet;
+	using juml::ann::Activation;
 	juml::Backend b = AF_BACKEND_CPU;
 	float X[] = {
 		0, 0, 1,
@@ -24,8 +25,8 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	Dataset Xset(Xarray);
 	Dataset yset(yarray);
 	std::vector<std::shared_ptr<Layer>> layers;
-	layers.push_back(std::shared_ptr<Layer>(new SigmoidLayer(3, 4)));
-	layers.push_back(std::shared_ptr<Layer>(new SigmoidLayer(4,1)));
+	layers.push_back(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(3, 4)));
+	layers.push_back(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(4,1)));
 	SequentialNeuralNet net(AF_BACKEND_CPU, layers);
 	net.fit(Xset, yset);
 	//TODO check result
@@ -36,8 +37,9 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 TEST(ANN_TES, TEST_XOR) {
 	using juml::Dataset;
 	using juml::ann::Layer;
-	using juml::ann::SigmoidLayer;
+	using juml::ann::FunctionLayer;
 	using juml::SequentialNeuralNet;
+	using juml::ann::Activation;
 
 	float X[] = {
 		0, 0, 1, 1,
@@ -50,8 +52,8 @@ TEST(ANN_TES, TEST_XOR) {
 	Dataset yset(yarray);
 
 	std::vector<std::shared_ptr<Layer>> layers;
-	layers.push_back(std::make_shared<SigmoidLayer>(2, 2));
-	layers.push_back(std::make_shared<SigmoidLayer>(2, 1));
+	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(2, 2));
+	layers.push_back(std::make_shared<FunctionLayer<Activation::Linear>>(2, 1));
 	SequentialNeuralNet net(0, layers);
 	net.fit(Xset, yset);
 }
@@ -64,10 +66,9 @@ static const std::string LABELS = "labels";
 
 TEST(ANN_TEST, IRIS_TEST) {
 	using juml::ann::Layer;
-	using juml::ann::SigmoidLayer;
 	std::vector<std::shared_ptr<Layer>> layers;
-	layers.push_back(std::shared_ptr<Layer>(new SigmoidLayer(4, 100)));
-	layers.push_back(std::shared_ptr<Layer>(new SigmoidLayer(100, 3)));
+	layers.push_back(std::shared_ptr<Layer>(new juml::ann::FunctionLayer<juml::ann::Activation::Sigmoid>(4, 100)));
+	layers.push_back(std::shared_ptr<Layer>(new juml::ann::FunctionLayer<juml::ann::Activation::Sigmoid>(100, 3)));
 	juml::SequentialNeuralNet net(AF_BACKEND_CPU, layers);
 	juml::Dataset X(FILE_PATH, SAMPLES);
 	juml::Dataset y(FILE_PATH, LABELS);
@@ -77,10 +78,11 @@ TEST(ANN_TEST, IRIS_TEST) {
 
 TEST(ANN_TEST, INCOMPATIBLE_LAYERS) {
 	using juml::ann::Layer;
-	using juml::ann::SigmoidLayer;
+	using juml::ann::FunctionLayer;
+	using juml::ann::Activation;
 	std::vector<std::shared_ptr<Layer>> layers;
-	layers.push_back(std::make_shared<SigmoidLayer>(4, 5));
-	layers.push_back(std::make_shared<SigmoidLayer>(3, 2));
+	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(4, 5));
+	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(3, 2));
 	try {
 		juml::SequentialNeuralNet(0, layers);
 		FAIL() << "SequentialNeuralNet Constructor did not notice incompatible layers";
