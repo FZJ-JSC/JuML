@@ -44,11 +44,7 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 		throw std::runtime_error(errMsg.str());
 	}
 
-/*	ClassNormalizer normalizer(this->comm_);
-	normalizer.index(y);
-	if (normalizer.n_classes() != this->layers.back()->node_count) {
-		throw std::runtime_error("Number of nodes in last layer does not match number of classes");
-	}*/
+	//TODO: Check that number of rows in label set matches number of nodes in the last layer of the network.
 
 	const int max_iterations = 200; //TODO: User-specify this value
 	const float learningrate = 1;
@@ -59,13 +55,9 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 	const int batchsize = 1;
 	af::array target(this->layers.back()->node_count, batchsize);
 
-	//TODO use matrix-matrix multiply for batches of inputs
 	for (int iteration = 0; iteration < max_iterations; iteration++) {
 		af::array error = af::constant(0, 1);
 		for (int i = 0; i < n_samples; i += batchsize) {
-			//TODO: Class labels probably need to be transformed!
-			//TODO need to generate target vector
-			//target = af::iota(normalizer.n_classes()) == ydata(i);
 			// (Number of Nodes in last layer=O)xb
 			target = ydata(af::span, af::seq(i, i+batchsize - 1));
 			// Fxb

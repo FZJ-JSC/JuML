@@ -25,8 +25,10 @@ namespace juml {
 
 				void updateWeights(float learningrate) {
 					if (update_count == 0) return;
+					//TODO: Sync weights_update, bias_update and update_count with other processes
 					this->weights_update /= this->update_count;
 					this->bias_update /= this->update_count;
+
 					this->weights -= learningrate * this->weights_update;
 				        this->bias -= learningrate * this->bias_update;
 
@@ -54,7 +56,7 @@ namespace juml {
 						const af::array& delta) = 0;
 
 				/**
-				 * Return the last output of the layer or the last delta value, depending on if forward or backwards was caled last.
+				 * Return the last output of the layer or the last delta value, depending on if forward or backwards was called last.
 				 */
 				inline const af::array& getLastOutput() const {
 					return lastOutput;
@@ -78,9 +80,10 @@ namespace juml {
 			}
 
 			const af::array& forward(const af::array& input) override {
-				// matmul(transpose(IxN), (Ixb)) + (Nx1) =
-				// matmul(         (NxI), (Ixb)) + (Nx1) = (Nxb) + (Nx1) 
-				af::array sumOfWeightedInputs = af::matmulTN(this->weights, input);// + this->bias;
+				// matmul(transpose(IxN), (Ixb))  =
+				// matmul(         (NxI), (Ixb))  = (Nxb)
+				af::array sumOfWeightedInputs = af::matmulTN(this->weights, input);
+				// Nxb += tile(Nx1, 1, b) = Nxb
 				sumOfWeightedInputs += af::tile(this->bias, 1, sumOfWeightedInputs.dims(1));
 				this->lastOutput = af::sigmoid(sumOfWeightedInputs);
 				return lastOutput;
@@ -93,8 +96,7 @@ namespace juml {
 				af::array d = lastDelta * sigmoid_deriv(this->lastOutput);
 				// matmul(Ixb, transpose(Nxb)) = matmul(Ixb, bxN) = (Ixb)*(bxN) = IxN
 				this->weights_update += matmulNT(input, d);
-				// (Nx1) += (Nxb) 
-				// TODO: Check if this sum-update is the right aproach.
+				// (Nx1) += sum(Nxb, 1) = Nx1
 				this->bias_update += af::sum(d, 1);
 				this->update_count += input.dims(1);
 				// matmul(IxN, Nxb) = Ixb;
