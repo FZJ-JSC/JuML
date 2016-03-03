@@ -71,11 +71,12 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 			this->backwards_all(sample, delta);
 			// 1x1 += sum(sum(Oxb)) = sum(1xb) = 1x1
 			error += af::sum(af::sum(delta * delta));
+
+			for (auto it = this->layers.begin(); it != this->layers.end(); ++it) {
+				(*it)->updateWeights(learningrate);
+			}
 		}
 		std::cout << "Error: " << (af::sum<float>(error)) << std::endl;
-		for (auto it = this->layers.begin(); it != this->layers.end(); ++it) {
-			(*it)->updateWeights(learningrate);
-		}
 	}
 }
 
