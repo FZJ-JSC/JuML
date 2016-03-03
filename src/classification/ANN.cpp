@@ -73,10 +73,13 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 			error += af::sum<float>(delta * delta);
 
 			for (auto it = this->layers.begin(); it != this->layers.end(); ++it) {
-				(*it)->updateWeights(learningrate);
+				(*it)->updateWeights(learningrate, this->comm_);
 			}
 		}
-		std::cout << "Iteration " << iteration << " Error: " << (sqrt(error)) << std::endl;
+		MPI_Allreduce(MPI_IN_PLACE, &error, 1, MPI_FLOAT, MPI_SUM, this->comm_);
+		if (this->mpi_rank_ == 0) {
+			std::cout << "Iteration " << iteration << " Error: " << (sqrt(error)) << std::endl;
+		}
 	}
 }
 

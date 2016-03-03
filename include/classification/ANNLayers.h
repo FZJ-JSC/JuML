@@ -2,6 +2,8 @@
 #define JUML_ANNLAYERS_H_
 #include<arrayfire.h>
 #include<iostream>
+#include<mpi.h>
+#include "core/MPIHelper.h"
 namespace juml {
 	namespace ann {
 		class Layer {
@@ -29,9 +31,13 @@ namespace juml {
 					lastOutput(node_count_),
 		       			input_count(input_count_), node_count(node_count_) {}
 
-				void updateWeights(float learningrate) {
+				void updateWeights(float learningrate, MPI_Comm comm) {
+					MPI_Allreduce(MPI_IN_PLACE, &this->update_count, 1, MPI_INT, MPI_SUM, comm);
 					if (update_count == 0) return;
-					//TODO: Sync weights_update, bias_update and update_count with other processes
+
+					mpi::allreduceInplace<float>(this->weights_update, MPI_SUM, comm);
+					mpi::allreduceInplace<float>(this->bias_update, MPI_SUM, comm);
+
 					this->weights_update /= this->update_count;
 					this->bias_update /= this->update_count;
 
