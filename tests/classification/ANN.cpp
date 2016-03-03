@@ -29,9 +29,9 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	layers.push_back(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(4,1)));
 	SequentialNeuralNet net(AF_BACKEND_CPU, layers);
 	net.fit(Xset, yset);
-	//TODO check result
-	//TODO fix network to work with binary problems using 1 output 
 
+	Dataset result = net.predict(Xset);
+	af::print("result", result.data());
 }
 
 TEST(ANN_TES, TEST_XOR) {
@@ -56,6 +56,10 @@ TEST(ANN_TES, TEST_XOR) {
 	layers.push_back(std::make_shared<FunctionLayer<Activation::Linear>>(2, 1));
 	SequentialNeuralNet net(0, layers);
 	net.fit(Xset, yset);
+
+
+	Dataset result = net.predict(Xset);
+	af::print("result", result.data());
 }
 
 

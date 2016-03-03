@@ -21,7 +21,10 @@
 namespace juml {
 
 Dataset SequentialNeuralNet::predict(Dataset& X) {
-	throw std::runtime_error("not yet implemented");
+	X.load_equal_chunks();
+	this->forward_all(X.data());
+	af::array result = this->layers.back()->getLastOutput();
+	return Dataset(result, this->comm_);
 }
 
 void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
