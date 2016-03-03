@@ -35,8 +35,8 @@ namespace juml {
         BaseClassifier(int backend, MPI_Comm comm=MPI_COMM_WORLD);
 
         virtual void fit(Dataset& X, Dataset& y);
-        virtual Dataset predict(Dataset& X) const = 0;
-        virtual float accuracy(Dataset& X, Dataset& y) const = 0;
+        virtual Dataset predict(Dataset& X) = 0;
+        virtual float accuracy(Dataset& X, Dataset& y) = 0;
     };
 } // namespace juml
 

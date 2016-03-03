@@ -126,7 +126,7 @@ namespace juml {
         return Dataset(probabilities, this->comm_);
     }
 
-    Dataset GaussianNaiveBayes::predict(Dataset& X) const {
+    Dataset GaussianNaiveBayes::predict(Dataset& X) {
         // X is loaded in this->predict_probability
         Dataset probabilities = this->predict_probability(X);
         
@@ -139,7 +139,7 @@ namespace juml {
         return Dataset(locations_orig, this->comm_);
     }
 
-    float GaussianNaiveBayes::accuracy(Dataset& X, Dataset& y) const {
+    float GaussianNaiveBayes::accuracy(Dataset& X, Dataset& y) {
         float local_results[2];
         Dataset predictions = this->predict(X);
         // X is loaded in this->predict
