@@ -75,7 +75,7 @@ namespace juml {
 				};
 		};
 
-		enum class Activation { Sigmoid, Linear };
+		enum class Activation { Sigmoid, TanH, Linear };
 
 		template<Activation T>
 		inline af::array activation(const af::array& in) {
@@ -105,6 +105,16 @@ namespace juml {
 		template<>
 		inline af::array activation_deriv<Activation::Sigmoid>(const af::array &out) {
 			return out * (1 - out);
+		}
+//TanH
+		template<>
+		inline af::array activation<Activation::TanH>(const af::array& in) {
+			return af::tanh(in);
+		}
+
+		template<>
+		inline af::array activation_deriv<Activation::TanH>(const af::array &out) {
+			return (1 - out * out);
 		}
 
 		//TODO implement a template-'FunctionLayer' with template-spezialisations for different activation functions?
