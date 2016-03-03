@@ -16,9 +16,15 @@ namespace juml {
 				const int input_count;
 				const int node_count;
 				Layer(int input_count_, int node_count_) :
-					weights(af::randu(input_count_, node_count_)),
+					weights(
+						af::randu(input_count_, node_count_)
+						* (1.0f/input_count_) - (0.5f/input_count_)
+					),
 					weights_update(af::constant(0, input_count_, node_count_)),
-					bias(af::randu(node_count_)),
+					bias(
+						af::randu(node_count_)
+						* (1.0f/input_count_) - (0.5f/input_count_)
+					),
 					bias_update(af::constant(0, node_count_)),
 					lastOutput(node_count_),
 		       			input_count(input_count_), node_count(node_count_) {}
