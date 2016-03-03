@@ -43,12 +43,12 @@ namespace juml {
 					this->update_count = 0;
 				}
 
-				inline af::array& getWeightUpdates() {
-					return this->weights_update;
+				inline af::array& getWeights() {
+					return this->weights;
 				}
 
-				inline af::array& getBiasUpdates() {
-					return this->bias_update;
+				inline af::array& getBias() {
+					return this->bias;
 				}
 
 				virtual const af::array& forward(const af::array& input) = 0;

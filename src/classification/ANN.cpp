@@ -59,7 +59,7 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 	af::array target(this->layers.back()->node_count, batchsize);
 
 	for (int iteration = 0; iteration < max_iterations; iteration++) {
-		af::array error = af::constant(0, 1);
+		float error = 0;
 		for (int i = 0; i < n_samples; i += batchsize) {
 			// (Number of Nodes in last layer=O)xb
 			target = ydata(af::span, af::seq(i, i+batchsize - 1));
@@ -69,14 +69,14 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 			// Oxb = Oxb - Oxb
 			af::array delta = this->layers.back()->getLastOutput() - target;
 			this->backwards_all(sample, delta);
-			// 1x1 += sum(sum(Oxb)) = sum(1xb) = 1x1
-			error += af::sum(af::sum(delta * delta));
+
+			error += af::sum<float>(delta * delta);
 
 			for (auto it = this->layers.begin(); it != this->layers.end(); ++it) {
 				(*it)->updateWeights(learningrate);
 			}
 		}
-		std::cout << "Error: " << (af::sum<float>(error)) << std::endl;
+		std::cout << "Iteration " << iteration << " Error: " << (sqrt(error)) << std::endl;
 	}
 }
 

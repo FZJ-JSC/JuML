@@ -57,6 +57,11 @@ TEST(ANN_TES, TEST_XOR) {
 	SequentialNeuralNet net(0, layers);
 	net.fit(Xset, yset);
 
+	for(auto it = layers.begin(); it != layers.end(); it++) {
+		af::print("weights", (*it)->getWeights());
+		af::print("bias", (*it)->getBias());
+	}
+
 
 	Dataset result = net.predict(Xset);
 	af::print("result", result.data());
