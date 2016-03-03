@@ -21,6 +21,7 @@ namespace juml {
 		template<typename T>
 		void allreduceInplace(af::array& a, MPI_Op op, MPI_Comm comm) {
 			T* ptr;
+			a.eval(); //Needed to query device pointer //Possible Bug in Arrayfire?
 			if (canUseDevicePoiner(a)) {
 				ptr = a.device<T>();
 			} else {
