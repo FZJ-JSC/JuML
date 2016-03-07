@@ -34,27 +34,33 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	af::print("result", result.data());
 }
 
-TEST(ANN_TES, TEST_XOR) {
+TEST(ANN_TEST, TEST_XOR) {
 	using juml::Dataset;
 	using juml::ann::Layer;
 	using juml::ann::FunctionLayer;
 	using juml::SequentialNeuralNet;
 	using juml::ann::Activation;
+	af::setBackend(AF_BACKEND_CPU);
+	af::info();
 
 	float X[] = {
-		0, 0, 1, 1,
-		0, 1, 0, 1
+		0, 0,
+		0, 1,
+		1, 0,
+		1, 1
 	};
 	float y[] = {0, 1, 1, 0};
 	af::array Xarray = af::array(2, 4, X);
+	af_print(Xarray);
 	af::array yarray = af::array(1, 4, y);
+	af_print(yarray);
 	Dataset Xset(Xarray);
 	Dataset yset(yarray);
 
 	std::vector<std::shared_ptr<Layer>> layers;
 	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(2, 2));
 	layers.push_back(std::make_shared<FunctionLayer<Activation::Linear>>(2, 1));
-	SequentialNeuralNet net(0, layers);
+	SequentialNeuralNet net(AF_BACKEND_CPU, layers);
 	net.fit(Xset, yset);
 
 	for(auto it = layers.begin(); it != layers.end(); it++) {
@@ -74,6 +80,8 @@ static const std::string LABELS = "labels";
 
 
 TEST(ANN_TEST, IRIS_TEST) {
+	af::info();
+	af::setBackend(AF_BACKEND_CPU);
 	using juml::ann::Layer;
 	std::vector<std::shared_ptr<Layer>> layers;
 	layers.push_back(std::shared_ptr<Layer>(new juml::ann::FunctionLayer<juml::ann::Activation::Sigmoid>(4, 100)));
