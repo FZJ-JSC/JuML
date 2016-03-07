@@ -145,16 +145,16 @@ namespace juml {
 
 			const af::array& backwards(
 					const af::array& input /* column with input_count rows and batchsize columns*/,
-					const af::array& lastDelta /* column with node_count rows and batchsize columns */) override {
+					const af::array& error /* column with node_count rows and batchsize columns */) override {
 				// scalar_mult(Nxb, Nxb) = Nxb
-				af::array d = lastDelta * activation_deriv<T>(this->lastOutput);
+				af::array delta = error * activation_deriv<T>(this->lastOutput);
 				// matmul(Ixb, transpose(Nxb)) = matmul(Ixb, bxN) = (Ixb)*(bxN) = IxN
-				this->weights_update += matmulNT(input, d);
+				this->weights_update += matmulNT(input, delta);
 				// (Nx1) += sum(Nxb, 1) = Nx1
-				this->bias_update += af::sum(d, 1);
+				this->bias_update += af::sum(delta, 1);
 				this->update_count += input.dims(1);
 				// matmul(IxN, Nxb) = Ixb;
-				this->lastOutput = af::matmul(this->weights, lastDelta);
+				this->lastOutput = af::matmul(this->weights, delta);
 				return this->lastOutput;
 			}
 		};
