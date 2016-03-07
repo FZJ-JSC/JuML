@@ -56,6 +56,7 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 	const int n_samples = Xdata.dims(1);
 	const int n_features = Xdata.dims(0);
 	const int batchsize = 1;
+	const float max_error = 0.001;
 	af::array target(this->layers.back()->node_count, batchsize);
 
 	for (int iteration = 0; iteration < max_iterations; iteration++) {
@@ -79,6 +80,12 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 		MPI_Allreduce(MPI_IN_PLACE, &error, 1, MPI_FLOAT, MPI_SUM, this->comm_);
 		if (this->mpi_rank_ == 0) {
 			std::cout << "Iteration " << iteration << " Error: " << (sqrt(error)) << std::endl;
+		}
+		if (error < max_error) {
+			if (this->mpi_rank_ == 0) {
+				std::cout << "Iteration " << iteration << " Error: " << (sqrt(error)) << std::endl;
+			}
+			break;
 		}
 	}
 }
