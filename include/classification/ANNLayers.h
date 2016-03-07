@@ -14,6 +14,11 @@ namespace juml {
 				af::array bias_update;
 				af::array lastOutput;
 				int update_count = 0;
+
+				virtual void applyWeightUpdate(float learningrate, MPI_Comm comm) {
+					this->weights -= learningrate * this->weights_update;
+				        this->bias -= learningrate * this->bias_update;
+				}
 			public:
 				const int input_count;
 				const int node_count;
@@ -41,8 +46,7 @@ namespace juml {
 					this->weights_update /= this->update_count;
 					this->bias_update /= this->update_count;
 
-					this->weights -= learningrate * this->weights_update;
-				        this->bias -= learningrate * this->bias_update;
+					applyWeightUpdate(learningrate, comm);
 
 					this->weights_update(af::span, af::span) = 0;
 					this->bias_update(af::span) = 0;
@@ -152,6 +156,34 @@ namespace juml {
 				// matmul(IxN, Nxb) = Ixb;
 				this->lastOutput = af::matmul(this->weights, lastDelta);
 				return this->lastOutput;
+			}
+		};
+
+		template<Activation T>
+		class MomentumFunctionLayer: public FunctionLayer<T> {
+			public:
+			MomentumFunctionLayer(int input_size, int node_count, float momentum) :
+				FunctionLayer<T>(input_size, node_count),
+				previous_weight_update(af::constant(0.0, input_size, node_count)),
+				previous_bias_update(af::constant(0.0, node_count)),
+				momentum_(momentum) {
+			}
+
+			protected:
+			af::array previous_weight_update;
+			af::array previous_bias_update;
+			float momentum_;
+
+			void applyWeightUpdate(float learningrate, MPI_Comm comm) override {
+				this->weights -= learningrate * (
+					       (1 - this->momentum_) * this->weights_update +
+					       this->momentum_ * this->previous_weight_update);
+				this->bias -= learningrate * (
+						(1 - this->momentum_) * this->bias_update +
+						this->momentum_ * this->previous_bias_update);
+
+				this->previous_weight_update = this->weights_update;
+				this->previous_bias_update = this->bias_update;
 			}
 		};
 	}
