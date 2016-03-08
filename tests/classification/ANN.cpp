@@ -34,6 +34,34 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	af::print("result", result.data());
 }
 
+TEST(ANN_TEST, TEST_IDENTITY) {
+	using juml::Dataset;
+	using juml::ann::Layer;
+	using juml::ann::FunctionLayer;
+	using juml::ann::Activation;
+	using juml::SequentialNeuralNet;
+	float X[] = {
+		1, 0, 0, 0, 0,
+		0, 1, 0, 0, 0,
+		0, 0, 1, 0, 0,
+		0, 0, 0, 1, 0,
+		0, 0, 0, 0, 1
+	};
+	af::array Xarray = af::array(5, 5, X);
+	Dataset Xset(Xarray);
+
+	std::vector<std::shared_ptr<Layer>> layers;
+	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(5, 5));
+	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(5, 5));
+
+	SequentialNeuralNet net(AF_BACKEND_CPU, layers);
+	net.fit(Xset, Xset);
+
+	Dataset result = net.predict(Xset);
+	af::print("result", result.data());
+
+}
+
 TEST(ANN_TEST, TEST_XOR) {
 	using juml::Dataset;
 	using juml::ann::Layer;

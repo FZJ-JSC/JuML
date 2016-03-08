@@ -81,7 +81,7 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 		if (this->mpi_rank_ == 0) {
 			std::cout << "Iteration " << iteration << " Error: " << (sqrt(error)) << std::endl;
 		}
-		if (error < max_error) {
+		if (sqrt(error) < max_error) {
 			if (this->mpi_rank_ == 0) {
 				std::cout << "Iteration " << iteration << " Error: " << (sqrt(error)) << std::endl;
 			}
