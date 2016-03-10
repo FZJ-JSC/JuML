@@ -22,7 +22,7 @@
 namespace juml {
     class BaseClusterer : public Algorithm {
     public:
-        BaseClassifier(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
+        BaseClusterer(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
 
         virtual void fit(Dataset& X) = 0;
         virtual Dataset predict(Dataset& X) const = 0;

@@ -13,7 +13,7 @@
 * Email: murxman@gmail.com
 */
 
-#include "classification/BaseClusterer.h"
+#include "clustering/BaseClusterer.h"
 
 namespace juml {
     BaseClusterer::BaseClusterer(int backend, MPI_Comm comm)
