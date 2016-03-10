@@ -69,6 +69,7 @@ namespace mpi {
         if (use_device_pointer) {
             data.unlock();
         } else {
+            af_write_array(data.get(), data_pointer, data.bytes(), afHost);
             delete[] data_pointer;
         }
     }

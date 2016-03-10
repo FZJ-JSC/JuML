@@ -24,7 +24,7 @@ namespace mpi {
     bool can_use_device_pointer(const af::array& data);
     MPI_Datatype get_MPI_type(const af::array& data);
 
-    void allreduce_inplace(af::array& data, MPI_Op op, MPI_Comm comm=MPI_COMM_WORLD);
+    void allreduce_inplace(af::array& data, MPI_Op op, MPI_Comm comm);
 } // namespace mpi
 } // namespace juml
 
