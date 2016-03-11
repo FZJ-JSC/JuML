@@ -54,7 +54,19 @@ namespace mpi {
         }
     }
 
-    void allreduce_inplace(af::array& data, MPI_Op op, MPI_Comm comm) {
+    int allreduce_inplace(af::array& data, MPI_Op op, MPI_Comm comm) {
+        return inplace_collective(data, MPI_Allreduce, op, comm);
+    }
+
+    int exscan_inplace(af::array& data, MPI_Op op, MPI_Comm comm) {
+        return inplace_collective(data, MPI_Exscan, op, comm);
+    }
+
+    int scan_inplace(af::array& data, MPI_Op op, MPI_Comm comm) {
+        return inplace_collective(data, MPI_Scan, op, comm);
+    }
+
+    int inplace_collective(af::array& data, OpCollective function, MPI_Op op, MPI_Comm comm) {
         data.eval(); // safeguard that af op tree is committed, used to be bugged as of af 2.14 (could not get dev ptr)
         void* data_pointer = nullptr;
         bool  use_device_pointer = can_use_device_pointer(data);
@@ -65,13 +77,18 @@ namespace mpi {
             data_pointer = reinterpret_cast<void*>(new unsigned char[data.bytes()]);
             data.host(data_pointer);
         }
-        MPI_Allreduce(MPI_IN_PLACE, data_pointer, data.elements(), get_MPI_type(data), op, comm);
+
+        int error = function(MPI_IN_PLACE, data_pointer, data.elements(), get_MPI_type(data), op, comm);
+        if (error != MPI_SUCCESS) return error;
+
         if (use_device_pointer) {
             data.unlock();
         } else {
             af_write_array(data.get(), data_pointer, data.bytes(), afHost);
             delete[] reinterpret_cast<unsigned char*>(data_pointer);
         }
+
+        return MPI_SUCCESS;
     }
 } // namespace mpi
 } // namespace juml

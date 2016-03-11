@@ -14,7 +14,6 @@
 */
 
 #include <algorithm>
-#include <cstdint>
 #include <stdexcept>
 #include <sstream>
 
@@ -31,7 +30,11 @@ namespace juml {
     Dataset::Dataset(af::array& data, MPI_Comm comm)
         : data_(data), comm_(comm) {
         MPI_Comm_rank(this->comm_, &this->mpi_rank_);
-        MPI_Comm_size(this->comm_, &this->mpi_size_);    
+        MPI_Comm_size(this->comm_, &this->mpi_size_);
+
+        MPI_Allreduce(MPI_IN_PLACE, &this->global_items_, 1, MPI_LONG_LONG, MPI_SUM, comm);
+        MPI_Exscan(MPI_IN_PLACE, &this->global_offset_, 1, MPI_LONG_LONG, MPI_SUM, comm);
+        if (this->mpi_rank_ == 0) this->global_offset_ = 0;
     }
     
     af::dtype Dataset::h5_to_af(hid_t h5_type) {
@@ -113,6 +116,10 @@ namespace juml {
             row_col_offset[i] = 0;
         }
 
+        // remember global ind
+        this->global_items_ = static_cast<dim_t>(dimensions[0]);
+        this->global_offset_ = static_cast<dim_t>(position);
+
         // create memory space
         hid_t mem_space = H5Screate_simple(n_dims, chunk_dimensions, NULL);
         if (mem_space < 0)
@@ -188,6 +195,14 @@ namespace juml {
     
     dim_t Dataset::n_features() const {
         return this->data_.dims(0);
+    }
+
+    dim_t Dataset::global_items() const {
+        return this->global_items_;
+    }
+
+    dim_t Dataset::global_offset() const {
+        return this->global_offset_;
     }
 } // namespace juml
 

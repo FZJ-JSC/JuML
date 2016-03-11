@@ -36,26 +36,26 @@ namespace juml {
     protected:
         af::array centroids_;
 
-        ulong  k_;
-        ulong  max_iter_;
+        uintl  k_;
+        uintl  max_iter_;
         Method initialization_;
-        ulong  seed_;
+        uintl  seed_;
         float  tolerance_;
         
-        void initialize_random_centroids(const af::array& data);
-        void initialize_kpp_centroids(const af::array& data);
-        void cluster(const af::array& data);
+        void initialize_random_centroids(const Dataset& data);
+        void initialize_kpp_centroids(const Dataset& data);
+        void cluster(const Dataset& data);
         af::array closest_centroids(const af::array& data) const;
         
     public:
         //! KMeans constructor
         //!
         //!
-        KMeans(ulong    k,
-               ulong    max_iter=100,
+        KMeans(uintl    k,
+               uintl    max_iter=100,
                Method   initialization=RANDOM,
                float    tolerance=1e-3,
-               ulong    seed=42L,
+               uintl    seed=42L,
                int      backend=Backend::CPU,
                MPI_Comm comm=MPI_COMM_WORLD);        
         virtual void fit(Dataset& X);
@@ -64,4 +64,5 @@ namespace juml {
         const af::array& centroids() const;
     }; // KMeans
 }  // juml
+
 #endif // KMEANS_H

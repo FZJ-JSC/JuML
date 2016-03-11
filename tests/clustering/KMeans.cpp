@@ -10,16 +10,16 @@
 static const std::string FILE_PATH = JUML_DATASETS"/iris.h5";
 static const std::string SAMPLES = "samples";
 
-static const float CENTROIDS[3][4] = {{5.8296299f, 2.7314816f, 4.3148150f, 1.3925927f},
-                                      {5.0060000f, 3.4180000f, 1.4640000f, 0.2440000f},
-                                      {6.7695646f, 3.0369565f, 5.6000000f, 2.0086961f}};
+static const float CENTROIDS[3][4] = {{5.0059996f, 3.4180002f, 1.4640000f, 0.2440000f},
+                                      {5.8836064f, 2.7409837f, 4.3885250f, 1.4344264f},
+                                      {6.8538442f, 3.0769234f, 5.7153850f, 2.0538464f}};
 
 TEST(KMEANS_TEST, IRIS_CPU_TEST) {
     juml::KMeans kmeans(
             /*k=*/3,
             /*max_iter=*/100,
             /*method=*/juml::KMeans::Method::RANDOM,
-            /*tolerance=*/1e-1,
+            /*tolerance=*/0.02,
             /*seed=*/42L,
             /*backend=*/juml::Backend::CPU);
     juml::Dataset X(FILE_PATH, SAMPLES);
@@ -40,7 +40,7 @@ TEST(KMEANS_TEST, IRIS_OPENCL_TEST) {
             /*k=*/3,
             /*max_iter=*/100,
             /*method=*/juml::KMeans::Method::RANDOM,
-            /*tolerance=*/1e-1,
+            /*tolerance=*/0.02,
             /*seed=*/42L,
             /*backend=*/juml::Backend::OPENCL);
     juml::Dataset X(FILE_PATH, SAMPLES);
@@ -62,7 +62,7 @@ TEST(KMEANS_TEST, IRIS_CUDA_TEST) {
             /*k=*/3,
             /*max_iter=*/100,
             /*method=*/juml::KMeans::Method::RANDOM,
-            /*tolerance=*/1e-1,
+            /*tolerance=*/0.02,
             /*seed=*/42L,
             /*backend=*/juml::Backend::CUDA);
     juml::Dataset X(FILE_PATH, SAMPLES);
