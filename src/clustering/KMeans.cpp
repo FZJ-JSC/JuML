@@ -8,9 +8,9 @@
 *
 * Description: Implementation of class KMeans
 *
-* Maintainer:
+* Maintainer: m.goetz
 *
-* Email:
+* Email: murxman@gmail.com
 */
 
 #include <random>
@@ -39,8 +39,8 @@ namespace juml {
 
     void KMeans::initialize_random_centroids(const af::array& data) {
         std::mt19937 random_state(this->seed_);
-        std::uniform_int_distribution<int> rank_selector(0, this->mpi_size_);
-        std::uniform_int_distribution<uint> index_selector(0, static_cast<uint>(data.dims(1)));
+        std::uniform_int_distribution<int> rank_selector(0, this->mpi_size_ - 1);
+        std::uniform_int_distribution<uint> index_selector(0, static_cast<uint>(data.dims(1)) - 1);
 
         // create a centroid array that holds the locally chosen centroids
         this->centroids_ = af::constant(0, data.dims(0), this->k_, data.type());
@@ -53,7 +53,7 @@ namespace juml {
             uint index = index_selector(random_state);
 
             if (rank != this->mpi_rank_) continue;
-            this->centroids_(i, af::span) = data(index, af::span);
+            this->centroids_(af::span, i) = data(af::span, index);
         }
 
         mpi::allreduce_inplace(this->centroids_, MPI_SUM, this->comm_);
@@ -89,7 +89,7 @@ namespace juml {
         dim_t n = data.dims(1); // number of sample
 
         // calculate the convergence threshold globally
-        uintl threshold = static_cast<uintl>(data.elements());
+        uintl threshold = static_cast<uintl>(n);
         MPI_Allreduce(MPI_IN_PLACE, &threshold, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, this->comm_);
         threshold = static_cast<uintl>(std::floor(this->tolerance_ * threshold));
 
@@ -102,16 +102,18 @@ namespace juml {
 
             // update the centroids
             af::array centroid_update = af::constant(0, f, 2 * k, data.type());
-            gfor(af::seq j, k) {
+
+            gfor (af::seq j, k) {
                 af::array closeness_volume = af::tile((locations == j), f);
-                centroid_update(af::span, j) = af::sum(data * closeness_volume, 0 /* along the samples */);
-                centroid_update(af::span, j + (double)k) = af::sum(closeness_volume, 0);
+                centroid_update(af::span, j) = af::sum(data * closeness_volume, 1 /* along the samples */);
+                af::seq second_half(af::seq(k, 2 * k - 1), true);
+                centroid_update(af::span, second_half) = af::sum(closeness_volume, 1);
             }
             mpi::allreduce_inplace(centroid_update, MPI_SUM, this->comm_);
             for (uintl j = 0; j < k; ++j) {
                 centroid_update(af::span, j) /= centroid_update(af::span, j + (double)k);
             }
-            this->centroids_ = centroid_update(af::span, af::seq(0, k));
+            this->centroids_ = centroid_update(af::span, af::seq(0, k - 1));
 
             // count the number of cluster assignment changes and leave the loop if below threshold
             uintl changes = af::sum<uintl>(previous_assignments != locations);
@@ -152,6 +154,10 @@ namespace juml {
         X.load_equal_chunks();
 
         af::array locations = this->closest_centroids(X.data());
-        return Dataset(locations);
+        return Dataset(locations, this->comm_);
+    }
+
+    const af::array& KMeans::centroids() const {
+        return this->centroids_;
     }
 } // namespace juml

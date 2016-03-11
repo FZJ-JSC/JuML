@@ -60,6 +60,8 @@ namespace juml {
                MPI_Comm comm=MPI_COMM_WORLD);        
         virtual void fit(Dataset& X);
         virtual Dataset predict(Dataset& X) const;
+
+        const af::array& centroids() const;
     }; // KMeans
 }  // juml
 #endif // KMEANS_H
