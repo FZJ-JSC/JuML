@@ -70,7 +70,7 @@ namespace mpi {
             data.unlock();
         } else {
             af_write_array(data.get(), data_pointer, data.bytes(), afHost);
-            delete[] data_pointer;
+            delete[] reinterpret_cast<unsigned char*>(data_pointer);
         }
     }
 } // namespace mpi
