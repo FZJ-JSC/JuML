@@ -20,9 +20,9 @@
 #include <iostream>
 namespace juml {
 
-Dataset SequentialNeuralNet::predict(Dataset& X) {
+Dataset SequentialNeuralNet::predict(Dataset& X) const {
 	X.load_equal_chunks();
-	this->forward_all(X.data());
+	const_cast<SequentialNeuralNet*>(this)->forward_all(X.data());
 	af::array result = this->layers.back()->getLastOutput();
 	return Dataset(result, this->comm_);
 }
@@ -115,7 +115,7 @@ void SequentialNeuralNet::backwards_all(const af::array& input, const af::array&
 	}
 }
 
-float SequentialNeuralNet::accuracy(Dataset& X, Dataset& y) {
+float SequentialNeuralNet::accuracy(Dataset& X, Dataset& y) const {
 	throw std::runtime_error("not yet implemented");
 }
 

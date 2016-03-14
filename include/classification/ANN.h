@@ -63,8 +63,8 @@ namespace juml {
 
 			}
 			void fit(Dataset& X, Dataset& y) override;
-			Dataset predict(Dataset& X) override;
-			float accuracy(Dataset& X, Dataset& y) override;
+			Dataset predict(Dataset& X) const override;
+			float accuracy(Dataset& X, Dataset& y) const override;
 	};
 }
 
