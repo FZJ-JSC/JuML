@@ -1,2 +1,4 @@
 FILE(GLOB CLUSTERING_SRC *.cpp)
-ADD_LIBRARY(clustering ${CLUSTERING_SRC})
+ADD_LIBRARY(clustering SHARED ${CLUSTERING_SRC})
+TARGET_LINK_LIBRARIES(clustering ${AF_LIBS} core data preprocessing)
+
