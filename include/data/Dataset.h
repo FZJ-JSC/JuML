@@ -20,6 +20,7 @@
 #include <hdf5.h>
 #include <mpi.h>
 #include <string>
+#include <sys/stat.h>
 
 namespace juml {
     //! Dataset
@@ -30,6 +31,7 @@ namespace juml {
 
         const std::string filename_;
         const std::string dataset_;
+        time_t loading_time_ = 0;
 
         const MPI_Comm comm_;
         int mpi_rank_;
@@ -44,8 +46,10 @@ namespace juml {
         //! Dataset constructor
         Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm=MPI_COMM_WORLD);        
         Dataset(af::array& data, MPI_Comm comm=MPI_COMM_WORLD);
-       
-        void load_equal_chunks();
+
+        time_t modified_time() const;
+        time_t loading_time() const;
+        void load_equal_chunks(bool force=false);
 
         virtual af::array& data();
         virtual const af::array& data() const;

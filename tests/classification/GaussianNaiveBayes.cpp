@@ -41,6 +41,10 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, IRIS_CPU_TEST) {
         }
     }
     ASSERT_FLOAT_EQ(gnb.accuracy(X, y), ACCURACY);
+
+    juml::Dataset X_not_loaded(FILE_PATH, SAMPLES);
+    juml::Dataset y_not_loaded(FILE_PATH, LABELS);
+    ASSERT_FLOAT_EQ(gnb.accuracy(X_not_loaded, y_not_loaded), ACCURACY);
 }
 
 #ifdef JUML_OPENCL
@@ -62,6 +66,10 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, IRIS_OPENCL_TEST) {
         }
     }
     ASSERT_FLOAT_EQ(gnb.accuracy(X, y), ACCURACY);
+
+    juml::Dataset X_not_loaded(FILE_PATH, SAMPLES);
+    juml::Dataset y_not_loaded(FILE_PATH, LABELS);
+    ASSERT_FLOAT_EQ(gnb.accuracy(X_not_loaded, y_not_loaded), ACCURACY);
 }
 
 #endif // JUML_OPENCL
@@ -85,6 +93,10 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, IRIS_CUDA_TEST) {
         }
     }
     ASSERT_FLOAT_EQ(gnb.accuracy(X, y), ACCURACY);
+
+    juml::Dataset X_not_loaded(FILE_PATH, SAMPLES);
+    juml::Dataset y_not_loaded(FILE_PATH, LABELS);
+    ASSERT_FLOAT_EQ(gnb.accuracy(X_not_loaded, y_not_loaded), ACCURACY);
 }
 
 #endif // JUML_CUDA
