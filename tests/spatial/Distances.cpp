@@ -1,6 +1,7 @@
 #include <arrayfire.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
+#include <armadillo>
 
 #include "spatial/Distances.h"
 
@@ -20,6 +21,13 @@ const float EUCLIDEAN_DISTANCES[6][2] = {{0.00000000000000000000f, 1.73205077648
                                          {1.00000000000000000000f, 1.41421353816986083984f},
                                          {1.73205077648162841797f, 0.00000000000000000000f},
                                          {1.73205077648162841797f, 3.46410155296325683594f}};
+
+const float MANHATTAN_DISTANCES[6][2] = {{0.0f, 3.0f},
+                                         {1.0f, 2.0f},
+                                         {1.0f, 2.0f},
+                                         {1.0f, 2.0f},
+                                         {3.0f, 0.0f},
+                                         {3.0f, 6.0f}};
 
 TEST(DISTANCES_TEST, EUCLIDEAN_EXCEPTION_TEST) {
     // to high-dimensionality
@@ -63,6 +71,51 @@ TEST(DISTANCES_TEST, EUCLIDEAN_TEST_CUDA) {
     af::array distances(af::dim4(2, 6), reinterpret_cast<const float*>(EUCLIDEAN_DISTANCES));
 
     ASSERT_EQ(af::allTrue(juml::euclidean(from, to) == distances).scalar<char>(), 1);
+}
+#endif // JUML_CUDA
+
+TEST(DISTANCES_TEST, MANHATTAN_EXCEPTION_TEST) {
+    // to high-dimensionality
+    ASSERT_THROW(juml::manhattan(af::constant(0, 1, 1, 3), af::constant(0, 1, 1)), std::invalid_argument);
+    ASSERT_THROW(juml::manhattan(af::constant(0, 1, 1), af::constant(0, 1, 1, 3)), std::invalid_argument);
+    ASSERT_THROW(juml::manhattan(af::constant(0, 1, 1, 1, 3), af::constant(0, 1, 1)), std::invalid_argument);
+    ASSERT_THROW(juml::manhattan(af::constant(0, 1, 1), af::constant(0, 1, 1, 1, 3)), std::invalid_argument);
+
+    // features count does not fit
+    ASSERT_THROW(juml::manhattan(af::constant(0, 3), af::constant(0, 2)), std::invalid_argument);
+}
+
+TEST(DISTANCES_TEST, MANHATTAN_TEST_CPU) {
+    af::setBackend(AF_BACKEND_CPU);
+
+    af::array from(af::dim4(3, 2), reinterpret_cast<const float*>(ORIGINS));
+    af::array to(af::dim4(3, 6), reinterpret_cast<const float*>(DESTINATIONS));
+    af::array distances(af::dim4(2, 6), reinterpret_cast<const float*>(MANHATTAN_DISTANCES));
+
+    ASSERT_EQ(af::allTrue(juml::manhattan(from, to) == distances).scalar<char>(), 1);
+}
+
+#ifdef JUML_OPENCL
+TEST(DISTANCES_TEST, MANHATTAN_TEST_OPENCL) {
+    af::setBackend(AF_BACKEND_OPENCL);
+
+    af::array from(af::dim4(3, 2), reinterpret_cast<const float*>(ORIGINS));
+    af::array to(af::dim4(3, 6), reinterpret_cast<const float*>(DESTINATIONS));
+    af::array distances(af::dim4(2, 6), reinterpret_cast<const float*>(MANHATTAN_DISTANCES));
+
+    ASSERT_EQ(af::allTrue(juml::manhattan(from, to) == distances).scalar<char>(), 1);
+}
+#endif // JUML_OPENCL
+
+#ifdef JUML_CUDA
+TEST(DISTANCES_TEST, MANHATTAN_TEST_CUDA) {
+    af::setBackend(AF_BACKEND_CUDA);
+
+    af::array from(af::dim4(3, 2), reinterpret_cast<const float*>(ORIGINS));
+    af::array to(af::dim4(3, 6), reinterpret_cast<const float*>(DESTINATIONS));
+    af::array distances(af::dim4(2, 6), reinterpret_cast<const float*>(MANHATTAN_DISTANCES));
+
+    ASSERT_EQ(af::allTrue(juml::manhattan(from, to) == distances).scalar<char>(), 1);
 }
 #endif // JUML_CUDA
 
