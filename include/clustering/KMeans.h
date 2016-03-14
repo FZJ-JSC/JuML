@@ -22,6 +22,7 @@
 #include "core/Definitions.h"
 #include "clustering/BaseClusterer.h"
 #include "data/Dataset.h"
+#include "spatial/Distances.h"
 
 namespace juml {
     //! KMeans
@@ -36,11 +37,12 @@ namespace juml {
     protected:
         af::array centroids_;
 
-        uintl  k_;
-        uintl  max_iter_;
-        Method initialization_;
-        uintl  seed_;
-        float  tolerance_;
+        uintl    k_;
+        uintl    max_iter_;
+        Method   initialization_;
+        Distance distance_;
+        uintl    seed_;
+        float    tolerance_;
         
         void initialize_random_centroids(const Dataset& data);
         void initialize_kpp_centroids(const Dataset& data);
@@ -54,6 +56,7 @@ namespace juml {
         KMeans(uintl    k,
                uintl    max_iter=100,
                Method   initialization=RANDOM,
+               Distance distance=euclidean,
                float    tolerance=1e-3,
                uintl    seed=42L,
                int      backend=Backend::CPU,
@@ -62,6 +65,12 @@ namespace juml {
         virtual Dataset predict(Dataset& X) const;
 
         const af::array& centroids() const;
+        const uintl k() const;
+        const uintl max_iter() const;
+        const Method initialization() const;
+        const Distance distance() const;
+        const uintl seed() const;
+        const float tolerance() const;
     }; // KMeans
 }  // juml
 

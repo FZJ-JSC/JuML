@@ -25,6 +25,7 @@ namespace juml {
            uintl    k,
            uintl    max_iter,
            Method   initialization,
+           Distance distance,
            float    tolerance,
            uintl    seed,
            int      backend,
@@ -33,6 +34,7 @@ namespace juml {
         k_(k),
         max_iter_(max_iter),
         initialization_(initialization),
+        distance_(distance),
         tolerance_(tolerance),
         seed_(seed) {
         if (k < 2)
@@ -66,23 +68,14 @@ namespace juml {
     }
 
     af::array KMeans::closest_centroids(const af::array& data) const {
-        dim_t f = data.dims(0); // features
-        dim_t k = static_cast<dim_t>(this->k_); // centroid count
-        dim_t n = data.dims(1); // number of sample
-
-        // reshape the data to allow vectorization, we basically want to have to volumes (3D), that have the following
-        // dimensions: features x samples x k repetitions. do the same for the centroids inside the loop
-        af::array data_volume = af::tile(data, 1, 1, k);
-        af::array centroids_volume = af::tile(af::moddims(this->centroids_, f, 1, k), 1, n, 1);
-
         // calculate the distances using a euclidean distance
-        af::array distances = af::sqrt(af::sum(af::pow(centroids_volume - data_volume, 2), 0 /* along features */));
+        af::array distances = this->distance_(this->centroids_, data);
 
         // get the locations where the distance is minimal
         af::array minimum_values, locations;
-        af::min(minimum_values, locations, distances, 2 /* along the third, or centroid, dimension */);
+        af::min(minimum_values, locations, distances, 0 /* along the first - sample - dimension */);
 
-        return locations;
+        return af::moddims(locations, 1, data.dims(1));
     }
 
     void KMeans::cluster(const Dataset& dataset) {
@@ -164,5 +157,29 @@ namespace juml {
 
     const af::array& KMeans::centroids() const {
         return this->centroids_;
+    }
+
+    const uintl KMeans::k() const {
+        return this->k_;
+    }
+
+    const uintl KMeans::max_iter() const {
+        return this->max_iter_;
+    }
+
+    const KMeans::Method KMeans::initialization() const {
+        return this->initialization_;
+    }
+
+    const Distance KMeans::distance() const {
+        return this->distance_;
+    }
+
+    const uintl KMeans::seed() const {
+        return this->seed_;
+    }
+
+    const float KMeans::tolerance() const {
+        return this->tolerance_;
     }
 } // namespace juml

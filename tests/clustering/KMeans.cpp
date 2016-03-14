@@ -6,6 +6,7 @@
 #include "data/Dataset.h"
 #include "core/Definitions.h"
 #include "clustering/KMeans.h"
+#include "spatial/Distances.h"
 
 static const std::string FILE_PATH = JUML_DATASETS"/iris.h5";
 static const std::string SAMPLES = "samples";
@@ -19,6 +20,7 @@ TEST(KMEANS_TEST, IRIS_CPU_TEST) {
             /*k=*/3,
             /*max_iter=*/100,
             /*method=*/juml::KMeans::Method::RANDOM,
+            /*distance=*/juml::euclidean,
             /*tolerance=*/0.02,
             /*seed=*/42L,
             /*backend=*/juml::Backend::CPU);
@@ -40,6 +42,7 @@ TEST(KMEANS_TEST, IRIS_OPENCL_TEST) {
             /*k=*/3,
             /*max_iter=*/100,
             /*method=*/juml::KMeans::Method::RANDOM,
+            /*distance=*/juml::euclidean,
             /*tolerance=*/0.02,
             /*seed=*/42L,
             /*backend=*/juml::Backend::OPENCL);
@@ -62,6 +65,7 @@ TEST(KMEANS_TEST, IRIS_CUDA_TEST) {
             /*k=*/3,
             /*max_iter=*/100,
             /*method=*/juml::KMeans::Method::RANDOM,
+            /*distance=*/juml::euclidean,
             /*tolerance=*/0.02,
             /*seed=*/42L,
             /*backend=*/juml::Backend::CUDA);
