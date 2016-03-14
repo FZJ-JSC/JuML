@@ -71,9 +71,10 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 		float error = 0;
 		for (int i = 0; i < n_samples; i += batchsize) {
 			// (Number of Nodes in last layer=O)xb
-			target = ydata(af::span, af::seq(i, i+batchsize - 1));
+			int last_batch_index = std::min(i+batchsize - 1, (int)ydata.dims(1) - 1);
+			target = ydata(af::span, af::seq(i, last_batch_index));
 			// Fxb
-			af::array sample = Xdata(af::span, af::seq(i, i+batchsize - 1));
+			af::array sample = Xdata(af::span, af::seq(i, last_batch_index));
 			this->forward_all(sample);
 			// Oxb = Oxb - Oxb
 			af::array delta = this->layers.back()->getLastOutput() - target;
