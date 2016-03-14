@@ -36,6 +36,18 @@ namespace juml {
 					lastOutput(node_count_),
 		       			input_count(input_count_), node_count(node_count_) {}
 
+				Layer(af::array weights_, af::array bias_) :
+					weights(weights_), bias(bias_),
+					weights_update(af::constant(0, weights_.dims(0), weights_.dims(1))),
+					bias_update(af::constant(0.0, bias_.dims(0))),
+					lastOutput(weights_.dims(1)),
+					input_count(weights_.dims(0)), node_count(weights_.dims(1))
+				{
+					if (weights.dims(1) != bias.dims(0)) {
+						throw std::runtime_error("Node count in weight matrix and bias vector differ");
+					}
+				}
+
 				void updateWeights(float learningrate, MPI_Comm comm) {
 					MPI_Allreduce(MPI_IN_PLACE, &this->update_count, 1, MPI_INT, MPI_SUM, comm);
 					if (update_count == 0) return;
@@ -132,6 +144,7 @@ namespace juml {
 		class FunctionLayer: public Layer {
 			public: 
 			FunctionLayer(int input_size, int node_count) : Layer(input_size, node_count) {}
+			FunctionLayer(af::array weights, af::array bias) : Layer(weights, bias) {}
 
 			const af::array& forward(const af::array& input) override {
 				// matmul(transpose(IxN), (Ixb))  =

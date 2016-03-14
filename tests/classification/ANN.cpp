@@ -85,9 +85,23 @@ TEST(ANN_TEST, TEST_XOR) {
 	Dataset Xset(Xarray);
 	Dataset yset(yarray);
 
+	float weights1[] = {0.06, -0.03, 0.2, 0.1};
+	float bias1[] = {-0.2, -0.2};
+	float weights2[] = {0.2, 0.08};
+	float bias2[] = {0.08};
+
+
 	std::vector<std::shared_ptr<Layer>> layers;
-	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(2, 2));
-	layers.push_back(std::make_shared<FunctionLayer<Activation::Linear>>(2, 1));
+	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(
+			af::array(2,2, weights1), af::array(2, bias1)));
+	layers.push_back(std::make_shared<FunctionLayer<Activation::Linear>>(
+			af::array(2, 1, weights2), af::array(1, bias2)));
+
+	for(auto it = layers.begin(); it != layers.end(); it++) {
+		af::print("weights", (*it)->getWeights());
+		af::print("bias", (*it)->getBias());
+	}
+
 	SequentialNeuralNet net(AF_BACKEND_CPU, layers);
 	net.fit(Xset, yset);
 
