@@ -127,8 +127,8 @@ namespace juml {
     }
 
     Dataset GaussianNaiveBayes::predict(Dataset& X) const {
-       // X is loaded in this->predict_probability
-       Dataset probabilities = this->predict_probability(X);
+        // X is loaded in this->predict_probability
+        Dataset probabilities = this->predict_probability(X);
         
         af::array values(X.n_samples());
         af::array locations(X.n_samples());
@@ -169,4 +169,3 @@ namespace juml {
         return this->theta_;
     }
 } // namespace juml
-
