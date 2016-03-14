@@ -47,7 +47,15 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 		throw std::runtime_error(errMsg.str());
 	}
 
-	//TODO: Check that number of rows in label set matches number of nodes in the last layer of the network.
+	if (y.data().dims(0) != this->layers.back()->node_count) {
+		std::stringstream errMsg;
+		errMsg << "Number of rows in label data ("
+			<< y.data().dims(0)
+			<< ") does not match number of nodes in output layer ("
+			<< this->layers.back()->node_count
+			<< ")";
+		throw std::runtime_error(errMsg.str());
+	}
 
 	const int max_iterations = 200; //TODO: User-specify this value
 	const float learningrate = 1;
