@@ -4,6 +4,7 @@
 #include <mpi.h>
 #include <string>
 
+#include "core/Backend.h"
 #include "data/Dataset.h"
 #include "preprocessing/ClassNormalizer.h"
 
@@ -11,7 +12,7 @@ static const std::string FILE_PATH = JUML_DATASETS"/random_class_labels.h5";
 static const std::string DATA_SET = "labels";
 
 TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_CPU) {
-    af::setBackend(AF_BACKEND_CPU);
+    juml::Backend::set(juml::Backend::CPU);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
     juml::ClassNormalizer class_normalizer;
@@ -35,7 +36,7 @@ TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_CPU) {
 
 #ifdef JUML_OPENCL
 TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_OPENCL) {
-    af::setBackend(AF_BACKEND_OPENCL);
+    juml::Backend::set(juml::Backend::OPENCL);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
     juml::ClassNormalizer class_normalizer;
@@ -61,7 +62,7 @@ TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_OPENCL) {
 
 #ifdef JUML_CUDA
 TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_CUDA) {
-    af::setBackend(AF_BACKEND_CUDA);
+    juml::Backend::set(juml::Backend::CUDA);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
     juml::ClassNormalizer class_normalizer;
@@ -86,7 +87,7 @@ TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_CUDA) {
 #endif // JUML_CUDA
 
 TEST (CLASS_NORMALIZER_TEST, VECTOR_MAPPING_TEST_CPU) {
-    af::setBackend(AF_BACKEND_CPU);
+    juml::Backend::set(juml::Backend::CPU);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
     juml::ClassNormalizer class_normalizer;
@@ -98,7 +99,7 @@ TEST (CLASS_NORMALIZER_TEST, VECTOR_MAPPING_TEST_CPU) {
 
 #ifdef JUML_OPENCL
 TEST (CLASS_NORMALIZER_TEST, VECTOR_MAPPING_TEST_OPENCL) {
-    af::setBackend(AF_BACKEND_OPENCL);
+    juml::Backend::set(juml::Backend::OPENCL);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
     juml::ClassNormalizer class_normalizer;
@@ -112,7 +113,7 @@ TEST (CLASS_NORMALIZER_TEST, VECTOR_MAPPING_TEST_OPENCL) {
 
 #ifdef JUML_CUDA
 TEST (CLASS_NORMALIZER_TEST, VECTOR_MAPPING_TEST_CUDA) {
-    af::setBackend(AF_BACKEND_OPENCL);
+    juml::Backend::set(juml::Backend::CUDA);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
     juml::ClassNormalizer class_normalizer;

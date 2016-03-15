@@ -13,6 +13,8 @@
 * Email: murxman@gmail.com
 */
 
+#include "core/Algorithm.h"
+#include "core/Backend.h"
 #include "data/Dataset.h"
 #include "classification/GaussianNaiveBayes.h"
 #include "clustering/KMeans.h"

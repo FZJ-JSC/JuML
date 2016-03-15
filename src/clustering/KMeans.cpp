@@ -43,6 +43,21 @@ namespace juml {
             throw std::invalid_argument("The tolerance must be larger then 0");
     }
 
+    KMeans::KMeans(
+            uintl      k,
+            af::array& centroids,
+            uintl      max_iter,
+            Distance   distance,
+            float      tolerance,
+            uintl      seed,
+            int        backend,
+            MPI_Comm   comm)
+      : KMeans(k, max_iter, static_cast<Method>(-1), distance, tolerance, seed, backend, comm) {
+        this->centroids_ = centroids;
+        if (this->centroids_.dims(1) != this->k_)
+            throw std::invalid_argument("Mismatch between centroid count and number of clusters k");
+    }
+
     void KMeans::initialize_random_centroids(const Dataset& dataset) {
         const af::array& data = dataset.data();
 
@@ -122,7 +137,7 @@ namespace juml {
     
     void KMeans::fit(Dataset& X) {
         // initialize backend and load data
-        af::setBackend(static_cast<af::Backend>(this->backend_.get()));
+        Backend::set(this->backend_.get());
         X.load_equal_chunks();
 
         // dimensionality checks
@@ -132,23 +147,20 @@ namespace juml {
         }
 
         // initialize centroids
-        switch (this->initialization_) {
-            case Method::RANDOM:
-                this->initialize_random_centroids(X);
-                break;
-            case Method::KMEANS_PLUS_PLUS:
-                this->initialize_kpp_centroids(X);
-                break;
-            default:
-                throw std::invalid_argument("Unsupported initialization method");
-        }
+        if (this->initialization_ == static_cast<Method>(-1)) {}// centroids given
+        else if (this->initialization_ == Method::RANDOM)
+            this->initialize_random_centroids(X);
+        else if (this->initialization_ == Method::KMEANS_PLUS_PLUS)
+            this->initialize_kpp_centroids(X);
+        else
+            throw std::invalid_argument("Unsupported initialization method");
 
         // actually cluster the data
         this->cluster(X);
     }
 
     Dataset KMeans::predict(Dataset& X) const {
-        af::setBackend(static_cast<af::Backend>(this->backend_.get()));
+        Backend::set(this->backend_.get());
         X.load_equal_chunks();
 
         af::array locations = this->closest_centroids(X.data());

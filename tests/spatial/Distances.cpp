@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <armadillo>
 
+#include "core/Backend.h"
 #include "spatial/Distances.h"
 
 const float DESTINATIONS[6][3] = {{0.0f, 0.0f, 0.0f},
@@ -16,9 +17,9 @@ const float ORIGINS[2][3] = {{0.0f, 0.0f, 0.0f},
                              {1.0f, 1.0f, 1.0f}};
 
 const float EUCLIDEAN_DISTANCES[6][2] = {{0.00000000000000000000f, 1.73205077648162841797f},
-                                         {1.00000000000000000000f, 1.41421353816986083984f},
-                                         {1.00000000000000000000f, 1.41421353816986083984f},
-                                         {1.00000000000000000000f, 1.41421353816986083984f},
+                                         {1.00000000000000000000f, 1.41421365737915039062f},
+                                         {1.00000000000000000000f, 1.41421365737915039062f},
+                                         {1.00000000000000000000f, 1.41421365737915039062f},
                                          {1.73205077648162841797f, 0.00000000000000000000f},
                                          {1.73205077648162841797f, 3.46410155296325683594f}};
 
@@ -41,7 +42,7 @@ TEST(DISTANCES_TEST, EUCLIDEAN_EXCEPTION_TEST) {
 }
 
 TEST(DISTANCES_TEST, EUCLIDEAN_TEST_CPU) {
-    af::setBackend(AF_BACKEND_CPU);
+    juml::Backend::set(juml::Backend::CPU);
 
     af::array from(af::dim4(3, 2), reinterpret_cast<const float*>(ORIGINS));
     af::array to(af::dim4(3, 6), reinterpret_cast<const float*>(DESTINATIONS));
@@ -52,19 +53,23 @@ TEST(DISTANCES_TEST, EUCLIDEAN_TEST_CPU) {
 
 #ifdef JUML_OPENCL
 TEST(DISTANCES_TEST, EUCLIDEAN_TEST_OPENCL) {
-    af::setBackend(AF_BACKEND_CPU);
+    juml::Backend::set(juml::Backend::OPENCL);
 
     af::array from(af::dim4(3, 2), reinterpret_cast<const float*>(ORIGINS));
     af::array to(af::dim4(3, 6), reinterpret_cast<const float*>(DESTINATIONS));
-    af::array distances(af::dim4(2, 6), reinterpret_cast<const float*>(EUCLIDEAN_DISTANCES));
+    af::array distances = juml::euclidean(from, to);
 
-    ASSERT_EQ(af::allTrue(juml::euclidean(from, to) == distances).scalar<char>(), 1);
+    for (int row = 0; row < 6; ++row) {
+        for (int col = 0; col < 2; ++col) {
+            ASSERT_FLOAT_EQ(distances(col, row).scalar<float>(), EUCLIDEAN_DISTANCES[row][col]);
+        }
+    }
 }
 #endif // JUML_OPENCL
 
 #ifdef JUML_CUDA
 TEST(DISTANCES_TEST, EUCLIDEAN_TEST_CUDA) {
-    af::setBackend(AF_BACKEND_CPU);
+    juml::Backend::set(juml::Backend::CUDA);
 
     af::array from(af::dim4(3, 2), reinterpret_cast<const float*>(ORIGINS));
     af::array to(af::dim4(3, 6), reinterpret_cast<const float*>(DESTINATIONS));
@@ -86,7 +91,7 @@ TEST(DISTANCES_TEST, MANHATTAN_EXCEPTION_TEST) {
 }
 
 TEST(DISTANCES_TEST, MANHATTAN_TEST_CPU) {
-    af::setBackend(AF_BACKEND_CPU);
+    juml::Backend::set(juml::Backend::CPU);
 
     af::array from(af::dim4(3, 2), reinterpret_cast<const float*>(ORIGINS));
     af::array to(af::dim4(3, 6), reinterpret_cast<const float*>(DESTINATIONS));
@@ -97,7 +102,7 @@ TEST(DISTANCES_TEST, MANHATTAN_TEST_CPU) {
 
 #ifdef JUML_OPENCL
 TEST(DISTANCES_TEST, MANHATTAN_TEST_OPENCL) {
-    af::setBackend(AF_BACKEND_OPENCL);
+    juml::Backend::set(juml::Backend::OPENCL);
 
     af::array from(af::dim4(3, 2), reinterpret_cast<const float*>(ORIGINS));
     af::array to(af::dim4(3, 6), reinterpret_cast<const float*>(DESTINATIONS));
@@ -109,7 +114,7 @@ TEST(DISTANCES_TEST, MANHATTAN_TEST_OPENCL) {
 
 #ifdef JUML_CUDA
 TEST(DISTANCES_TEST, MANHATTAN_TEST_CUDA) {
-    af::setBackend(AF_BACKEND_CUDA);
+    juml::Backend::set(juml::Backend::CUDA);
 
     af::array from(af::dim4(3, 2), reinterpret_cast<const float*>(ORIGINS));
     af::array to(af::dim4(3, 6), reinterpret_cast<const float*>(DESTINATIONS));

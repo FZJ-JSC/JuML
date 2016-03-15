@@ -3,8 +3,8 @@
 #include <iostream>
 #include <mpi.h>
 
+#include "core/Backend.h"
 #include "data/Dataset.h"
-#include "core/Definitions.h"
 #include "clustering/KMeans.h"
 #include "spatial/Distances.h"
 
@@ -150,6 +150,67 @@ TEST(KMEANS_TEST, IRIS_MANHATTAN_CUDA_TEST) {
             ASSERT_FLOAT_EQ(centroids(col, row).scalar<float>(), MANHATTAN_CENTROIDS[row][col]);
         }
     }
+}
+#endif // JUML_CUDA
+
+TEST(KMEANS_TEST, IRIS_PASS_CENTROIDS_CPU_TEST) {
+    juml::Backend::set(juml::Backend::CPU);
+
+    af::array centroids = af::constant(2.0f, 4, 3);
+    juml::KMeans kmeans(
+            /*k=*/3,
+            /*centroids=*/centroids,
+            /*max_iter=*/0,
+            /*distance=*/juml::euclidean,
+            /*tolerance=*/0.02,
+            /*seed=*/42L,
+            /*backend=*/juml::Backend::CPU);
+    juml::Dataset X(FILE_PATH, SAMPLES);
+    kmeans.fit(X);
+
+    const af::array& kmeans_centroids = kmeans.centroids();
+    ASSERT_EQ(af::allTrue(centroids == kmeans_centroids).scalar<char>(), 1);
+}
+
+#ifdef JUML_OPENCL
+TEST(KMEANS_TEST, IRIS_PASS_CENTROIDS_OPENCL_TEST) {
+    juml::Backend::set(juml::Backend::OPENCL);
+
+    af::array centroids = af::constant(2.0f, 4, 3);
+    juml::KMeans kmeans(
+            /*k=*/3,
+            /*centroids=*/centroids,
+            /*max_iter=*/0,
+            /*distance=*/juml::euclidean,
+            /*tolerance=*/0.02,
+            /*seed=*/42L,
+            /*backend=*/juml::Backend::OPENCL);
+    juml::Dataset X(FILE_PATH, SAMPLES);
+    kmeans.fit(X);
+
+    const af::array& kmeans_centroids = kmeans.centroids();
+    ASSERT_EQ(af::allTrue(centroids == kmeans_centroids).scalar<char>(), 1);
+}
+#endif // JUML_OPENCL
+
+#ifdef JUML_CUDA
+TEST(KMEANS_TEST, IRIS_PASS_CENTROIDS_CUDA_TEST) {
+    juml::Backend::set(juml::Backend::CUDA);
+
+    af::array centroids = af::constant(2.0f, 4, 3);
+    juml::KMeans kmeans(
+            /*k=*/3,
+            /*centroids=*/centroids,
+            /*max_iter=*/0,
+            /*distance=*/juml::euclidean,
+            /*tolerance=*/0.02,
+            /*seed=*/42L,
+            /*backend=*/juml::Backend::CUDA);
+    juml::Dataset X(FILE_PATH, SAMPLES);
+    kmeans.fit(X);
+
+    const af::array& kmeans_centroids = kmeans.centroids();
+    ASSERT_EQ(af::allTrue(centroids == kmeans_centroids).scalar<char>(), 1);
 }
 #endif // JUML_CUDA
 

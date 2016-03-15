@@ -19,7 +19,7 @@
 #include <arrayfire.h>
 #include <mpi.h>
 
-#include "core/Definitions.h"
+#include "core/Backend.h"
 #include "classification/BaseClassifier.h"
 #include "data/Dataset.h"
 

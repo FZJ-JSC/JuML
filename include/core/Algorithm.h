@@ -16,7 +16,7 @@
 #ifndef ALGORITHM_H
 #define ALGORITHM_H
 
-#include "core/Definitions.h"
+#include "core/Backend.h"
 
 #include <mpi.h>
 

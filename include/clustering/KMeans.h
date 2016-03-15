@@ -19,7 +19,7 @@
 #include <arrayfire.h>
 #include <mpi.h>
 
-#include "core/Definitions.h"
+#include "core/Backend.h"
 #include "clustering/BaseClusterer.h"
 #include "data/Dataset.h"
 #include "spatial/Distances.h"
@@ -36,13 +36,12 @@ namespace juml {
         
     protected:
         af::array centroids_;
-
-        uintl    k_;
-        uintl    max_iter_;
-        Method   initialization_;
-        Distance distance_;
-        uintl    seed_;
-        float    tolerance_;
+        uintl     k_;
+        uintl     max_iter_;
+        Method    initialization_;
+        Distance  distance_;
+        uintl     seed_;
+        float     tolerance_;
         
         void initialize_random_centroids(const Dataset& data);
         void initialize_kpp_centroids(const Dataset& data);
@@ -53,14 +52,23 @@ namespace juml {
         //! KMeans constructor
         //!
         //!
-        KMeans(uintl    k,
-               uintl    max_iter=100,
-               Method   initialization=RANDOM,
-               Distance distance=euclidean,
-               float    tolerance=1e-3,
-               uintl    seed=42L,
-               int      backend=Backend::CPU,
-               MPI_Comm comm=MPI_COMM_WORLD);        
+        KMeans(uintl      k,
+               uintl      max_iter=100,
+               Method     initialization=RANDOM,
+               Distance   distance=euclidean,
+               float      tolerance=1e-3,
+               uintl      seed=42L,
+               int        backend=Backend::CPU,
+               MPI_Comm   comm=MPI_COMM_WORLD);
+        KMeans(uintl      k,
+               af::array& centroids,
+               uintl      max_iter=100,
+               Distance   distance=euclidean,
+               float      tolerance=1e-3,
+               uintl      seed=42L,
+               int        backend=Backend::CPU,
+               MPI_Comm   comm=MPI_COMM_WORLD);
+
         virtual void fit(Dataset& X);
         virtual Dataset predict(Dataset& X) const;
 
