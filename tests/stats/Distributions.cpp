@@ -3,10 +3,11 @@
 #include <cmath>
 #include <limits>
 
+#include "core/Backend.h"
 #include "stats/Distributions.h"
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_FLOAT_TEST_CPU) {
-    af::setBackend(AF_BACKEND_CPU);
+    juml::Backend::set(juml::Backend::CPU);
     
     // normal bell curve
     ASSERT_FLOAT_EQ(juml::gaussian_pdf(-0.5f, 0.0f, 1.0f), 0.35206532676429952f);
@@ -23,7 +24,7 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_FLOAT_TEST_CPU) {
 }
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_DOUBLE_TEST_CPU) {
-    af::setBackend(AF_BACKEND_CPU);
+    juml::Backend::set(juml::Backend::CPU);
     
     // normal bell curve
     ASSERT_DOUBLE_EQ(juml::gaussian_pdf(-0.5, 0.0, 1.0), 0.35206532676429952);
@@ -40,7 +41,7 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_DOUBLE_TEST_CPU) {
 }
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_NAN_TEST_CPU) {
-    af::setBackend(AF_BACKEND_CPU);
+    juml::Backend::set(juml::Backend::CPU);
     const auto float_nan  = std::numeric_limits<float>::quiet_NaN();
     const auto double_nan = std::numeric_limits<double>::quiet_NaN();
 
@@ -54,7 +55,7 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_NAN_TEST_CPU) {
 }
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_VECTOR_TEST_CPU) {
-    af::setBackend(AF_BACKEND_CPU);
+    juml::Backend::set(juml::Backend::CPU);
     
     const float val[] = {-0.5f, +0.0f, +0.5f};
     const float loc[] = {+0.5f, +0.0f, +-.5f};
@@ -75,7 +76,7 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_VECTOR_TEST_CPU) {
 
 #ifdef JUML_OPENCL
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_FLOAT_TEST_OPENCL) {
-    af::setBackend(AF_BACKEND_OPENCL);
+    juml::Backend::set(juml::Backend::OPENCL);
     
     // normal bell curve
     ASSERT_FLOAT_EQ(juml::gaussian_pdf(-0.5f, 0.0f, 1.0f), 0.35206532676429952f);
@@ -92,7 +93,8 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_FLOAT_TEST_OPENCL) {
 }
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_DOUBLE_TEST_OPENCL) {
-    af::setBackend(AF_BACKEND_OPENCL);
+    juml::Backend::set(juml::Backend::OPENCL);
+    if (!af::isDoubleAvailable(af::getDevice())) {return;}
     
     // normal bell curve
     ASSERT_DOUBLE_EQ(juml::gaussian_pdf(-0.5, 0.0, 1.0), 0.35206532676429952);
@@ -109,21 +111,25 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_DOUBLE_TEST_OPENCL) {
 }
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_NAN_TEST_OPENCL) {
-    af::setBackend(AF_BACKEND_OPENCL);
+    juml::Backend::set(juml::Backend::OPENCL);
     const auto float_nan  = std::numeric_limits<float>::quiet_NaN();
     const auto double_nan = std::numeric_limits<double>::quiet_NaN();
 
     // passing NaN values
     ASSERT_TRUE(std::isnan(juml::gaussian_pdf(float_nan,  0.0f, 1.0f)));
-    ASSERT_TRUE(std::isnan(juml::gaussian_pdf(double_nan, 0.0,  1.0)));
+    if (af::isDoubleAvailable(af::getDevice())) {
+        ASSERT_TRUE(std::isnan(juml::gaussian_pdf(double_nan, 0.0,  1.0)));
+    }
     
     // zero standard deviation
     ASSERT_TRUE(std::isnan(juml::gaussian_pdf(0.5f, 0.0f, 0.0f)));
-    ASSERT_TRUE(std::isnan(juml::gaussian_pdf(0.5,  0.0,  0.0)));
+    if (af::isDoubleAvailable(af::getDevice())) {
+        ASSERT_TRUE(std::isnan(juml::gaussian_pdf(0.5,  0.0,  0.0)));
+    }
 }
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_VECTOR_TEST_OPENCL) {
-    af::setBackend(AF_BACKEND_OPENCL);
+    juml::Backend::set(juml::Backend::OPENCL);
     
     const float val[] = {-0.5f, +0.0f, +0.5f};
     const float loc[] = {+0.5f, +0.0f, +-.5f};
@@ -145,7 +151,7 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_VECTOR_TEST_OPENCL) {
 
 #ifdef JUML_CUDA
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_FLOAT_TEST_CUDA) {
-    af::setBackend(AF_BACKEND_CUDA);
+    juml::Backend::set(juml::Backend::CUDA);
     
     // normal bell curve
     ASSERT_FLOAT_EQ(juml::gaussian_pdf(-0.5f, 0.0f, 1.0f), 0.35206532676429952f);
@@ -162,7 +168,8 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_FLOAT_TEST_CUDA) {
 }
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_DOUBLE_TEST_CUDA) {
-    af::setBackend(AF_BACKEND_CUDA);
+    juml::Backend::set(juml::Backend::CUDA);
+    if (!af::isDoubleAvailable(af::getDevice())) {return;}
     
     // normal bell curve
     ASSERT_DOUBLE_EQ(juml::gaussian_pdf(-0.5, 0.0, 1.0), 0.35206532676429952);
@@ -179,21 +186,25 @@ TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_DOUBLE_TEST_CUDA) {
 }
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_NAN_TEST_CUDA) {
-    af::setBackend(AF_BACKEND_CUDA);
+    juml::Backend::set(juml::Backend::CUDA);
     const auto float_nan  = std::numeric_limits<float>::quiet_NaN();
     const auto double_nan = std::numeric_limits<double>::quiet_NaN();
 
     // passing NaN values
     ASSERT_TRUE(std::isnan(juml::gaussian_pdf(float_nan,  0.0f, 1.0f)));
-    ASSERT_TRUE(std::isnan(juml::gaussian_pdf(double_nan, 0.0,  1.0)));
+    if (af::isDoubleAvailable(af::getDevice())) {
+        ASSERT_TRUE(std::isnan(juml::gaussian_pdf(double_nan, 0.0,  1.0)));
+    }
     
     // zero standard deviation
     ASSERT_TRUE(std::isnan(juml::gaussian_pdf(0.5f, 0.0f, 0.0f)));
-    ASSERT_TRUE(std::isnan(juml::gaussian_pdf(0.5,  0.0,  0.0)));
+    if (af::isDoubleAvailable(af::getDevice())) {
+        ASSERT_TRUE(std::isnan(juml::gaussian_pdf(0.5,  0.0,  0.0)));
+    }
 }
 
 TEST(DISTRIBUTIONS_TEST, GAUSSIAN_PDF_VECTOR_TEST_CUDA) {
-    af::setBackend(AF_BACKEND_CUDA);
+    juml::Backend::set(juml::Backend::CUDA);
     
     const float val[] = {-0.5f, +0.0f, +0.5f};
     const float loc[] = {+0.5f, +0.0f, +-.5f};

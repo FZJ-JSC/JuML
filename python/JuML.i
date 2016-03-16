@@ -21,7 +21,7 @@
 
 /*Wrap Core*/
 %include "core/Algorithm.h"
-%include "core/Definitions.h"
+%include "core/Backend.h"
 
 /* Wrap Dataset*/
 %include "data/Dataset.h"

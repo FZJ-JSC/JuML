@@ -14,7 +14,6 @@
 */
 
 #include <algorithm>
-#include <cstdint>
 #include <stdexcept>
 #include <sstream>
 
@@ -31,7 +30,28 @@ namespace juml {
     Dataset::Dataset(af::array& data, MPI_Comm comm)
         : data_(data), comm_(comm) {
         MPI_Comm_rank(this->comm_, &this->mpi_rank_);
-        MPI_Comm_size(this->comm_, &this->mpi_size_);    
+        MPI_Comm_size(this->comm_, &this->mpi_size_);
+
+        MPI_Allreduce(MPI_IN_PLACE, &this->global_items_, 1, MPI_LONG_LONG, MPI_SUM, comm);
+        MPI_Exscan(MPI_IN_PLACE, &this->global_offset_, 1, MPI_LONG_LONG, MPI_SUM, comm);
+        if (this->mpi_rank_ == 0) this->global_offset_ = 0;
+    }
+
+    time_t Dataset::modified_time() const {
+        struct stat info;
+        int status;
+
+        status = stat(this->filename_.c_str(), &info);
+        if (status != 0) {
+            std::stringstream error;
+            error << "Could not open file " << this->filename_;
+            throw std::runtime_error(error.str().c_str());
+        }
+        return info.st_mtim.tv_sec;
+    }
+
+    time_t Dataset::loading_time() const {
+        return this->loading_time_;
     }
     
     af::dtype Dataset::h5_to_af(hid_t h5_type) {
@@ -52,7 +72,17 @@ namespace juml {
         throw std::domain_error("Unsupported HDF5 type");
     }
 
-    void Dataset::load_equal_chunks() {
+    void Dataset::load_equal_chunks(bool force) {
+        if (this->filename_.empty()) {
+            return ;
+        }
+        time_t mod_time = this->modified_time();
+        if (!force && mod_time <= this->loading_time_) {
+            return ;
+        }
+        else {
+            this->loading_time_ = mod_time;
+        }
         // create access list for parallel IO
         hid_t access_plist = H5Pcreate(H5P_FILE_ACCESS);
         if (access_plist < 0)
@@ -112,6 +142,10 @@ namespace juml {
             chunk_dimensions[i] = dimensions[i];
             row_col_offset[i] = 0;
         }
+
+        // remember global ind
+        this->global_items_ = static_cast<dim_t>(dimensions[0]);
+        this->global_offset_ = static_cast<dim_t>(position);
 
         // create memory space
         hid_t mem_space = H5Screate_simple(n_dims, chunk_dimensions, NULL);
@@ -188,6 +222,14 @@ namespace juml {
     
     dim_t Dataset::n_features() const {
         return this->data_.dims(0);
+    }
+
+    dim_t Dataset::global_items() const {
+        return this->global_items_;
+    }
+
+    dim_t Dataset::global_offset() const {
+        return this->global_offset_;
     }
 } // namespace juml
 

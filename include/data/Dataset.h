@@ -20,6 +20,7 @@
 #include <hdf5.h>
 #include <mpi.h>
 #include <string>
+#include <sys/stat.h>
 
 namespace juml {
     //! Dataset
@@ -27,11 +28,17 @@ namespace juml {
     class Dataset {
     protected:
         af::array data_;
+
         const std::string filename_;
         const std::string dataset_;
+        time_t loading_time_ = 0;
+
         const MPI_Comm comm_;
         int mpi_rank_;
         int mpi_size_;
+
+        dim_t global_items_;
+        dim_t global_offset_;
         
         af::dtype h5_to_af(hid_t h5_type);
 
@@ -39,13 +46,17 @@ namespace juml {
         //! Dataset constructor
         Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm=MPI_COMM_WORLD);        
         Dataset(af::array& data, MPI_Comm comm=MPI_COMM_WORLD);
-       
-        void load_equal_chunks();
+
+        time_t modified_time() const;
+        time_t loading_time() const;
+        void load_equal_chunks(bool force=false);
 
         virtual af::array& data();
         virtual const af::array& data() const;
         virtual dim_t n_samples() const;
         virtual dim_t n_features() const;
+        virtual dim_t global_items() const;
+        virtual dim_t global_offset() const;
     }; // Dataset
 }  // juml
 #endif // DATASET_H
