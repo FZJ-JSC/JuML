@@ -4,9 +4,9 @@
 #include <mpi.h>
 #include <string>
 
-#include "core/Definitions.h"
-#include "classification/GaussianNaiveBayes.h"
 #include "data/Dataset.h"
+#include "core/Backend.h"
+#include "classification/GaussianNaiveBayes.h"
 
 static const std::string FILE_PATH = JUML_DATASETS"/iris.h5";
 static const std::string SAMPLES = "samples";

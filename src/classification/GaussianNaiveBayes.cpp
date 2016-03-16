@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "core/Backend.h"
 #include "classification/GaussianNaiveBayes.h"
 #include "stats/Distributions.h"
 
@@ -25,7 +26,7 @@ namespace juml {
     {}
     
     void GaussianNaiveBayes::fit(Dataset& X, Dataset& y) {
-        af::setBackend(static_cast<af::Backend>(this->backend_.get()));
+        Backend::set(this->backend_.get());
         
         X.load_equal_chunks();
         y.load_equal_chunks();
@@ -106,7 +107,7 @@ namespace juml {
 
     Dataset GaussianNaiveBayes::predict_probability(Dataset& X) const {
         const dim_t n_classes = this->class_normalizer_.n_classes();
-        af::setBackend(static_cast<af::Backend>(this->backend_.get()));
+        Backend::set(this->backend_.get());
         X.load_equal_chunks();
         af::array probabilities = af::constant(1.0f, n_classes, X.n_samples());
         
@@ -169,4 +170,3 @@ namespace juml {
         return this->theta_;
     }
 } // namespace juml
-

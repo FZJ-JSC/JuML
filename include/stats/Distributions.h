@@ -6,7 +6,7 @@
 *
 * File name: DataSet.h
 *
-* Description: Header of class DataSet
+* Description: Collection of statistical distributions
 *
 * Maintainer: m.goetz
 *

@@ -19,6 +19,7 @@
 #include <arrayfire.h>
 #include <mpi.h>
 
+#include "core/Backend.h"
 #include "classification/BaseClassifier.h"
 #include "data/Dataset.h"
 
@@ -31,7 +32,7 @@ namespace juml {
         af::array theta_;
 
     public:
-        GaussianNaiveBayes(int backend=Backend::CUDA, MPI_Comm comm=MPI_COMM_WORLD);
+        GaussianNaiveBayes(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
     
         virtual void fit(Dataset& X, Dataset& y);
         virtual Dataset predict(Dataset& X) const;

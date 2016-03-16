@@ -16,7 +16,9 @@
 #ifndef ALGORITHM_H
 #define ALGORITHM_H
 
-#include "core/Definitions.h"
+#include "core/Backend.h"
+
+#include <mpi.h>
 
 namespace juml {
     //! Algorithm
@@ -24,8 +26,12 @@ namespace juml {
     class Algorithm {
     protected:
         Backend backend_;
+        
+        MPI_Comm comm_;
+        int mpi_rank_;
+        int mpi_size_;
     public:
-        Algorithm(int backend=Backend::CPU);
+        Algorithm(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
     }; // Algorithm
 }  // juml
 #endif // ALGORITHM_H
