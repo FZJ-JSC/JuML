@@ -46,7 +46,7 @@ namespace juml {
         void initialize_random_centroids(const Dataset& data);
         void initialize_kpp_centroids(const Dataset& data);
         void cluster(const Dataset& data);
-        af::array closest_centroids(const af::array& data) const;
+        af::array closest_centroids(const af::array& centroids, const af::array& data) const;
         
     public:
         //! KMeans constructor
@@ -54,12 +54,13 @@ namespace juml {
         //!
         KMeans(uintl      k,
                uintl      max_iter=100,
-               Method     initialization=RANDOM,
+               Method     initialization=KMEANS_PLUS_PLUS,
                Distance   distance=euclidean,
                float      tolerance=1e-3,
                uintl      seed=42L,
                int        backend=Backend::CPU,
                MPI_Comm   comm=MPI_COMM_WORLD);
+
         KMeans(uintl      k,
                af::array& centroids,
                uintl      max_iter=100,
