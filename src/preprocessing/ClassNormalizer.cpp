@@ -13,6 +13,10 @@
  * Email: phil.glock@gmail.com
  */
 
+#include <stdexcept>
+
+#include "core/Backend.h"
+#include "core/MPI.h"
 #include "preprocessing/ClassNormalizer.h"
 
 namespace juml {
@@ -27,10 +31,22 @@ namespace juml {
     }
 
     void ClassNormalizer::index(const Dataset& y) {
-        af::Backend currentBackend = af::getBackendId(y.data());
-        af::array local_class_labels = af::setUnique(af::transpose(y.data().as(s64)));
+        const af::array& data = y.data();
+        dim_t n = data.dims(1);
+
+        // check dimensionality
+        if (data.dims(0) > 0 || data.dims(2) > 0 || data.dims(3) > 0) {
+            throw std::invalid_argument("Class labels must be a vector");
+        }
+
+        // setup backend, local classes and collect globally
+        Backend::set(af::getBackendId(data));
+        af::array local_class_labels = af::setUnique(af::moddims(data, n));
+        af::array n_classes = af::constant(local_class_labels.elements(), 1);
+        mpi::allgather_inplace(n_classes, this->comm_);
+
         // send the local number of classes to all processes
-        int n_classes = local_class_labels.elements();
+        int n_classes = static_cast<int>(local_class_labels.elements());
         int* n_classes_per_processor = new int[this->mpi_size_];
         MPI_Allgather(&n_classes, 1, MPI_INT, n_classes_per_processor, 1, MPI_INT, this->comm_);
 
