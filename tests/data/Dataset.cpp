@@ -19,9 +19,11 @@ class DATASET_TEST : public testing::Test
 {
 public:
     int rank_;
+    int size_;
 
     DATASET_TEST() {
         MPI_Comm_rank(MPI_COMM_WORLD, &this->rank_);
+        MPI_Comm_size(MPI_COMM_WORLD, &this->size_);
     }
 };
 
@@ -101,6 +103,58 @@ TEST_F(DATASET_TEST, CREATE_FROM_ARRAY) {
     // call load_equal_chunks, nothing is done
     set.load_equal_chunks();
 }
+
+
+TEST_F(DATASET_TEST, NORMALIZE_0_TO_1_DEP_ALL) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    data_2D.normalize();
+    for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == (float)this->rank_/(float)this->size_));
+    }
+}
+TEST_F(DATASET_TEST, NORMALIZE_1_TO_1_DEP_ALL) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    data_2D.normalize(1,1);
+    for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == 1));
+    }
+}
+
+TEST_F(DATASET_TEST, NORMALIZE_0_TO_1_INDEP_ALL) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    data_2D.normalize(0,1,true);
+    for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == (float)this->rank_/(float)this->size_));
+    }
+}
+TEST_F(DATASET_TEST, NORMALIZE_MINUS20_TO_10_INDEP_ALL) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    data_2D.normalize(-20,10,true);
+    for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
+        ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == 30*(float)this->rank_/(float)this->size_ - 20));
+    }
+}
+TEST_F(DATASET_TEST, NORMALIZE_MINUS20_TO_10_INDEP_1_2) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    data_2D.normalize(-20, 10, true, af::range(af::dim4(3)) < 3);
+    for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
+        if (this->rank_ == 3)
+            ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == (float)this->rank_));
+        else
+            ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == 30*(float)this->rank_/(float)this->size_ - 20));
+    }
+}
+
 
 #ifdef JUML_OPENCL
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_OPENCL_TEST) {

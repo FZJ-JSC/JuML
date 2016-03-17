@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <sstream>
+#include <core/MPI.h>
 
 #include "data/Dataset.h"
 
@@ -70,6 +71,54 @@ namespace juml {
         else if (H5Tequal(h5_type, H5T_NATIVE_DOUBLE))  return f64;
         else if (H5Tequal(h5_type, H5T_NATIVE_LDOUBLE)) return f64;
         throw std::domain_error("Unsupported HDF5 type");
+    }
+
+    void Dataset::normalize(float min, float max, bool independent_features, const af::array& selected_features)
+    {
+        // Check if min == max
+        if (min == max) {
+            this->data_ = min;
+            return;
+        }
+
+        // Flatten if array is multidimensional
+        af::array& data = this->data_;
+        if (data.numdims() > 2)
+            data = af::array(data, this->n_features(), data.elements() / n_features());
+
+        // Check if selected_features is empty and its size
+        af::array mask = selected_features;;
+        if (selected_features.isempty())
+            mask = af::constant(1, this->n_features()) > 0;
+        else if (selected_features.numdims() > 1 || selected_features.elements() != this->n_features())
+            throw std::runtime_error("The selected_features array should have the same length as n_features()");
+
+        int num_features = af::sum<int>(mask);
+
+        // Compute local minimum
+        af::array minimum = af::min(data(mask,af::span), 1);
+        af::array maximum = af::max(data(mask,af::span), 1);
+
+        if (!independent_features) {
+            minimum = af::min(minimum);
+            maximum = af::max(maximum);
+        }
+
+        // Reduce minimum
+        mpi::allreduce_inplace(minimum, MPI_MIN, this->comm_);
+        mpi::allreduce_inplace(maximum, MPI_MAX, this->comm_);
+
+        // Update data
+        af::array norm_range = af::constant(max - min, minimum.elements()) / (maximum - minimum);
+
+        if (!independent_features) {
+            minimum = af::tile(minimum, num_features);
+            norm_range = af::tile(norm_range, num_features);
+        }
+
+        data(mask, af::span) -= af::tile(minimum, 1, this->n_samples());
+        data(mask, af::span) *= af::tile(norm_range, 1, this->n_samples());
+        data(mask, af::span) += af::constant(min, num_features, this->n_samples());
     }
 
     void Dataset::load_equal_chunks(bool force) {
