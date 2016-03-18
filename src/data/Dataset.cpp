@@ -33,10 +33,10 @@ namespace juml {
         MPI_Comm_rank(this->comm_, &this->mpi_rank_);
         MPI_Comm_size(this->comm_, &this->mpi_size_);
 
-        this->global_n_features_ = data.dims(1);
-        this->global_offset_ = this->global_n_features_;
+        this->global_n_samples_ = data.dims(1);
+        this->global_offset_ = this->global_n_samples_;
 
-        MPI_Allreduce(MPI_IN_PLACE, &this->global_n_features_, 1, MPI_LONG_LONG, MPI_SUM, comm);
+        MPI_Allreduce(MPI_IN_PLACE, &this->global_n_samples_, 1, MPI_LONG_LONG, MPI_SUM, comm);
         MPI_Exscan(MPI_IN_PLACE, &this->global_offset_, 1, MPI_LONG_LONG, MPI_SUM, comm);
         if (this->mpi_rank_ == 0) this->global_offset_ = 0;
     }
@@ -135,7 +135,7 @@ namespace juml {
             mean = af::mean(this->data_, 1);
         mean *= (float)this->n_samples();
         mpi::allreduce_inplace(mean, MPI_SUM, this->comm_);
-        mean /= (float)this->global_n_features_;
+        mean /= (float)this->global_n_samples_;
         return mean;
     }
 
@@ -211,7 +211,7 @@ namespace juml {
         }
 
         // remember global ind
-        this->global_n_features_ = static_cast<dim_t>(dimensions[0]);
+        this->global_n_samples_ = static_cast<dim_t>(dimensions[0]);
         this->global_offset_ = static_cast<dim_t>(position);
 
         // create memory space
@@ -285,7 +285,7 @@ namespace juml {
         stdev *= stdev;
         stdev = af::sum(stdev, 1);
         mpi::allreduce_inplace(stdev, MPI_SUM, this->comm_);
-        stdev /= (float) this->global_n_features();
+        stdev /= (float) this->global_n_samples_;
         stdev = af::sqrt(stdev);
         return stdev;
     }
@@ -306,8 +306,8 @@ namespace juml {
         return this->data_.dims(0);
     }
 
-    dim_t Dataset::global_n_features() const {
-        return this->global_n_features_;
+    dim_t Dataset::global_n_samples() const {
+        return this->global_n_samples_;
     }
 
     dim_t Dataset::global_offset() const {
