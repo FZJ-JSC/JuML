@@ -1,6 +1,6 @@
 #include <arrayfire.h>
+#include <cstdio>
 #include <exception>
-#include <ios>
 #include <iostream>
 #include <gtest/gtest.h>
 #include <mpi.h>
@@ -29,6 +29,7 @@ public:
 
 const std::string FILE_PATH_ROWNUMBER = JUML_DATASETS"/rownumInColumns5x3.h5";
 const std::string ROWNUMBER_SETNAME = "testset";
+const std::string DUMP_FILE = "dump_test.h5";
 
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_SINGLE_PROCESS) {
     if (rank_ != 0) return;
@@ -152,6 +153,20 @@ TEST_F(DATASET_TEST, NORMALIZE_MINUS20_TO_10_INDEP_1_2) {
             ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == (float)this->rank_));
         else
             ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == 30*(float)this->rank_/(float)this->size_ - 20));
+    }
+}
+
+TEST_F(DATASET_TEST, DUMP_EQUAL_CHUNKS_TEST) {
+    juml::Backend::set(juml::Backend::CPU);
+    af::array data = af::constant(rank_, 2, 2);
+    juml::Dataset dataset(data, MPI_COMM_WORLD);
+    dataset.dump_equal_chunks(DUMP_FILE, "dataset");
+
+    juml::Dataset loaded(DUMP_FILE,"dataset");
+    loaded.load_equal_chunks();
+    af::allTrue<bool>(loaded.data() == data);
+    if (rank_ == 0) {
+        std::remove(DUMP_FILE.c_str());
     }
 }
 
