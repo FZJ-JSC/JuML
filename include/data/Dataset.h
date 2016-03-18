@@ -37,6 +37,7 @@ namespace juml {
         int mpi_rank_;
         int mpi_size_;
 
+        dim_t sample_dim_;
         dim_t global_n_samples_;
         dim_t global_offset_;
         
@@ -60,6 +61,7 @@ namespace juml {
         virtual dim_t n_features() const;
         virtual dim_t global_n_samples() const;
         virtual dim_t global_offset() const;
+        virtual dim_t sample_dim() const;
     }; // Dataset
 }  // juml
 #endif // DATASET_H
