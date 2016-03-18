@@ -256,7 +256,13 @@ namespace juml {
         H5Fclose(file_id);
         H5Pclose(access_plist);
     }
-    
+
+    void Dataset::dump_equal_chunks(const std::string& filename, const std::string& dataset) {
+        af::array n_rows = af::constant(0, this->mpi_size_);
+        n_rows(this->mpi_rank_) = this->data_.dims(0);
+        mpi::allgather_inplace(n_rows, this->comm_);
+    }
+
     af::array& Dataset::data() {
         return this->data_;
     }

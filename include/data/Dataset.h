@@ -51,6 +51,7 @@ namespace juml {
         void normalize(float min = 0, float max = 1, bool independent_features = false, const af::array& selected_features = af::array());
         time_t loading_time() const;
         void load_equal_chunks(bool force=false);
+        void dump_equal_chunks(const std::string& filename, const std::string& dataset);
 
         virtual af::array& data();
         virtual const af::array& data() const;
