@@ -32,7 +32,7 @@ namespace juml {
 
         virtual void fit(Dataset& X, Dataset& y);
         virtual Dataset predict(Dataset& X) const = 0;
-        virtual float accuracy(Dataset& X, Dataset& y) const;
+        virtual float accuracy(Dataset& X, Dataset& y) const = 0;
     };
 } // namespace juml
 
