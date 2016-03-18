@@ -41,6 +41,7 @@ namespace juml {
         dim_t global_offset_;
         
         af::dtype h5_to_af(hid_t h5_type);
+        hid_t af_to_h5(af::dtype af_type);
 
     public:
         //! Dataset constructor
