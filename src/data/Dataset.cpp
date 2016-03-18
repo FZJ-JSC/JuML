@@ -87,11 +87,13 @@ namespace juml {
             data = af::array(data, this->n_features(), data.elements() / n_features());
 
         // Check if selected_features is empty and its size
-        af::array mask = selected_features;;
+        af::array mask = af::constant(1, this->n_features()) > 1;
         if (selected_features.isempty())
-            mask = af::constant(1, this->n_features()) > 0;
+            mask = true;
         else if (selected_features.numdims() > 1 || selected_features.elements() != this->n_features())
             throw std::runtime_error("The selected_features array should have the same length as n_features()");
+        else
+            mask(selected_features) = true;
 
         int num_features = af::sum<int>(mask);
 
