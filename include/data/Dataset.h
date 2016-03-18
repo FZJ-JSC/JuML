@@ -49,6 +49,7 @@ namespace juml {
 
         time_t modified_time() const;
         void normalize(float min = 0, float max = 1, bool independent_features = false, const af::array& selected_features = af::array());
+        af::array mean(bool total = false);
         time_t loading_time() const;
         void load_equal_chunks(bool force=false);
 

@@ -123,6 +123,19 @@ namespace juml {
         data(mask, af::span) += af::constant(min, num_features, this->n_samples());
     }
 
+
+    af::array Dataset::mean(bool total) {
+        af::array mean;
+        if (total)
+            mean = af::mean(af::array(this->data_, this->data_.elements()));
+        else
+            mean = af::mean(this->data_, 1);
+        mean *= (float)this->n_samples();
+        mpi::allreduce_inplace(mean, MPI_SUM, this->comm_);
+        mean /= (float)this->global_items_;
+        return mean;
+    }
+
     void Dataset::load_equal_chunks(bool force) {
         if (this->filename_.empty()) {
             return ;
