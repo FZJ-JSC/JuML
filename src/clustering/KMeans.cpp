@@ -189,7 +189,6 @@ namespace juml {
 
         // calculate the convergence threshold globally
         uintl threshold = static_cast<uintl>(std::floor(this->tolerance_ * dataset.global_items()));
-
         // remember the cluster assignments in order to break on changes
         af::array previous_assignments = af::constant(-1, 1, n);
 
