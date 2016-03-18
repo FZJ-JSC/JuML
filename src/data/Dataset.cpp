@@ -127,7 +127,7 @@ namespace juml {
     }
 
 
-    af::array Dataset::mean(bool total) {
+    af::array Dataset::mean(bool total) const {
         af::array mean;
         if (total)
             mean = af::mean(af::array(this->data_, this->data_.elements()));
@@ -273,6 +273,21 @@ namespace juml {
         H5Dclose(data_id);
         H5Fclose(file_id);
         H5Pclose(access_plist);
+    }
+
+    af::array Dataset::stdev(bool total) const {
+        af:: array mean = this->mean(total);
+        af::array stdev;
+        if (total)
+            stdev = this->data_ - af::tile(mean, this->data_.dims());
+        else
+            stdev = this->data_ - af::tile(mean, 1, this->n_samples());
+        stdev *= stdev;
+        stdev = af::sum(stdev, 1);
+        mpi::allreduce_inplace(stdev, MPI_SUM, this->comm_);
+        stdev /= (float) this->global_n_features();
+        stdev = af::sqrt(stdev);
+        return stdev;
     }
     
     af::array& Dataset::data() {

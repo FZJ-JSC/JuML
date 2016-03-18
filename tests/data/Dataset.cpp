@@ -172,6 +172,24 @@ TEST_F(DATASET_TEST, MEAN) {
         ASSERT_FLOAT_EQ(7.0/6.0, mean(col).scalar<float>());
 }
 
+TEST_F(DATASET_TEST, STDEV) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    af::array stdev = data_2D.stdev();
+    for (size_t col=0; col < stdev.dims(0); col++)
+        ASSERT_FLOAT_EQ(1.0671873, stdev(col).scalar<float>());
+}
+
+TEST_F(DATASET_TEST, STDEV_ALL) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    af::array stdev = data_2D.stdev(true);
+    ASSERT_FLOAT_EQ(1.0671873, stdev.scalar<float>());
+}
+
+
 #ifdef JUML_OPENCL
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_OPENCL_TEST) {
     juml::Backend::set(juml::Backend::OPENCL);
