@@ -37,7 +37,7 @@ namespace juml {
         int mpi_rank_;
         int mpi_size_;
 
-        dim_t global_items_;
+        dim_t global_n_features_;
         dim_t global_offset_;
         
         af::dtype h5_to_af(hid_t h5_type);
@@ -57,7 +57,7 @@ namespace juml {
         virtual const af::array& data() const;
         virtual dim_t n_samples() const;
         virtual dim_t n_features() const;
-        virtual dim_t global_items() const;
+        virtual dim_t global_n_features() const;
         virtual dim_t global_offset() const;
     }; // Dataset
 }  // juml
