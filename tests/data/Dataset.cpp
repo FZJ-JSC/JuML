@@ -139,19 +139,21 @@ TEST_F(DATASET_TEST, NORMALIZE_MINUS20_TO_10_INDEP_ALL) {
     data_2D.load_equal_chunks();
     data_2D.normalize(-20,10,true);
     for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
-        ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == 30*(float)this->rank_/(float)this->size_ - 20));
+        ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == 10.0*(float)this->rank_ - 20.0));
     }
 }
 TEST_F(DATASET_TEST, NORMALIZE_MINUS20_TO_10_INDEP_1_2) {
     juml::Backend::set(juml::Backend::CPU);
     juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
     data_2D.load_equal_chunks();
-    data_2D.normalize(-20, 10, true, af::range(af::dim4(3)) < 3);
-    for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
-        if (this->rank_ == 3)
-            ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == (float)this->rank_));
-        else
-            ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == 30*(float)this->rank_/(float)this->size_ - 20));
+    data_2D.normalize(-20, 10, true, af::range(af::dim4(2)));
+    for (size_t row = 0; row < data_2D.data().dims(0); ++row) {
+        for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
+            if (row == 2)
+                ASSERT_FLOAT_EQ(data_2D.data()(row, col).scalar<float>(), (float) this->rank_);
+            else
+                ASSERT_FLOAT_EQ(data_2D.data()(row, col).scalar<float>(), 30.0 * (float) this->rank_ - 20.0);
+        }
     }
 }
 
