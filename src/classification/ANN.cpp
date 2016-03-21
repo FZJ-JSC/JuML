@@ -21,6 +21,9 @@
 namespace juml {
 
 Dataset SequentialNeuralNet::predict(Dataset& X) const {
+	if (this->layers.size() == 0) {
+		throw std::runtime_error("Need at least 1 layer");
+	}
 	X.load_equal_chunks();
 	const_cast<SequentialNeuralNet*>(this)->forward_all(X.data());
 	af::array result = this->layers.back()->getLastOutput();
@@ -28,6 +31,9 @@ Dataset SequentialNeuralNet::predict(Dataset& X) const {
 }
 
 void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
+	if (this->layers.size() == 0) {
+		throw std::runtime_error("Need at least 1 layer");
+	}
 	X.load_equal_chunks();
 	if (X.data().dims(0) != this->layers[0]->input_count) {
 		std::stringstream errMsg;

@@ -24,10 +24,9 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	af::array yarray = af::array(1, 4, y);
 	Dataset Xset(Xarray);
 	Dataset yset(yarray);
-	std::vector<std::shared_ptr<Layer>> layers;
-	layers.push_back(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(3, 4)));
-	layers.push_back(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(4,1)));
-	SequentialNeuralNet net(AF_BACKEND_CPU, layers);
+	SequentialNeuralNet net(AF_BACKEND_CPU);
+	net.add(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(3, 4)));
+	net.add(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(4, 1)));
 	net.fit(Xset, yset);
 
 	Dataset result = net.predict(Xset);
@@ -50,11 +49,10 @@ TEST(ANN_TEST, TEST_IDENTITY) {
 	af::array Xarray = af::array(5, 5, X);
 	Dataset Xset(Xarray);
 
-	std::vector<std::shared_ptr<Layer>> layers;
-	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(5, 5));
-	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(5, 5));
+	SequentialNeuralNet net(AF_BACKEND_CPU);
+	net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(5, 5));
+	net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(5, 5));
 
-	SequentialNeuralNet net(AF_BACKEND_CPU, layers);
 	net.fit(Xset, Xset);
 
 	Dataset result = net.predict(Xset);
@@ -91,21 +89,20 @@ TEST(ANN_TEST, TEST_XOR) {
 	float bias2[] = {0.08};
 
 
-	std::vector<std::shared_ptr<Layer>> layers;
-	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(
+	SequentialNeuralNet net(AF_BACKEND_CPU);
+	net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(
 			af::array(2,2, weights1), af::array(2, bias1)));
-	layers.push_back(std::make_shared<FunctionLayer<Activation::Linear>>(
+	net.add(std::make_shared<FunctionLayer<Activation::Linear>>(
 			af::array(2, 1, weights2), af::array(1, bias2)));
 
-	for(auto it = layers.begin(); it != layers.end(); it++) {
+	for(auto it = net.layers_begin(); it != net.layers_end(); it++) {
 		af::print("weights", (*it)->getWeights());
 		af::print("bias", (*it)->getBias());
 	}
 
-	SequentialNeuralNet net(AF_BACKEND_CPU, layers);
 	net.fit(Xset, yset);
 
-	for(auto it = layers.begin(); it != layers.end(); it++) {
+	for(auto it = net.layers_begin(); it != net.layers_end(); it++) {
 		af::print("weights", (*it)->getWeights());
 		af::print("bias", (*it)->getBias());
 	}
@@ -125,10 +122,9 @@ TEST(ANN_TEST, IRIS_TEST) {
 	af::info();
 	af::setBackend(AF_BACKEND_CPU);
 	using juml::ann::Layer;
-	std::vector<std::shared_ptr<Layer>> layers;
-	layers.push_back(std::shared_ptr<Layer>(new juml::ann::FunctionLayer<juml::ann::Activation::Sigmoid>(4, 100)));
-	layers.push_back(std::shared_ptr<Layer>(new juml::ann::FunctionLayer<juml::ann::Activation::Sigmoid>(100, 3)));
-	juml::SequentialNeuralNet net(AF_BACKEND_CPU, layers);
+	juml::SequentialNeuralNet net(AF_BACKEND_CPU);
+	net.add(std::shared_ptr<Layer>(new juml::ann::FunctionLayer<juml::ann::Activation::Sigmoid>(4, 100)));
+	net.add(std::shared_ptr<Layer>(new juml::ann::FunctionLayer<juml::ann::Activation::Sigmoid>(100, 3)));
 	juml::Dataset X(FILE_PATH, SAMPLES);
 	juml::Dataset y(FILE_PATH, LABELS);
 
@@ -139,12 +135,11 @@ TEST(ANN_TEST, INCOMPATIBLE_LAYERS) {
 	using juml::ann::Layer;
 	using juml::ann::FunctionLayer;
 	using juml::ann::Activation;
-	std::vector<std::shared_ptr<Layer>> layers;
-	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(4, 5));
-	layers.push_back(std::make_shared<FunctionLayer<Activation::Sigmoid>>(3, 2));
+	juml::SequentialNeuralNet net(0);
 	try {
-		juml::SequentialNeuralNet(0, layers);
-		FAIL() << "SequentialNeuralNet Constructor did not notice incompatible layers";
+		net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(4, 5));
+		net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(3, 2));
+		FAIL() << "SequentialNeuralNet did not notice incompatible layers";
 	} catch(...) {
 		SUCCEED();
 		//TODO: Check for explicit Exception type

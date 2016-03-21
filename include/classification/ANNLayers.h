@@ -97,6 +97,8 @@ namespace juml {
 				};
 		};
 
+		typedef std::shared_ptr<Layer> LayerPtr;
+
 		enum class Activation { Sigmoid, TanH, Linear };
 
 		template<Activation T>

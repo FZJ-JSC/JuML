@@ -30,37 +30,32 @@
 namespace juml {
 	class SequentialNeuralNet : public BaseClassifier {
 		protected:
-			std::vector<std::shared_ptr<ann::Layer>> &layers;
+			std::vector<ann::LayerPtr> layers;
 			void forward_all(const af::array& input);
 			void backwards_all(const af::array& input, const af::array& delta);
 		public:
-			SequentialNeuralNet(int backend, std::vector<std::shared_ptr<ann::Layer>> &layers_, MPI_Comm comm=MPI_COMM_WORLD) :  BaseClassifier(backend, comm), layers(layers_) {
-				if (this->layers.size() == 0) {
-					throw std::runtime_error("Need at least 1 layer");
-				}
-				auto it = layers.begin();
-				int before_node_count = (*it)->node_count;
-				it++;
-				int i = 1;
-				for(;it != layers.end();it++) {
-					if (before_node_count != (*it)->input_count) {
+			SequentialNeuralNet(int backend, MPI_Comm comm=MPI_COMM_WORLD) :
+				BaseClassifier(backend, comm) {}
+			SequentialNeuralNet& add(ann::LayerPtr layer) {
+				if (layers.size() > 0) {
+					if (layers.back()->node_count != layer->input_count) {
 						std::stringstream errMsg;
-						errMsg 
-							<< "Layer Mismatch: Layer " 
-							<< (i - 1)
-							<< " has "
-							<< before_node_count
-							<< " Nodes, but the next layer expects "
-							<< (*it)->input_count 
-							<< " inputs";
+						errMsg << "Incompatible Layers. Last Layer has "
+							<< layers.back()->node_count
+							<< " Nodes, but the proposed Layer expects "
+							<< layer->input_count
+							<< " Inputs";
 						throw std::runtime_error(errMsg.str());
-
-
 					}
-					before_node_count = (*it)->node_count;
-					i += 1;
 				}
-
+				layers.push_back(layer);
+				return *this;
+			}
+			std::vector<ann::LayerPtr>::iterator layers_begin() {
+				return layers.begin();
+			}
+			std::vector<ann::LayerPtr>::iterator layers_end() {
+				return layers.end();
 			}
 			void fit(Dataset& X, Dataset& y) override;
 			Dataset predict(Dataset& X) const override;
