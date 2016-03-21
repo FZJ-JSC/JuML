@@ -28,7 +28,6 @@ namespace juml {
     class Dataset {
     protected:
         af::array data_;
-        af::array matrix_;
 
         const std::string filename_;
         const std::string dataset_;
@@ -60,7 +59,6 @@ namespace juml {
         virtual const af::array& data() const;
         virtual dim_t n_samples() const;
         virtual dim_t n_features() const;
-        virtual af::array& matrix();
         virtual dim_t global_n_samples() const;
         virtual dim_t global_offset() const;
         virtual dim_t sample_dim() const;
