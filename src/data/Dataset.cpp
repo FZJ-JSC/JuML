@@ -309,7 +309,7 @@ namespace juml {
     dim_t Dataset::n_features() const {
         return this->data_.dims(0);
     }
-    af::array& Datcdaset::matrix() {
+    af::array& Dataset::matrix() {
         af_array temp;
         af_device_array(&temp, this->data_.device<unsigned char>(), this->data_.numdims(), this->data_.dims().dims, this->data_.type());
         this->matrix_ =  af::array(temp);
