@@ -87,16 +87,15 @@ namespace juml {
         }
 
         // Flatten if array is multidimensional
-        af::array& data = this->data_;
-        if (data.numdims() > 2)
-            data = af::array(data, this->n_features(), data.elements() / n_features());
+        this->matrix();
+        af::array& data = this->matrix();
 
         // Check if selected_features is empty and its size
         af::array mask = af::constant(1, this->n_features()) > 1;
         if (selected_features.isempty())
             mask = true;
-        else if (selected_features.numdims() > 1 || selected_features.elements() != this->n_features())
-            throw std::runtime_error("The selected_features array should have the same length as n_features()");
+        else if (selected_features.numdims() > 1)
+            throw std::runtime_error("The selected_features must be 1-dimensional");
         else
             mask(selected_features) = true;
 
@@ -122,7 +121,6 @@ namespace juml {
             minimum = af::tile(minimum, num_features);
             norm_range = af::tile(norm_range, num_features);
         }
-
         data(mask, af::span) -= af::tile(minimum, 1, this->n_samples());
         data(mask, af::span) *= af::tile(norm_range, 1, this->n_samples());
         data(mask, af::span) += af::constant(min, num_features, this->n_samples());
@@ -310,6 +308,13 @@ namespace juml {
     
     dim_t Dataset::n_features() const {
         return this->data_.dims(0);
+    }
+    af::array& Datcdaset::matrix() {
+        af_array temp;
+        af_device_array(&temp, this->data_.device<unsigned char>(), this->data_.numdims(), this->data_.dims().dims, this->data_.type());
+        this->matrix_ =  af::array(temp);
+        this->matrix_.lock();
+        return this->matrix_;
     }
 
     dim_t Dataset::global_n_samples() const {
