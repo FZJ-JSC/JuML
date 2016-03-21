@@ -150,6 +150,7 @@ namespace juml {
 			}
 		};
 
+
 		template<Activation T>
 		class MomentumFunctionLayer: public FunctionLayer<T> {
 			public:
@@ -177,6 +178,18 @@ namespace juml {
 				this->previous_bias_update = this->bias_update;
 			}
 		};
+		//TODO automatically generate these based on the Available Activations?
+		//Create functions make_SigmoidLayer, make_SigmoidMLayer, make_LinearLayer, ...
+#define CreateMakeLayer(A) template<typename ...Args> \
+	std::shared_ptr<FunctionLayer<Activation::A>> make_ ## A ## Layer(Args... args) { \
+	return std::make_shared<FunctionLayer<Activation::A>>(args...); } \
+	template<typename ...Args> \
+	std::shared_ptr<MomentumFunctionLayer<Activation::A>> make_ ## A ## MLayer(Args... args) { \
+	return std::make_shared<MomentumFunctionLayer<Activation::A>>(args...); }
+		CreateMakeLayer(Sigmoid);
+		CreateMakeLayer(Linear);
+		CreateMakeLayer(TanH);
+#undef CreateMakeLayer
 	}
 }
 

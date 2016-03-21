@@ -123,8 +123,8 @@ TEST(ANN_TEST, IRIS_TEST) {
 	af::setBackend(AF_BACKEND_CPU);
 	using juml::ann::Layer;
 	juml::SequentialNeuralNet net(AF_BACKEND_CPU);
-	net.add(std::shared_ptr<Layer>(new juml::ann::FunctionLayer<juml::ann::Activation::Sigmoid>(4, 100)));
-	net.add(std::shared_ptr<Layer>(new juml::ann::FunctionLayer<juml::ann::Activation::Sigmoid>(100, 3)));
+	net.add(juml::ann::make_SigmoidLayer(4, 100));
+	net.add(juml::ann::make_SigmoidLayer(100, 3));
 	juml::Dataset X(FILE_PATH, SAMPLES);
 	juml::Dataset y(FILE_PATH, LABELS);
 
