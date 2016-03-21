@@ -13,8 +13,8 @@
 * Email: murxman@gmail.com
 */
 
-#ifndef DEFINITIONS_H
-#define DEFINITIONS_H
+#ifndef BACKEND_H
+#define BACKEND_H
 
 #include <arrayfire.h>
 
@@ -27,11 +27,13 @@ namespace juml {
         static const int CPU    = AF_BACKEND_CPU;
         static const int CUDA   = AF_BACKEND_CUDA;
         static const int OPENCL = AF_BACKEND_OPENCL;
+
+        static void set(int backend);
         
         Backend(int backend);
         int get() const;
     };
 } // namespace juml
 
-#endif // DEFINITIONS_H
+#endif // BACKEND_H
 

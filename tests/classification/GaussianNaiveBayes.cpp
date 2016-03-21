@@ -5,7 +5,7 @@
 #include <string>
 
 #include "data/Dataset.h"
-#include "core/Definitions.h"
+#include "core/Backend.h"
 #include "classification/GaussianNaiveBayes.h"
 
 static const std::string FILE_PATH = JUML_DATASETS"/iris.h5";

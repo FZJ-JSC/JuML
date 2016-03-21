@@ -19,7 +19,7 @@ af::array* toAF(PyArrayObject* np_array, bool copy=true)
     bool f_style = PyArray_IS_F_CONTIGUOUS(np_array);
     if(f_style)
         std::swap(dims[0],dims[1]);
-    af::dim4 dimensions(ndims,(dim_t*)dims);    
+    af::dim4 dimensions(ndims,(dim_t*)dims);
     af::dtype type;
     switch(PyArray_TYPE(np_array))
     {   
@@ -44,24 +44,24 @@ af::array* toAF(PyArrayObject* np_array, bool copy=true)
     
     char* data = (char*)PyArray_DATA(np_array);
     af::array* ret;
-    if (copy || af::getBackendId(af::constant(0,1)) != AF_BACKEND_CPU || f_style)
+if ((copy || af::getBackendId(af::constant(0,1)) != AF_BACKEND_CPU) && !f_style)
     {
         ret = new af::array(dimensions, type);
         ret->write(data, PyArray_NBYTES(np_array));
-        if(f_style)
-        {  
-            af::array transposed = ret->T();
-            delete ret;
-            ret = new af::array(transposed);
-        }
     }
     else
     {
-        af_array* arr;
-        af_device_array(arr, data, ndims, (long long*)dims, type);
+        af_array arr;
+        af_device_array(&arr, data, ndims, (long long*)dims, type);
         ret = new af::array(arr);
         ret->lock();
-    }
+        if(f_style)
+        {
+            af::array* temp = new af::array(ret->T());
+            delete ret;
+            ret = temp;
+        }
+    };
     return ret;
 }
 

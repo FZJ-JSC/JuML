@@ -11,11 +11,17 @@
  * Maintainer: m.glock
  *
  * Email: murxman@gmail.com
- */ 
+ */
 
-#include "core/Definitions.h"
+#include <arrayfire.h>
+
+#include "core/Backend.h"
 
 namespace juml {
+    void Backend::set(int backend) {
+        af::setBackend(static_cast<af::Backend>(backend));
+    }
+
     Backend::Backend(int backend) 
       : backend_(backend) { 
       af::setBackend(static_cast<af::Backend>(this->backend_));

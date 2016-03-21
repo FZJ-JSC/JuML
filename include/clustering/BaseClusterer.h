@@ -17,6 +17,7 @@
 #define BASECLUSTERER_H
 
 #include "core/Algorithm.h"
+#include "core/Backend.h"
 #include "data/Dataset.h"
 
 namespace juml {
