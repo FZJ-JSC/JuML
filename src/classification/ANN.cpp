@@ -198,7 +198,39 @@ void SequentialNeuralNet::save(std::string filename, bool overwrite) {
 }
 
 void SequentialNeuralNet::load(std::string filename) {
+	hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+	if (file_id < 0) {
+		throw std::runtime_error("Could not open file to read SequentialNeuralNet");
+	}
 
+	int i = 0;
+	while (true) {
+		std::stringstream groupname;
+		groupname << i << "_layer";
+		//TODO supress error message printed by HDF5-Library
+		hid_t group_id = H5Gopen2(file_id, groupname.str().c_str(), H5P_DEFAULT);
+		if (group_id < 0) break;
+		hid_t dataset_id = H5Dopen(group_id, "weights", H5P_DEFAULT);
+		if (dataset_id < 0) break;
+		hid_t dset_space = H5Dget_space(dataset_id);
+		if (dset_space < 0) {
+			//TODO Error
+			break;
+		}
+		int rank = H5Sget_simple_extent_ndims(dset_space);
+		if (rank != 2) {
+			//TODO Error
+			break;
+		}
+		hsize_t dims[2];
+		H5Sget_simple_extent_dims(dset_space,dims, NULL);
+		//TODO read into af::array
+		std::cout << "dims: " << dims[0] << ", " << dims[1] << std::endl;
+
+		i+=1;
+	}
+
+	H5Fclose(file_id);
 }
 
 } //end of namespace
