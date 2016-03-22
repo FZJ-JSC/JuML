@@ -33,13 +33,14 @@ namespace juml {
         MPI_Comm_rank(this->comm_, &this->mpi_rank_);
         MPI_Comm_size(this->comm_, &this->mpi_size_);
 
-        this->sample_dim_ = data.numdims() - 1;
+        this->sample_dim_ = data.numdims() > 2 ? data.numdims() - 1 : 1;
+        MPI_Allreduce(MPI_IN_PLACE, &this->sample_dim_, 1, MPI_LONG_LONG, MPI_MAX, comm);
+
         this->global_n_samples_ = data.dims(this->sample_dim_);
         this->global_offset_ = this->global_n_samples_;
 
         MPI_Allreduce(MPI_IN_PLACE, &this->global_n_samples_, 1, MPI_LONG_LONG, MPI_SUM, comm);
         MPI_Exscan(MPI_IN_PLACE, &this->global_offset_, 1, MPI_LONG_LONG, MPI_SUM, comm);
-        MPI_Allreduce(MPI_IN_PLACE, &this->sample_dim_, 1, MPI_LONG_LONG, MPI_SUM, comm);
         if (this->mpi_rank_ == 0) this->global_offset_ = 0;
     }
 
@@ -188,7 +189,7 @@ namespace juml {
             error << "Got " << n_dims << "dimensions in dataset " << this->dataset_ << " in file " << this->filename_ << ". Expected 1 to 4.";
             throw std::domain_error(error.str().c_str());
         }
-        this->sample_dim_ = n_dims - 1;
+        this->sample_dim_ = n_dims > 2 ? n_dims -  1 : 1;
 
         // calculate offsets into the hyperslab
         hsize_t dimensions[n_dims];
@@ -304,7 +305,7 @@ namespace juml {
     }
     
     dim_t Dataset::n_samples() const {
-        return this->data_.dims(sample_dim());
+        return this->data_.dims(this->sample_dim_);
     }
     
     dim_t Dataset::n_features() const {
