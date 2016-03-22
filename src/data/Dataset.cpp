@@ -33,8 +33,13 @@ namespace juml {
         MPI_Comm_rank(this->comm_, &this->mpi_rank_);
         MPI_Comm_size(this->comm_, &this->mpi_size_);
 
-        MPI_Allreduce(MPI_IN_PLACE, &this->global_items_, 1, MPI_LONG_LONG, MPI_SUM, comm);
+        this->sample_dim_ = data.numdims() - 1;
+        this->global_n_samples_ = data.dims(this->sample_dim_);
+        this->global_offset_ = this->global_n_samples_;
+
+        MPI_Allreduce(MPI_IN_PLACE, &this->global_n_samples_, 1, MPI_LONG_LONG, MPI_SUM, comm);
         MPI_Exscan(MPI_IN_PLACE, &this->global_offset_, 1, MPI_LONG_LONG, MPI_SUM, comm);
+        MPI_Allreduce(MPI_IN_PLACE, &this->sample_dim_, 1, MPI_LONG_LONG, MPI_SUM, comm);
         if (this->mpi_rank_ == 0) this->global_offset_ = 0;
     }
 
@@ -81,17 +86,17 @@ namespace juml {
             return;
         }
 
-        // Flatten if array is multidimensional
+        // TODO: Square if array is multidimensional
         af::array& data = this->data_;
-        if (data.numdims() > 2)
-            data = af::array(data, this->n_features(), data.elements() / n_features());
 
         // Check if selected_features is empty and its size
-        af::array mask = selected_features;;
+        af::array mask = af::constant(1, this->n_features()) > 1;
         if (selected_features.isempty())
-            mask = af::constant(1, this->n_features()) > 0;
-        else if (selected_features.numdims() > 1 || selected_features.elements() != this->n_features())
-            throw std::runtime_error("The selected_features array should have the same length as n_features()");
+            mask = true;
+        else if (selected_features.numdims() > 1)
+            throw std::runtime_error("The selected_features must be 1-dimensional");
+        else
+            mask(selected_features) = true;
 
         int num_features = af::sum<int>(mask);
 
@@ -116,9 +121,23 @@ namespace juml {
             norm_range = af::tile(norm_range, num_features);
         }
 
+
         data(mask, af::span) -= af::tile(minimum, 1, this->n_samples());
         data(mask, af::span) *= af::tile(norm_range, 1, this->n_samples());
         data(mask, af::span) += af::constant(min, num_features, this->n_samples());
+    }
+
+
+    af::array Dataset::mean(bool total) const {
+        af::array mean;
+        if (total)
+            mean = af::mean(af::array(this->data_, this->data_.elements()));
+        else
+            mean = af::mean(this->data_, this->sample_dim());
+        mean *= (float)this->n_samples();
+        mpi::allreduce_inplace(mean, MPI_SUM, this->comm_);
+        mean /= (float)this->global_n_samples_;
+        return mean;
     }
 
     void Dataset::load_equal_chunks(bool force) {
@@ -169,6 +188,7 @@ namespace juml {
             error << "Got " << n_dims << "dimensions in dataset " << this->dataset_ << " in file " << this->filename_ << ". Expected 1 to 4.";
             throw std::domain_error(error.str().c_str());
         }
+        this->sample_dim_ = n_dims - 1;
 
         // calculate offsets into the hyperslab
         hsize_t dimensions[n_dims];
@@ -193,7 +213,7 @@ namespace juml {
         }
 
         // remember global ind
-        this->global_items_ = static_cast<dim_t>(dimensions[0]);
+        this->global_n_samples_ = static_cast<dim_t>(dimensions[0]);
         this->global_offset_ = static_cast<dim_t>(position);
 
         // create memory space
@@ -230,7 +250,7 @@ namespace juml {
         // initialize the array, swap the row and column dimensions before (HDF5 row-major, AF column-major)
         af::dim4 arrayDim4;
         if (n_dims > 1) {
-            std::swap<hsize_t>(chunk_dimensions[0], chunk_dimensions[1]);
+            std::reverse(chunk_dimensions, chunk_dimensions + n_dims);
             arrayDim4 = af::dim4(n_dims, reinterpret_cast<dim_t*>(chunk_dimensions));
         } else if (n_dims == 1) {
             arrayDim4 = af::dim4(1, chunk_dimensions[0]);
@@ -256,6 +276,24 @@ namespace juml {
         H5Fclose(file_id);
         H5Pclose(access_plist);
     }
+
+    af::array Dataset::stdev(bool total) const {
+        af:: array mean = this->mean(total);
+        af::array stdev;
+        if (total)
+            stdev = this->data_ - af::tile(mean, this->data_.dims());
+        else {
+            af::dim4 broadcast(1,1,1,1);
+            broadcast[this->sample_dim()] = n_samples();
+            stdev = this->data_ - af::tile(mean, broadcast);
+        }
+        stdev *= stdev;
+        stdev = af::sum(stdev, this->sample_dim());
+        mpi::allreduce_inplace(stdev, MPI_SUM, this->comm_);
+        stdev /= (float) this->global_n_samples_;
+        stdev = af::sqrt(stdev);
+        return stdev;
+    }
     
     af::array& Dataset::data() {
         return this->data_;
@@ -266,19 +304,22 @@ namespace juml {
     }
     
     dim_t Dataset::n_samples() const {
-        return this->data_.dims(1);
+        return this->data_.dims(sample_dim());
     }
     
     dim_t Dataset::n_features() const {
         return this->data_.dims(0);
     }
 
-    dim_t Dataset::global_items() const {
-        return this->global_items_;
+    dim_t Dataset::global_n_samples() const {
+        return this->global_n_samples_;
     }
 
     dim_t Dataset::global_offset() const {
         return this->global_offset_;
+    }
+    dim_t Dataset::sample_dim() const {
+        return this->sample_dim_;
     }
 } // namespace juml
 
