@@ -87,7 +87,7 @@ namespace juml {
         }
 
         // TODO: Square if array is multidimensional
-        af::array& data = this->data_;
+        af::array& data = this->data();
 
         // Check if selected_features is empty and its size
         af::array mask = af::constant(1, this->n_features()) > 1;
@@ -138,6 +138,38 @@ namespace juml {
         mpi::allreduce_inplace(mean, MPI_SUM, this->comm_);
         mean /= (float)this->global_n_samples_;
         return mean;
+    }
+
+    void Dataset::normalize_std(float x_std, bool independent_features, const af::array& selected_features) {
+
+        // Check parameters
+        if(x_std <= 0)
+            throw std::runtime_error("multiple of std must be greater than 0");
+
+        // Check if selected_features is empty and its size
+        af::array mask = af::constant(0, this->n_features()) > 0;
+        if (selected_features.isempty())
+            mask = true;
+        else if (selected_features.numdims() > 1)
+            throw std::runtime_error("The selected_features must be 1-dimensional");
+        else
+            mask(selected_features) = true;
+
+        // Compute mean and std
+        int num_features = af::sum<int>(mask);
+
+        af::array mean = this->mean(!independent_features)(mask);
+        af::array std = this->stdev(!independent_features)(mask) / x_std;
+
+        if (!independent_features) {
+            mean = af::tile(mean(0), num_features);
+            std = af::tile(std(0),num_features);
+        }
+
+        // Normalize data
+        af::array& data = this->data_;
+        data(mask, af::span) -= af::tile(mean, 1, this->n_samples());
+        data(mask, af::span) /= af::tile(std, 1, this->n_samples());
     }
 
     void Dataset::load_equal_chunks(bool force) {

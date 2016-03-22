@@ -145,7 +145,7 @@ TEST_F(DATASET_TEST, NORMALIZE_MINUS20_TO_10_INDEP_1_2) {
     juml::Backend::set(juml::Backend::CPU);
     juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
     data_2D.load_equal_chunks();
-    data_2D.normalize(-20, 10, true, af::range(af::dim4(2)));
+    data_2D.normalize(-20, 10, true, af::range(2));
     for (size_t row = 0; row < data_2D.data().dims(0); ++row) {
         for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
             if (row == 2)
@@ -155,6 +155,40 @@ TEST_F(DATASET_TEST, NORMALIZE_MINUS20_TO_10_INDEP_1_2) {
         }
     }
 }
+
+TEST_F(DATASET_TEST, NORMALIZE_STD_1_DEP_ALL) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    data_2D.normalize_std(1.0);
+    af::array std = data_2D.stdev();
+    for (size_t row = 0; row < std.dims(0); ++row)
+        ASSERT_FLOAT_EQ(1.0, std(row).scalar<float>());
+}
+
+TEST_F(DATASET_TEST, NORMALIZE_STD_2_INDEP_ALL) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    data_2D.normalize_std(2.0, true);
+    af::array std = data_2D.stdev();
+    for (size_t row = 0; row < std.dims(0); ++row)
+        ASSERT_FLOAT_EQ(2.0, std(row).scalar<float>());
+}
+
+TEST_F(DATASET_TEST, NORMALIZE_STD_3_INDEP_1_2) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    data_2D.normalize_std(3.0, true, af::range(2));
+    af::array std = data_2D.stdev();
+    for (size_t row = 0; row < std.dims(0); ++row)
+        if(row != 2)
+            ASSERT_FLOAT_EQ(3.0, std(row).scalar<float>());
+        else
+            ASSERT_FLOAT_EQ(1.0671874, std(row).scalar<float>());
+}
+
 
 TEST_F(DATASET_TEST, MEAN_ALL) {
     juml::Backend::set(juml::Backend::CPU);
