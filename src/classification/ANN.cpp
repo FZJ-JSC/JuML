@@ -134,6 +134,72 @@ float SequentialNeuralNet::accuracy(Dataset& X, Dataset& y) const {
 	throw std::runtime_error("not yet implemented");
 }
 
+void write_array_into_hdf5(hid_t id, const char *name, const af::array& array) {
+	//This causes warnings because of conversion from long long int to long long unsigned int
+	hsize_t dims[2] = {array.dims(1), array.dims(0)};
+	hid_t dataspace_id = H5Screate_simple(2, dims, NULL);
+	if (dataspace_id < 0) {
+		throw std::runtime_error("Can not create dataspace");
+	}
+	hid_t dataset_id = H5Dcreate2(id, name, H5T_NATIVE_FLOAT, dataspace_id,
+			H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	if (dataset_id <= 0) {
+		H5Sclose(dataspace_id);
+		throw std::runtime_error("Can not create dataset");
+	}
+	bool devicePtr = af::getBackendId(array) == AF_BACKEND_CPU;
+	float *dataptr;
+	if (devicePtr) {
+		dataptr = array.device<float>();
+	} else {
+		dataptr = new float[array.elements()];
+	}
+	H5Dwrite(dataset_id, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataptr);
+	if (devicePtr) {
+		array.unlock();
+	} else {
+		delete[] dataptr;
+	}
+	H5Dclose(dataset_id);
+	H5Sclose(dataspace_id);
+}
 
+void SequentialNeuralNet::save(std::string filename, bool overwrite) {
+	//Only the master process saves the network, because its the same on every process anyway.
+	if (this->mpi_rank_ != 0) return;
+	hid_t file_id = H5Fcreate(filename.c_str(), overwrite ? H5F_ACC_TRUNC : H5F_ACC_EXCL,
+			H5P_DEFAULT, H5P_DEFAULT);
+	if (file_id >= 0) {
+		for (int i = 0; i < this->layers.size(); i++) {
+			std::stringstream groupname;
+			groupname << i << "_layer";
+			hid_t group_id = H5Gcreate(file_id, groupname.str().c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+			af::array& layer = this->layers[i]->getWeights();
+			if (group_id >= 0) {
+				//TODO: need to catch possible exceptions from write_array_into_hdf5!
+				write_array_into_hdf5(group_id, "weights", this->layers[i]->getWeights());
+				write_array_into_hdf5(group_id, "bias", this->layers[i]->getBias());
+				H5Gclose(group_id);
+			} else {
+				H5Fclose(file_id);
+				std::stringstream errMsg;
+				errMsg << "Could not create group " << groupname.str() 
+					<< " in " << filename << " HDF5 Error: " << group_id;
+				throw std::runtime_error(errMsg.str());
+			}
+
+		}
+		H5Fclose(file_id);
+	} else {
+		std::stringstream errMsg;
+		errMsg << "Could not save SequentialNeuralNet to " << filename << " HDF5 Error Code: " << file_id;
+		throw std::runtime_error(errMsg.str());
+	}
+}
+
+void SequentialNeuralNet::load(std::string filename) {
+
+}
 
 } //end of namespace

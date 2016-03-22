@@ -60,6 +60,9 @@ namespace juml {
 			void fit(Dataset& X, Dataset& y) override;
 			Dataset predict(Dataset& X) const override;
 			float accuracy(Dataset& X, Dataset& y) const override;
+
+			void save(std::string filename, bool overwrite);
+			void load(std::string filename);
 	};
 }
 
