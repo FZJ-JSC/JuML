@@ -135,8 +135,10 @@ float SequentialNeuralNet::accuracy(Dataset& X, Dataset& y) const {
 }
 
 void write_array_into_hdf5(hid_t id, const char *name, const af::array& array) {
-	//This causes warnings because of conversion from long long int to long long unsigned int
-	hsize_t dims[2] = {array.dims(1), array.dims(0)};
+	hsize_t dims[2] = {
+		static_cast<hsize_t>(array.dims(1)),
+		static_cast<hsize_t>(array.dims(0))
+	};
 	hid_t dataspace_id = H5Screate_simple(2, dims, NULL);
 	if (dataspace_id < 0) {
 		throw std::runtime_error("Can not create dataspace");
