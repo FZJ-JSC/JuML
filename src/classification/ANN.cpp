@@ -134,7 +134,7 @@ float SequentialNeuralNet::accuracy(Dataset& X, Dataset& y) const {
 	throw std::runtime_error("not yet implemented");
 }
 
-void write_array_into_hdf5(hid_t id, const char *name, const af::array& array) {
+void write_2d_array_into_hdf5(hid_t id, const char *name, const af::array& array) {
 	hsize_t dims[2] = {
 		static_cast<hsize_t>(array.dims(1)),
 		static_cast<hsize_t>(array.dims(0))
@@ -189,15 +189,60 @@ void SequentialNeuralNet::save(std::string filename, bool overwrite) {
 		}
 
 		//TODO: need to catch possible exceptions from write_array_into_hdf5!
-		write_array_into_hdf5(group_id, "weights", this->layers[i]->getWeights());
-		write_array_into_hdf5(group_id, "bias", this->layers[i]->getBias());
+		write_2d_array_into_hdf5(group_id, "weights", this->layers[i]->getWeights());
+		write_2d_array_into_hdf5(group_id, "bias", this->layers[i]->getBias());
 		H5Gclose(group_id);
 
 	}
 	H5Fclose(file_id);
 }
 
+af::array read_hdf5_into_2d_array(hid_t id, const char *name) {
+	hid_t dataset_id = H5Dopen(id, name, H5P_DEFAULT);
+	if (dataset_id < 0) {
+		throw std::runtime_error("Can not open dataset");
+	}
+	hid_t dset_space = H5Dget_space(dataset_id);
+	if (dset_space < 0) {
+		throw std::runtime_error("Could not get Dataspace from dataset");
+	}
+	int rank = H5Sget_simple_extent_ndims(dset_space);
+	if (rank < 0) {
+		throw std::runtime_error("Could not determine number of dimensions");
+	}
+	if (rank > 2) {
+		throw std::runtime_error("Can only read 2 dimensional Datasets into af::array for now");
+	}
+	hsize_t dims[2];
+	if (H5Sget_simple_extent_dims(dset_space, dims, NULL) < 0) {
+		throw std::runtime_error("Could not read dimensions from Datast");
+	}
+
+	if (rank == 1) dims[1] = 1;
+	//We transpose the data here, by swapping dimension numbers and by later reading Row-Major into Column-Major
+	dim_t afdims[2] = {static_cast<dim_t>(dims[1]), static_cast<dim_t>(dims[0]) };
+
+	af::array out(afdims[0], afdims[1]);
+	if (af::getBackendId(out) == AF_BACKEND_CPU) {
+		H5Dread(dataset_id, H5T_NATIVE_FLOAT, dset_space, dset_space, H5P_DEFAULT, out.device<float>());
+		out.unlock();
+	} else {
+		size_t size = afdims[0] * afdims[1];
+		float* buffer = new float[size];
+		H5Dread(dataset_id, H5T_NATIVE_FLOAT, dset_space, dset_space, H5P_DEFAULT, buffer);
+		af_write_array(out.get(), buffer, size * sizeof(float), afHost);
+		delete[] buffer;
+	}
+	H5Sclose(dset_space);
+	H5Dclose(dataset_id);
+
+	return out;
+}
+
 void SequentialNeuralNet::load(std::string filename) {
+	if (this->layers.size() != 0) {
+		throw std::runtime_error("Network is already populated with layers.");
+	}
 	hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 	if (file_id < 0) {
 		throw std::runtime_error("Could not open file to read SequentialNeuralNet");
@@ -207,26 +252,21 @@ void SequentialNeuralNet::load(std::string filename) {
 	while (true) {
 		std::stringstream groupname;
 		groupname << i << "_layer";
-		//TODO supress error message printed by HDF5-Library
+		if (!H5Lexists(file_id, groupname.str().c_str(), H5P_DEFAULT)) {
+			//The group for the next layer does not exist, so we stop here.
+			break;
+		}
 		hid_t group_id = H5Gopen2(file_id, groupname.str().c_str(), H5P_DEFAULT);
-		if (group_id < 0) break;
-		hid_t dataset_id = H5Dopen(group_id, "weights", H5P_DEFAULT);
-		if (dataset_id < 0) break;
-		hid_t dset_space = H5Dget_space(dataset_id);
-		if (dset_space < 0) {
-			//TODO Error
-			break;
+		if (group_id < 0) {
+			throw std::runtime_error("Could not open group");
 		}
-		int rank = H5Sget_simple_extent_ndims(dset_space);
-		if (rank != 2) {
-			//TODO Error
-			break;
-		}
-		hsize_t dims[2];
-		H5Sget_simple_extent_dims(dset_space,dims, NULL);
-		//TODO read into af::array
-		std::cout << "dims: " << dims[0] << ", " << dims[1] << std::endl;
+		af::array weights = read_hdf5_into_2d_array(group_id, "weights");
+		af::array bias = read_hdf5_into_2d_array(group_id, "bias");
 
+		//TODO create the correct layer type
+		this->add(ann::make_SigmoidLayer(weights, bias));
+
+		H5Gclose(group_id);
 		i+=1;
 	}
 
