@@ -269,6 +269,9 @@ void SequentialNeuralNet::load(std::string filename) {
 		H5Gclose(group_id);
 		i+=1;
 	}
+	if (i == 0) {
+		throw std::runtime_error("Could not load any layers from the file");
+	}
 
 	H5Fclose(file_id);
 }
