@@ -81,18 +81,8 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 			target = ydata(af::span, af::seq(i, last_batch_index));
 			// Fxb
 			af::array sample = Xdata(af::span, af::seq(i, last_batch_index));
-			this->forward_all(sample);
-			// Oxb = Oxb - Oxb
-			af::array delta = this->layers.back()->getLastOutput() - target;
-			this->backwards_all(sample, delta);
-
-			error += af::sum<float>(delta * delta);
-
-			for (auto it = this->layers.begin(); it != this->layers.end(); ++it) {
-				(*it)->updateWeights(learningrate, this->comm_);
-			}
+			error += this->fitBatch(sample, target, learningrate);
 		}
-		MPI_Allreduce(MPI_IN_PLACE, &error, 1, MPI_FLOAT, MPI_SUM, this->comm_);
 		if (this->mpi_rank_ == 0) {
 			std::cout << "Iteration " << iteration << " Error: " << (sqrt(error)) << std::endl;
 		}
@@ -103,6 +93,21 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 			break;
 		}
 	}
+}
+
+float SequentialNeuralNet::fitBatch(af::array batch, af::array target, float learningrate) {
+	this->forward_all(batch);
+	// Oxb = Oxb - Oxb
+	af::array delta = this->layers.back()->getLastOutput() - target;
+	this->backwards_all(batch, delta);
+
+	float error = af::sum<float>(delta * delta);
+	MPI_Allreduce(MPI_IN_PLACE, &error, 1, MPI_FLOAT, MPI_SUM, this->comm_);
+
+	for (auto it = this->layers.begin(); it != this->layers.end(); ++it) {
+		(*it)->updateWeights(learningrate, this->comm_);
+	}
+	return error;
 }
 
 void SequentialNeuralNet::forward_all(const af::array& input) {
