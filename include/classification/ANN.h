@@ -58,8 +58,12 @@ namespace juml {
 				return layers.end();
 			}
 			void fit(Dataset& X, Dataset& y) override;
+			float fitBatch(af::array batch, af::array target, float learningrate);
 			Dataset predict(Dataset& X) const override;
 			float accuracy(Dataset& X, Dataset& y) const override;
+
+			void save(std::string filename, bool overwrite);
+			void load(std::string filename);
 	};
 }
 

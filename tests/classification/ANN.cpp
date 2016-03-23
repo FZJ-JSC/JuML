@@ -110,6 +110,27 @@ TEST(ANN_TEST, TEST_XOR) {
 
 	Dataset result = net.predict(Xset);
 	af::print("result", result.data());
+
+	net.save("xor_trained_net.h5", true);
+
+	SequentialNeuralNet net2(AF_BACKEND_CPU);
+	net2.load("xor_trained_net.h5");
+	for(auto it = net2.layers_begin(); it != net2.layers_end(); it++) {
+		af::print("loaded weights", (*it)->getWeights());
+		af::print("loaded bias", (*it)->getBias());
+	}
+
+	auto it1 = net.layers_begin();
+	auto it2 = net2.layers_begin();
+	for (;it1 != net.layers_end() && it2 != net2.layers_end(); it1++, it2++) {
+		ASSERT_TRUE(af::allTrue<bool>((*it1)->getWeights() == (*it2)->getWeights()));
+		ASSERT_TRUE(af::allTrue<bool>((*it1)->getBias() == (*it2)->getBias()));
+		//TODO: Compare Type
+	}
+	if (it1 != net.layers_end() || it2 != net2.layers_end()) {
+		FAIL() << "ANN loaded from file does not have the same number of layers as ANN in memory";
+	}
+
 }
 
 
