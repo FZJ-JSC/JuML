@@ -1,1 +1,2 @@
 ADD_SUBDIRECTORY(ann)
+ADD_SUBDIRECTORY(ann-mnist)
