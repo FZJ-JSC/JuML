@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
 	af::array data_array = data.data();
 	data_array = af::moddims(data_array, 28*28, data_array.dims(2));
 	data_array = data_array / 255.0;
+	af::array full_data = data_array;
 	data_array = data_array(af::span, af::seq(0, data_array.dims(1) - 1, dataset_stepsize));
 
 	af::array label_array = label.data();
@@ -65,6 +66,9 @@ int main(int argc, char *argv[]) {
 		cout << MPI_Wtime() << " Epoch " << epoch << " Error: " << sqrt(error) 
 			<< " Last: " << sqrt(lasterror) << endl;
 	}
+	
+	juml::Dataset full_data_set(full_data);
+	cout << "Full Class-Accuracy: " << net.classify_accuracy(full_data_set, label) << endl;
 	/*juml::Dataset trainset(data_array);
 	juml::Dataset labelset(target);
 	net.fit(trainset, labelset);*/

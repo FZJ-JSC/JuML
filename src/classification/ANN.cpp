@@ -21,13 +21,47 @@
 namespace juml {
 
 Dataset SequentialNeuralNet::predict(Dataset& X) const {
+	X.load_equal_chunks();
+	af::array result = this->predict_array(X.data());
+	return Dataset(result, this->comm_);
+}
+
+af::array SequentialNeuralNet::predict_array(af::array X) const {
 	if (this->layers.size() == 0) {
 		throw std::runtime_error("Need at least 1 layer");
 	}
+	const_cast<SequentialNeuralNet*>(this)->forward_all(X);
+	return this->layers.back()->getLastOutput();
+}
+
+af::array SequentialNeuralNet::classify_array(af::array X) const {
+	af::array result = this->predict_array(X);
+	af::array values, idxs;
+	af::max(values, idxs, result, 0);
+	return idxs;
+}
+
+Dataset SequentialNeuralNet::classify(Dataset& X) const {
 	X.load_equal_chunks();
-	const_cast<SequentialNeuralNet*>(this)->forward_all(X.data());
-	af::array result = this->layers.back()->getLastOutput();
+	af::array result = this->classify_array(X.data());
 	return Dataset(result, this->comm_);
+}
+
+int SequentialNeuralNet::classify_accuracy_array(const af::array X, const af::array y) const {
+	af::array classes = this->classify_array(X);
+	int correct = af::count<int>(classes == y);
+	MPI_Allreduce(MPI_IN_PLACE, &correct, 1, MPI_INT, MPI_SUM, this->comm_);
+	return correct;
+}
+
+float SequentialNeuralNet::classify_accuracy(Dataset& X, Dataset& y) const {
+	X.load_equal_chunks();
+	y.load_equal_chunks();
+	int correct = classify_accuracy_array(X.data(), y.data());
+	int all = X.data().dims(1);
+	MPI_Allreduce(MPI_IN_PLACE, &all, 1, MPI_INT, MPI_SUM, this->comm_);
+
+	return ((float)correct)/all;
 }
 
 void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {

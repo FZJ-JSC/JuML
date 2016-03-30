@@ -60,7 +60,14 @@ namespace juml {
 			void fit(Dataset& X, Dataset& y) override;
 			float fitBatch(af::array batch, af::array target, float learningrate);
 			Dataset predict(Dataset& X) const override;
+			af::array predict_array(af::array X) const;
+
+			Dataset classify(Dataset& X) const;
+			af::array classify_array(af::array X) const;
+
 			float accuracy(Dataset& X, Dataset& y) const override;
+			float classify_accuracy(Dataset& X, Dataset &y) const;
+			int classify_accuracy_array(af::array X, af::array y) const;
 
 			void save(std::string filename, bool overwrite);
 			void load(std::string filename);
