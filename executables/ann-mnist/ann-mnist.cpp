@@ -42,6 +42,8 @@ int main(int argc, char *argv[]) {
 	label_array = label_array(af::span, af::seq(0, label_array.dims(1) - 1, dataset_stepsize));
 
 	const int N = data_array.dims(1);
+	int globalN;
+	MPI_Allreduce(&N, &globalN, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
 	af::array target = af::constant(0, 10, N, s32);
 	target(af::range(N).T() *  10 + label_array)= 1;
@@ -63,8 +65,13 @@ int main(int argc, char *argv[]) {
 			lasterror = net.fitBatch(batchsamples, batchtarget, 1);
 			error += lasterror;
 		}
-		cout << MPI_Wtime() << " Epoch " << epoch << " Error: " << sqrt(error) 
-			<< " Last: " << sqrt(lasterror) << endl;
+
+		cout << " Epoch " << epoch << " Error: " << error / nbatches 
+			<< " Last: " << lasterror << endl;
+		cout << "Train-Class-Accuracy: " << (net.classify_accuracy_array(data_array, label_array) / (float) globalN) << endl;
+		if (error / nbatches < 0.05) {
+			break;
+		}
 	}
 	
 	juml::Dataset full_data_set(full_data);
