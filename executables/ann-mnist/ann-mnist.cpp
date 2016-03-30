@@ -36,10 +36,13 @@ int main(int argc, char *argv[]) {
 	data_array = af::moddims(data_array, 28*28, data_array.dims(2));
 	data_array = data_array / 255.0;
 	af::array full_data = data_array;
-	data_array = data_array(af::span, af::seq(0, data_array.dims(1) - 1, dataset_stepsize));
+
+	//data_array = data_array(af::span, af::seq(0, data_array.dims(1) - 1, dataset_stepsize));
+	data_array = data_array(af::span, af::seq(0, 8000 - 1));
 
 	af::array label_array = label.data();
-	label_array = label_array(af::span, af::seq(0, label_array.dims(1) - 1, dataset_stepsize));
+	//label_array = label_array(af::span, af::seq(0, label_array.dims(1) - 1, dataset_stepsize));
+	label_array = label_array(af::span, af::seq(0, 8000 - 1));
 
 	const int N = data_array.dims(1);
 	int globalN;
