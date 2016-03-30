@@ -16,6 +16,8 @@ int main(int argc, char *argv[]) {
 	cout << "Seed: " << af::getSeed() << endl;
 
 	juml::SequentialNeuralNet net(AF_BACKEND_CPU);
+	//net.add(juml::ann::make_SigmoidLayer(28*28, 30));
+	//net.add(juml::ann::make_SigmoidLayer(30, 10));
 	//net.load("mnist-net.h5");
 	net.add(juml::ann::make_SigmoidLayer(28*28, 100));
 	net.add(juml::ann::make_SigmoidLayer(100, 50));
@@ -54,7 +56,7 @@ int main(int argc, char *argv[]) {
 	int mpi_size;
 	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
 
-	int batchsize = 100 / mpi_size;
+	int batchsize = 400;
 	int nbatches = N/batchsize;
 	cout << "N: " << N << " n_batches: " << nbatches << endl
 		<< "batchsize: " << batchsize <<endl;
@@ -65,14 +67,14 @@ int main(int argc, char *argv[]) {
 			int last = std::min((int)data_array.dims(1) - 1, batch + batchsize - 1);
 			af::array batchsamples = data_array(af::span, af::seq(batch, last));
 			af::array batchtarget = target(af::span, af::seq(batch, last));
-			lasterror = net.fitBatch(batchsamples, batchtarget, 1);
+			lasterror = net.fitBatch(batchsamples, batchtarget, 2);
 			error += lasterror;
 		}
 
 		cout << " Epoch " << epoch << " Error: " << error / nbatches 
 			<< " Last: " << lasterror << endl;
 		cout << "Train-Class-Accuracy: " << (net.classify_accuracy_array(data_array, label_array) / (float) globalN) << endl;
-		if (error / nbatches < 0.05) {
+		if (error / nbatches < 0.25) {
 			break;
 		}
 	}
