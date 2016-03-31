@@ -29,6 +29,7 @@ namespace juml {
         static const int OPENCL = AF_BACKEND_OPENCL;
 
         static void set(int backend);
+        static int of(const af::array& data);
         
         Backend(int backend);
         int get() const;

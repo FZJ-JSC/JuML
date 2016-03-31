@@ -19,4 +19,3 @@
 #include "classification/GaussianNaiveBayes.h"
 #include "clustering/KMeans.h"
 #include "stats/Distributions.h"
-
