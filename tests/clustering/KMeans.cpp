@@ -22,16 +22,6 @@ static const float MANHATTAN_CENTROIDS[3][4] = {{5.0059996f, 3.4180002f, 1.46400
                                                 {6.6112895f, 2.9983876f, 5.3903232f, 1.9225806f}};
 
 TEST(KMEANS_TEST, IRIS_EUCLIDEAN_CPU_TEST) {
-    af::setBackend(AF_BACKEND_CPU);
-    int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    int size; MPI_Comm_size(MPI_COMM_WORLD, &size);
-    af::array data = af::constant(rank, 3, rank + 1);
-    af::array counts = (af::iota(af::dim4(size)) + 1) * 3;
-
-    juml::mpi::allgatherv_inplace(data, counts, MPI_COMM_WORLD);
-    if (rank == 1)
-        af_print(data);
-
     juml::KMeans kmeans(
             /*k=*/3,
             /*max_iter=*/100,
