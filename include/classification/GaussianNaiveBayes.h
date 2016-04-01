@@ -32,6 +32,15 @@ namespace juml {
      *
      * Example:
      *
+     * using namespace juml;
+     * 
+     * Dataset X("train.h5", "data");
+     * Dataset y("train.h5", "labels");
+     * Dataset C("test.h5", "data"):
+     *
+     * GaussianNaiveBayes gnb();
+     * gnb.fit(X, y);
+     * Dataset predictions = gnb.predict(c);
      */
     class GaussianNaiveBayes : public BaseClassifier {
     protected:
