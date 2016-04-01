@@ -38,4 +38,3 @@ namespace juml {
         return local_results[0] / local_results[1];
     }
 } // namespace juml
-
