@@ -95,6 +95,7 @@ namespace juml {
          * @return The predicted probabilities for each class (f x n) as dataset
          */
         virtual Dataset predict_probability(Dataset& X) const;
+        virtual float accuracy(Dataset& X, Dataset& y) const;
 
         const af::array& class_counts() const;
         const af::array& prior() const;

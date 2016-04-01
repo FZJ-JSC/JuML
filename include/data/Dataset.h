@@ -42,6 +42,7 @@ namespace juml {
         dim_t global_offset_;
         
         af::dtype h5_to_af(hid_t h5_type);
+        hid_t af_to_h5(af::dtype af_type);
 
     public:
         //! Dataset constructor
@@ -54,6 +55,7 @@ namespace juml {
         af::array mean(bool total = false) const;
         time_t loading_time() const;
         void load_equal_chunks(bool force=false);
+        void dump_equal_chunks(const std::string& filename, const std::string& dataset);
         af::array stdev(bool total = false) const;
 
         virtual af::array& data();
@@ -66,4 +68,3 @@ namespace juml {
     }; // Dataset
 }  // juml
 #endif // DATASET_H
-

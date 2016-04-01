@@ -31,7 +31,7 @@ namespace juml {
         
         X.load_equal_chunks();
         y.load_equal_chunks();
-        BaseClassifier::fit(X, y);
+        BaseClassifier::fit(X, y);        
         
         const af::array& X_ = X.data();
         const af::array& y_ = y.data();
@@ -135,6 +135,20 @@ namespace juml {
         af::array locations_orig = this->class_normalizer_.invert(locations);
                 
         return Dataset(locations_orig, this->comm_);
+    }
+
+    float GaussianNaiveBayes::accuracy(Dataset& X, Dataset& y) const {
+        float local_results[2];
+        Dataset predictions = this->predict(X);
+        // X is loaded in this->predict
+        y.load_equal_chunks();
+
+        af::array sum = af::sum(predictions.data() == y.data());
+        local_results[0] = (float)sum.scalar<uint>();
+        local_results[1] = (float)y.n_samples();
+        MPI_Allreduce(MPI_IN_PLACE, local_results, 2, MPI_FLOAT, MPI_SUM, this->comm_);
+        
+        return local_results[0] / local_results[1];
     }
     
     const af::array& GaussianNaiveBayes::class_counts() const {
