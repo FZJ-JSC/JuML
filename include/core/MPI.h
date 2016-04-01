@@ -23,7 +23,7 @@ namespace juml {
 namespace mpi {
     typedef int (*ReductionCollective)(const void*, void*, int, MPI_Datatype, MPI_Op, MPI_Comm);
 
-    bool  can_use_device_pointer(const af::array& data);
+    bool can_use_device_pointer(const af::array& data);
     MPI_Datatype get_MPI_type(const af::array& data);
 
     int allgather(af::array& data, MPI_Comm comm, dim_t merge=1);

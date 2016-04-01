@@ -101,6 +101,7 @@ namespace mpi {
         // mpi book-keeping and sanity check for number of counts
         int mpi_rank;
         int mpi_size;
+        int mpi_error;
 
         MPI_Comm_rank(comm, &mpi_rank);
         MPI_Comm_size(comm, &mpi_size);
@@ -112,7 +113,8 @@ namespace mpi {
         counts[mpi_rank] = static_cast<int>(data.elements());
         displacements[0] = 0;
 
-        MPI_Allgather(counts + mpi_rank, 1, MPI_INT, counts, 1, MPI_INT, comm);
+        mpi_error = MPI_Allgather(counts + mpi_rank, 1, MPI_INT, counts, 1, MPI_INT, comm);
+
         for (int i = 1; i < mpi_size; ++i) {
             displacements[i] = displacements[i - 1] + counts[i - 1];
             total_elements += counts[i];
@@ -134,7 +136,8 @@ namespace mpi {
 
         // exchange the actual data
         MPI_Datatype type = get_MPI_type(data);
-        int error = MPI_Allgatherv(data_buffer, counts[mpi_rank], type, gather_buffer, counts, displacements, type, comm);
+        mpi_error = MPI_Allgatherv(data_buffer, counts[mpi_rank], type,
+                                   gather_buffer, counts, displacements, type, comm);
 
         // release resources
         if (use_device_pointer) {
@@ -142,9 +145,9 @@ namespace mpi {
         } else {
             delete[] reinterpret_cast<unsigned char *>(data_buffer);
         }
-        if (error != MPI_SUCCESS) {
+        if (mpi_error != MPI_SUCCESS) {
             delete[] reinterpret_cast<unsigned char*>(gather_buffer);
-            return error;
+            return mpi_error;
         }
 
         // copy the data back into the target array
