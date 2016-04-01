@@ -58,6 +58,7 @@ namespace juml {
         template <typename T>
         intl transform(const T class_label) const {
             af::array indices = af::where(this->class_labels_ == class_label);
+            af_print(indices);
             if (indices.elements() != 1) {
                 std::stringstream message;
                 message << "Class " << class_label << " not found";

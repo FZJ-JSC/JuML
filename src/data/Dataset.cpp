@@ -28,7 +28,7 @@ namespace juml {
         MPI_Comm_size(this->comm_, &this->mpi_size_);
     }
 
-    Dataset::Dataset(af::array& data, MPI_Comm comm)
+    Dataset::Dataset(const af::array& data, MPI_Comm comm)
         : data_(data), comm_(comm) {
         MPI_Comm_rank(this->comm_, &this->mpi_rank_);
         MPI_Comm_size(this->comm_, &this->mpi_size_);
@@ -36,7 +36,7 @@ namespace juml {
         this->sample_dim_ = data.numdims() > 2 ? data.numdims() - 1 : 1;
         MPI_Allreduce(MPI_IN_PLACE, &this->sample_dim_, 1, MPI_LONG_LONG, MPI_MAX, comm);
 
-        this->global_n_samples_ = data.dims(this->sample_dim_);
+        this->global_n_samples_ = data.dims(static_cast<unsigned int>(this->sample_dim_));
         this->global_offset_ = this->global_n_samples_;
 
         MPI_Allreduce(MPI_IN_PLACE, &this->global_n_samples_, 1, MPI_LONG_LONG, MPI_SUM, comm);
@@ -122,7 +122,6 @@ namespace juml {
             norm_range = af::tile(norm_range, num_features);
         }
 
-
         data(mask, af::span) -= af::tile(minimum, 1, this->n_samples());
         data(mask, af::span) *= af::tile(norm_range, 1, this->n_samples());
         data(mask, af::span) += af::constant(min, num_features, this->n_samples());
@@ -160,7 +159,7 @@ namespace juml {
         int num_features = af::sum<int>(mask);
 
         af::array mean = this->mean(!independent_features)(mask);
-        af::array std = this->stdev(!independent_features)(mask) / x_std;
+        af::array std = this->stddev(!independent_features)(mask) / x_std;
 
         if (!independent_features) {
             mean = af::tile(mean(0), num_features);
@@ -310,7 +309,7 @@ namespace juml {
         H5Pclose(access_plist);
     }
 
-    af::array Dataset::stdev(bool total) const {
+    af::array Dataset::stddev(bool total) const {
         af:: array mean = this->mean(total);
         af::array stdev;
         if (total)
@@ -351,6 +350,7 @@ namespace juml {
     dim_t Dataset::global_offset() const {
         return this->global_offset_;
     }
+
     dim_t Dataset::sample_dim() const {
         return this->sample_dim_;
     }

@@ -59,11 +59,14 @@ namespace juml {
 
     af::array ClassNormalizer::transform(const af::array& original_labels) const {
         af::array transformed_labels = af::constant(-1, original_labels.dims(), s64);
-        for (dim_t i = 0; i < this->class_labels_.elements(); ++i) {
+        for (int i = 0; i < this->class_labels_.elements(); ++i) {
             intl label = this->class_labels_(i).scalar<intl>();
             af::array indices = original_labels ==  label;
             af::replace(transformed_labels, indices, i);
         }
+        af_print(original_labels);
+        af_print(class_labels_);
+        af_print(transformed_labels);
 
         return transformed_labels;
     }

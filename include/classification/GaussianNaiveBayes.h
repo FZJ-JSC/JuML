@@ -33,7 +33,7 @@ namespace juml {
      * Example:
      *
      * using namespace juml;
-     * 
+     *
      * Dataset X("train.h5", "data");
      * Dataset y("train.h5", "labels");
      * Dataset C("test.h5", "data"):
