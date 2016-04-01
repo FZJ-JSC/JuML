@@ -67,11 +67,11 @@ namespace juml {
 				}
 
 				void updateWeights(float learningrate, MPI_Comm comm) {
-					MPI_Allreduce(MPI_IN_PLACE, &this->update_count, 1, MPI_INT, MPI_SUM, comm);
+					//MPI_Allreduce(MPI_IN_PLACE, &this->update_count, 1, MPI_INT, MPI_SUM, comm);
 					if (update_count == 0) return;
 
-					mpi::allreduce_inplace(this->weights_update, MPI_SUM, comm);
-					mpi::allreduce_inplace(this->bias_update, MPI_SUM, comm);
+					//mpi::allreduce_inplace(this->weights_update, MPI_SUM, comm);
+					//mpi::allreduce_inplace(this->bias_update, MPI_SUM, comm);
 
 					this->weights_update /= this->update_count;
 					this->bias_update /= this->update_count;
@@ -81,6 +81,16 @@ namespace juml {
 					this->weights_update(af::span, af::span) = 0;
 					this->bias_update(af::span) = 0;
 					this->update_count = 0;
+				}
+
+				void mpi_average_weights(MPI_Comm comm) {
+					int mpi_size;
+					MPI_Comm_size(comm, &mpi_size);
+					mpi::allreduce_inplace(this->weights, MPI_SUM, comm);
+					mpi::allreduce_inplace(this->bias, MPI_SUM, comm);
+
+					this->weights /= mpi_size;
+					this->bias /= mpi_size;
 				}
 
 				inline af::array& getWeights() {

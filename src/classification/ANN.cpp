@@ -147,6 +147,12 @@ float SequentialNeuralNet::fitBatch(af::array batch, af::array target, float lea
 	return error / fullbatchsize;
 }
 
+void SequentialNeuralNet::sync() {
+	for (auto it = this->layers.begin(); it != this->layers.end(); it++) {
+		(*it)->mpi_average_weights(this->comm_);
+	}
+}
+
 void SequentialNeuralNet::forward_all(const af::array& input) {
 	auto itbefore = this->layers.begin();
 	//Constructor ensures there is at least one layer

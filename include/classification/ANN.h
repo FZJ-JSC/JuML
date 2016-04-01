@@ -65,6 +65,8 @@ namespace juml {
 			Dataset classify(Dataset& X) const;
 			af::array classify_array(af::array X) const;
 
+			void sync();
+
 			float accuracy(Dataset& X, Dataset& y) const override;
 			float classify_accuracy(Dataset& X, Dataset &y) const;
 			int classify_accuracy_array(af::array X, af::array y) const;

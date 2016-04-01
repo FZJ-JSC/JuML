@@ -80,6 +80,7 @@ int main(int argc, char *argv[]) {
 			lasterror = net.fitBatch(batchsamples, batchtarget, 2);
 			error += lasterror;
 		}
+		net.sync();
 
 		cout << " Epoch " << epoch << " Error: " << error / nbatches 
 			<< " Last: " << lasterror << endl;
