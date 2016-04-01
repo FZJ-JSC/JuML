@@ -37,7 +37,8 @@ namespace juml {
         int mpi_rank_;
         int mpi_size_;
 
-        dim_t global_items_;
+        dim_t sample_dim_;
+        dim_t global_n_samples_;
         dim_t global_offset_;
         
         af::dtype h5_to_af(hid_t h5_type);
@@ -50,17 +51,20 @@ namespace juml {
 
         time_t modified_time() const;
         void normalize(float min = 0, float max = 1, bool independent_features = false, const af::array& selected_features = af::array());
+        void normalize_std(float x_std= 1, bool independent_features = false, const af::array& selected_features = af::array());
+        af::array mean(bool total = false) const;
         time_t loading_time() const;
         void load_equal_chunks(bool force=false);
         void dump_equal_chunks(const std::string& filename, const std::string& dataset);
+        af::array stdev(bool total = false) const;
 
         virtual af::array& data();
         virtual const af::array& data() const;
         virtual dim_t n_samples() const;
         virtual dim_t n_features() const;
-        virtual dim_t global_items() const;
+        virtual dim_t global_n_samples() const;
         virtual dim_t global_offset() const;
+        virtual dim_t sample_dim() const;
     }; // Dataset
 }  // juml
 #endif // DATASET_H
-

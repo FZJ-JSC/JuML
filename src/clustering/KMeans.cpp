@@ -63,7 +63,7 @@ namespace juml {
 
         // initialize random generator
         std::mt19937 random_state(this->seed_);
-        std::uniform_int_distribution<intl> index_selector(0, dataset.global_items() - 1);
+        std::uniform_int_distribution<intl> index_selector(0, dataset.global_n_samples() - 1);
 
         // create a centroid array that holds the locally chosen centroids
         this->centroids_ = af::constant(0, data.dims(0), static_cast<dim_t>(this->k_), data.type());
@@ -86,7 +86,7 @@ namespace juml {
 
         // initialize random generator
         std::mt19937 random_state(this->seed_);
-        std::uniform_int_distribution<intl> index_selector(0, dataset.global_items() - 1);
+        std::uniform_int_distribution<intl> index_selector(0, dataset.global_n_samples() - 1);
 
         // choose first centroid randomly and broadcast it
         af::array centroids = af::constant(0, f, data.type());
@@ -147,7 +147,7 @@ namespace juml {
         // initialize the pick arrays
         af::array upper_bounds = af::accum(weights);
         af::array lower_bounds = upper_bounds - weights;
-        intl pick_boundary = dataset.global_items() - 1;
+        intl pick_boundary = dataset.global_n_samples() - 1;
 
         // actually pick from the array
         for (uintl i = 0; i < this->k_; ++i) {
@@ -188,7 +188,8 @@ namespace juml {
         dim_t n = data.dims(1); // number of sample
 
         // calculate the convergence threshold globally
-        uintl threshold = static_cast<uintl>(std::floor(this->tolerance_ * dataset.global_items()));
+        uintl threshold = static_cast<uintl>(std::floor(this->tolerance_ * dataset.global_n_samples()));
+
         // remember the cluster assignments in order to break on changes
         af::array previous_assignments = af::constant(-1, 1, n);
 

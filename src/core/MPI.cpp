@@ -21,7 +21,7 @@
 namespace juml {
 namespace mpi {
     bool can_use_device_pointer(const af::array& data) {
-        return Backend::of(data) == AF_BACKEND_CPU;
+        return Backend::of(data) == Backend::CPU;
     }
 
     MPI_Datatype get_MPI_type(const af::array& data) {
@@ -55,7 +55,7 @@ namespace mpi {
         }
     }
 
-    int allgather_inplace(af::array& data, MPI_Comm comm) {
+    int allgather(af::array& data, MPI_Comm comm, dim_t merge) {
         // obtain the read buffer
         data.eval();
         void* data_pointer = nullptr;
@@ -89,7 +89,7 @@ namespace mpi {
 
         // copy the data back
         af::dim4 dimensions = data.dims();
-        dimensions[dimensions.ndims() - 1] *= mpi_size;
+        dimensions[merge] *= mpi_size;
         data = af::constant(0, dimensions, data.type());
         af_write_array(data.get(), gather_buffer, data.bytes(), afHost);
         delete[] reinterpret_cast<unsigned char*>(gather_buffer);
@@ -97,79 +97,64 @@ namespace mpi {
         return MPI_SUCCESS;
     }
 
-    int allgatherv_inplace(af::array& data, const af::array& counts, MPI_Comm comm) {
+    int allgatherv(af::array& data, MPI_Comm comm, dim_t merge) {
         // mpi book-keeping and sanity check for number of counts
         int mpi_rank;
-        MPI_Comm_rank(comm, &mpi_rank);
         int mpi_size;
+        int mpi_error;
+
+        MPI_Comm_rank(comm, &mpi_rank);
         MPI_Comm_size(comm, &mpi_size);
-        if (mpi_size != counts.elements()) {
-            throw std::invalid_argument("Number of counts must match the size of communicator");
-        }
 
-        // obtain the read buffer
-        data.eval();
-        void *data_pointer = nullptr;
+        // exchange the element counts and displacements
+        int counts[mpi_size];
+        int displacements[mpi_size];
+        int total_elements = 0;
+        counts[mpi_rank] = static_cast<int>(data.elements());
+        displacements[0] = 0;
+
+        mpi_error = MPI_Allgather(counts + mpi_rank, 1, MPI_INT, counts, 1, MPI_INT, comm);
+
+        for (int i = 1; i < mpi_size; ++i) {
+            displacements[i] = displacements[i - 1] + counts[i - 1];
+            total_elements += counts[i];
+        }
+        total_elements += counts[0];
+
+        // prepare the source and target buffers
         bool use_device_pointer = can_use_device_pointer(data);
-
-        if (use_device_pointer) {
-            data_pointer = reinterpret_cast<void*>(data.device <unsigned char>());
-        } else {
-            data_pointer = reinterpret_cast<void*>(new unsigned char[data.bytes()]);
-            data.host(data_pointer);
-        }
-
-        // calculate displacements and total number of elements
-        af::array disp = (af::accum(counts) - counts).as(s32);
-        disp.eval();
-        int* displacements;
-        if (can_use_device_pointer(disp)) {
-            displacements = disp.device<int>();
-        } else {
-            displacements = new int[mpi_size];
-            disp.host(displacements);
-        }
-        af::array counts32 = counts.as(s32);
-        counts32.eval();
-        int* recv_counts;
-        if (can_use_device_pointer(counts)) {
-            recv_counts = counts32.device<int>();
-        } else {
-            recv_counts = new int[mpi_size];
-            counts32.host(recv_counts);
-        }
-
-        // allocate the gather buffer
-        uintl total_elements = af::sum(counts).as(u64).scalar<uintl>();
         void* gather_buffer = new unsigned char[data.bytes() / data.elements() * total_elements];
+        void* data_buffer = nullptr;
 
-        // exchange the message
+        data.eval();
+        if (use_device_pointer) {
+            data_buffer = reinterpret_cast<void*>(data.device<unsigned char>());
+        } else {
+            data_buffer = reinterpret_cast<void*>(new unsigned char[data.bytes()]);
+            data.host(data_buffer);
+        }
+
+        // exchange the actual data
         MPI_Datatype type = get_MPI_type(data);
-        int error = MPI_Allgatherv(data_pointer, (int)data.elements(), type,
-                                   gather_buffer, recv_counts, displacements, type, comm);
+        mpi_error = MPI_Allgatherv(data_buffer, counts[mpi_rank], type,
+                                   gather_buffer, counts, displacements, type, comm);
 
         // release resources
         if (use_device_pointer) {
             data.unlock();
         } else {
-            delete[] reinterpret_cast<unsigned char *>(data_pointer);
+            delete[] reinterpret_cast<unsigned char *>(data_buffer);
         }
-        if (!can_use_device_pointer(disp)) {
-            delete[] displacements;
-        }
-        if (!can_use_device_pointer(counts32)) {
-            delete[] recv_counts;
-        }
-        if (error != MPI_SUCCESS) {
+        if (mpi_error != MPI_SUCCESS) {
             delete[] reinterpret_cast<unsigned char*>(gather_buffer);
-            return error;
+            return mpi_error;
         }
 
-        // copy the data back
+        // copy the data back into the target array
         af::dim4 dimensions = data.dims();
-        dimensions[dimensions.ndims() - 1] = total_elements;
+        dimensions[merge] = total_elements / (data.elements() / data.dims(static_cast<unsigned int>(merge)));
         data = af::constant(0, dimensions, data.type());
-        af_write_array(data.get(), gather_buffer, data.elements() * total_elements / data.bytes() , afHost);
+        af_write_array(data.get(), gather_buffer, data.bytes() / data.elements() * total_elements, afHost);
         delete[] reinterpret_cast<unsigned char*>(gather_buffer);
 
         return MPI_SUCCESS;
