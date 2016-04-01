@@ -7,15 +7,27 @@ int main(int argc, char *argv[]) {
 	using std::cout;
 	using std::endl;
 	MPI_Init(&argc, &argv);
+	int mpi_size, mpi_rank;
+	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 	if (argc != 2 && argc != 3) return 1;
-	af::setBackend(AF_BACKEND_CPU);
+	const af::Backend backend = AF_BACKEND_CUDA;
+
+	af::setBackend(backend);
+	if (mpi_rank % 4 >= af::getDeviceCount()) {
+		cout << "Not enough devices to set device to " << (mpi_rank % 4) << " / " << af::getDeviceCount() << endl;
+		return 1;
+	}
+	cout << "Backend set" << endl;
+	af::setDevice(mpi_rank % 4);
+	cout << "Device set to " << (mpi_rank % 4)  <<endl;
 	af::info();
 	if (argc == 3) {
 		af::setSeed(atoi(argv[2]));
 	}
 	cout << "Seed: " << af::getSeed() << endl;
 
-	juml::SequentialNeuralNet net(AF_BACKEND_CPU);
+	juml::SequentialNeuralNet net(backend);
 	//net.add(juml::ann::make_SigmoidLayer(28*28, 30));
 	//net.add(juml::ann::make_SigmoidLayer(30, 10));
 	//net.load("mnist-net.h5");
@@ -53,8 +65,6 @@ int main(int argc, char *argv[]) {
 	af::array target = af::constant(0, 10, N, s32);
 	target(af::range(N).T() *  10 + label_array)= 1;
 
-	int mpi_size;
-	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
 
 	int batchsize = 400;
 	int nbatches = N/batchsize;
