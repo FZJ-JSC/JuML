@@ -94,8 +94,10 @@ int main(int argc, char *argv[]) {
 		}
 		double time_buf = MPI_Wtime();
 		net.sync();
-		time_train_sync += MPI_Wtime() - time_buf;
 
+		MPI_Allreduce(MPI_IN_PLACE, &error, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+		error /= mpi_size;
+		time_train_sync += MPI_Wtime() - time_buf;
 		time_buf = MPI_Wtime();
 
 		cout << " Epoch " << epoch << " Error: " << error / nbatches 
