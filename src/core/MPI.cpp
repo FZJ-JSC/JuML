@@ -123,40 +123,38 @@ namespace mpi {
 
         // prepare the source and target buffers
         bool use_device_pointer = can_use_device_pointer(data);
-        void* gather_buffer = new unsigned char[data.bytes() / data.elements() * total_elements];
-        void* data_buffer = nullptr;
-
-        data.eval();
-        if (use_device_pointer) {
-            data_buffer = reinterpret_cast<void*>(data.device<unsigned char>());
-        } else {
-            data_buffer = reinterpret_cast<void*>(new unsigned char[data.bytes()]);
-            data.host(data_buffer);
-        }
-
-        // exchange the actual data
         MPI_Datatype type = get_MPI_type(data);
-        mpi_error = MPI_Allgatherv(data_buffer, counts[mpi_rank], type,
-                                   gather_buffer, counts, displacements, type, comm);
 
-        // release resources
-        if (use_device_pointer) {
-            data.unlock();
-        } else {
-            delete[] reinterpret_cast<unsigned char *>(data_buffer);
-        }
-        if (mpi_error != MPI_SUCCESS) {
-            delete[] reinterpret_cast<unsigned char*>(gather_buffer);
-            return mpi_error;
-        }
-
-        // copy the data back into the target array
+        // allocate target
         af::dim4 dimensions = data.dims();
         dimensions[merge] = total_elements / (data.elements() / data.dims(static_cast<unsigned int>(merge)));
-        data = af::constant(0, dimensions, data.type());
-        af_write_array(data.get(), gather_buffer, data.bytes() / data.elements() * total_elements, afHost);
-        delete[] reinterpret_cast<unsigned char*>(gather_buffer);
+        af::array target = af::constant(0, dimensions, data.type());
+        data.eval();
+        target.eval();
 
+        if (use_device_pointer) {
+            void* data_buffer = reinterpret_cast<void*>(data.device<unsigned char>());
+            void* gather_buffer = reinterpret_cast<void*>(target.device<unsigned char>());
+            mpi_error = MPI_Allgatherv(data_buffer, counts[mpi_rank], type, gather_buffer, counts, displacements, type, comm);
+            data.unlock();
+            target.unlock();
+        } else {
+            void* data_buffer = reinterpret_cast<void*>(new unsigned char[data.bytes()]);
+            void* gather_buffer = new unsigned char[data.bytes() / data.elements() * total_elements];
+            data.host(data_buffer);
+            mpi_error = MPI_Allgatherv(data_buffer, counts[mpi_rank], type, gather_buffer, counts, displacements, type, comm);
+            if (mpi_error != MPI_SUCCESS) {
+                delete[] reinterpret_cast<unsigned char*>(data_buffer);
+                delete[] reinterpret_cast<unsigned char*>(gather_buffer);
+                return mpi_error;
+            }
+            af_write_array(target.get(), gather_buffer, target.bytes() / target.elements() * total_elements, afHost);
+            data.unlock();
+            delete[] reinterpret_cast<unsigned char*>(data_buffer);
+            delete[] reinterpret_cast<unsigned char*>(gather_buffer);
+        }
+
+        data = target;
         return MPI_SUCCESS;
     }
 
