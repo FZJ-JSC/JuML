@@ -15,15 +15,15 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 	if (argc != 2 && argc != 3) return 1;
 	const af::Backend backend = AF_BACKEND_CUDA;
-
-	af::setBackend(backend);
-	if (mpi_rank % 4 >= af::getDeviceCount()) {
-		cout << "Not enough devices to set device to " << (mpi_rank % 4) << " / " << af::getDeviceCount() << endl;
-		return 1;
+	cout << "CUDA_VISIBLE_DEVICES: " << secure_getenv("CUDA_VISIBLE_DEVICES") << endl;
+	{
+		char cuda_env[30];
+		snprintf(cuda_env, 30, "CUDA_VISIBLE_DEVICES=%d", mpi_rank % 4);
+		putenv(cuda_env);
 	}
+	cout << "CUDA_VISIBLE_DEVICES: " << secure_getenv("CUDA_VISIBLE_DEVICES") << endl;
+	af::setBackend(backend);
 	cout << "Backend set" << endl;
-	af::setDevice(mpi_rank % 4);
-	cout << "Device set to " << (mpi_rank % 4)  <<endl;
 	af::info();
 	if (argc == 3) {
 		af::setSeed(atoi(argv[2]));
