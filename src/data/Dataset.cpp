@@ -383,8 +383,8 @@ namespace juml {
             this->data_.host(dump_data);
             herr_t status = H5Dwrite(dset_id, type, memspace, filespace, plist_id, dump_data);
             delete[] dump_data;
-            this->data_.unlock();
         }
+        this->data_.unlock();
 
         H5Dclose(dset_id);
         H5Sclose(filespace);
