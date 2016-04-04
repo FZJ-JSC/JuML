@@ -81,6 +81,8 @@ int main(int argc, char *argv[]) {
 			error += lasterror;
 		}
 		net.sync();
+		MPI_Allreduce(MPI_IN_PLACE, &error, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+		error /= mpi_size;
 
 		cout << " Epoch " << epoch << " Error: " << error / nbatches 
 			<< " Last: " << lasterror << endl;
