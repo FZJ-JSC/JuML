@@ -98,11 +98,11 @@ TEST (CLASS_NORMALIZER_TEST, MAPPING_EXCEPTION_CPU) {
 
     // set up a working normalizer and wrong labels
     class_normalizer.index(labels);
-    int out_of_range_transform = af::max<int>(labels.data()) + 1;
+    int out_of_range_transform = af::max<int>(class_normalizer.classes()) + 1;
     int out_of_range_invert = static_cast<int>(class_normalizer.n_classes()) + 1;
 
     // singular input
-    ASSERT_THROW(class_normalizer.transform(out_of_range_transform), std::invalid_argument);
+    ASSERT_THROW(class_normalizer.transform<int>(out_of_range_transform), std::invalid_argument);
     ASSERT_THROW(class_normalizer.invert<int>(out_of_range_invert), std::invalid_argument);
 }
 

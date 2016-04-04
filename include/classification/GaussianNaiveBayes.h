@@ -69,7 +69,6 @@ namespace juml {
     public:
         /**
          * GaussianNaiveBayes constructor
-         *
          * @param backend The execution backend (@see Backend)
          * @param comm The MPI communicator for the execution
          */
