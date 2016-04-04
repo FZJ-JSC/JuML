@@ -50,6 +50,14 @@ namespace juml {
     }
 
     af::array ClassNormalizer::invert(const af::array& transformed_labels) const  {
+        if (transformed_labels.dims(0) > 1 || transformed_labels.dims(2) > 1 || transformed_labels.dims(3) > 1) {
+            throw std::invalid_argument("Transformed labels needs to be a row-vector");
+        }
+
+        dim_t labels = transformed_labels.elements();
+        if (af::anyTrue<bool>(transformed_labels < 0 || transformed_labels >= labels)) {
+            throw std::invalid_argument("Could not invert transformed labels - out of bounds");
+        }
         return this->class_labels_(transformed_labels);
     }
 
@@ -58,13 +66,22 @@ namespace juml {
     }
 
     af::array ClassNormalizer::transform(const af::array& original_labels) const {
-        af::array transformed_labels = af::constant(-1, original_labels.dims(), s64);
-        for (dim_t i = 0; i < this->class_labels_.elements(); ++i) {
-            intl label = this->class_labels_(i).scalar<intl>();
-            af::array indices = original_labels ==  label;
-            af::replace(transformed_labels, indices, i);
+        if (original_labels.dims(0) > 1 || original_labels.dims(2) > 1 || original_labels.dims(3) > 1) {
+            throw std::invalid_argument("Original labels needs to be a row-vector");
         }
 
-        return transformed_labels;
+        dim_t classes = this->n_classes();
+        dim_t labels = original_labels.elements();
+
+        // create volumes and compare them against each other
+        af::array class_volume = af::tile(af::moddims(this->class_labels_, classes), 1, static_cast<unsigned int>(labels));
+        af::array label_volume = af::tile(original_labels, classes);
+
+        // find the indexes where they are equal and clamp them using the modulo operation
+        af::array transformed = af::where(class_volume == label_volume);
+        if (transformed.elements() != labels) {
+            throw std::invalid_argument("Could not convert all the labels");
+        }
+        return af::moddims(transformed % classes, 1, labels);
     }
 } // namespace juml
