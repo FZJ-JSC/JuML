@@ -61,11 +61,11 @@ int main(int argc, char *argv[]) {
 	af::array full_data = data_array;
 
 	//data_array = data_array(af::span, af::seq(0, data_array.dims(1) - 1, dataset_stepsize));
-	data_array = data_array(af::span, af::seq(0, 8000/mpi_size - 1));
+	data_array = data_array(af::span, af::seq(0, 18000/mpi_size - 1));
 
 	af::array label_array = label.data();
 	//label_array = label_array(af::span, af::seq(0, label_array.dims(1) - 1, dataset_stepsize));
-	label_array = label_array(af::span, af::seq(0, 8000/mpi_size - 1));
+	label_array = label_array(af::span, af::seq(0, 18000/mpi_size - 1));
 
 	const int N = data_array.dims(1);
 	int globalN;
@@ -78,11 +78,11 @@ int main(int argc, char *argv[]) {
 	double time_train_batch_test = 0;
 	double time_train_sync = 0;
 
-	int batchsize = 10;
+	int batchsize = 32 / mpi_size;
 	int nbatches = N/batchsize;
 	cout << "N: " << N << " n_batches: " << nbatches << endl
 		<< "batchsize: " << batchsize <<endl;
-	for (int epoch = 0; epoch < 250; epoch++) {
+	for (int epoch = 0; epoch <50; epoch++) {
 		float error = 0;
 		float lasterror;
 		for (int batch = 0; batch < N; batch += batchsize) {
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
 			error += lasterror;
 		}
 		double time_buf = MPI_Wtime();
-		net.sync();
+		//net.sync();
 
 		MPI_Allreduce(MPI_IN_PLACE, &error, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
 		error /= mpi_size;
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
 		cout << "Train-Class-Accuracy: " << (net.classify_accuracy_array(data_array, label_array) / (float) globalN) << endl;
 		time_train_batch_test += MPI_Wtime() - time_buf;
 		if (error / nbatches < 0.25) {
-			break;
+//			break;
 		}
 	}
 
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
 	net.fit(trainset, labelset);*/
 
 	cout << "Time Measuerment: " << endl;
-	#define Fs(time, name) printf("%20s %3.4f\n", name, time);
+	#define Fs(time, name) printf("%20s %9.4f\n", name, time);
 	#define F(start,end,name) Fs(end - start, name);
 
 	F(time_start, time_init_af, "AF-init");	

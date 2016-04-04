@@ -67,11 +67,11 @@ namespace juml {
 				}
 
 				void updateWeights(float learningrate, MPI_Comm comm) {
-					//MPI_Allreduce(MPI_IN_PLACE, &this->update_count, 1, MPI_INT, MPI_SUM, comm);
+					MPI_Allreduce(MPI_IN_PLACE, &this->update_count, 1, MPI_INT, MPI_SUM, comm);
 					if (update_count == 0) return;
 
-					//mpi::allreduce_inplace(this->weights_update, MPI_SUM, comm);
-					//mpi::allreduce_inplace(this->bias_update, MPI_SUM, comm);
+					mpi::allreduce_inplace(this->weights_update, MPI_SUM, comm);
+					mpi::allreduce_inplace(this->bias_update, MPI_SUM, comm);
 
 					this->weights_update /= this->update_count;
 					this->bias_update /= this->update_count;
