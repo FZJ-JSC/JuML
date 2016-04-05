@@ -96,5 +96,11 @@ target/
 # Idea IDEs
 *.idea
 
+# Qt Creator
+*.user
+
+# Vim
+*.swp
+
 # Docker
 Dockerfile
