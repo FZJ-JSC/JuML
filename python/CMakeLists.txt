@@ -81,11 +81,8 @@ IF(SWIG_FOUND)
 
     FILE(GLOB JuML_HEADER ${JuML_INLUDE_DIRECTORIES}/*/*.h)
     
-    SET(SWIG_MODULE_JuML_EXTRA_DEPS 
-            ${JuML_HEADER}
-            *.i
-        )
+    #SET(SWIG_MODULE_JuML_EXTRA_DEPS ${JuML_HEADER} *.i)
         
-    SWIG_ADD_MODULE(JuML python JuML.i)
+    SWIG_ADD_MODULE(JuML python JuML.i "arrayfire_converter.h")
     SWIG_LINK_LIBRARIES(JuML ${PYTHON_LIBRARIES} core data preprocessing classification ${AF_LIBS})
 ENDIF(SWIG_FOUND)
