@@ -64,7 +64,7 @@ namespace mpi {
         // allocate target memory
         af::dim4 dimensions = data.dims();
         dimensions[merge] *= mpi_size;
-        af::array target = af::constant(0, dimensions, data.type());
+        af::array target = af::array(dimensions, data.type());
 
         // force evaluations of operations and allocation
         data.eval();
@@ -131,7 +131,7 @@ namespace mpi {
         // allocate target
         af::dim4 dimensions = data.dims();
         dimensions[merge] = total_elements / (data.elements() / data.dims(static_cast<unsigned int>(merge)));
-        af::array target = af::constant(0, dimensions, data.type());
+        af::array target = af::array(dimensions, data.type());
         data.eval();
         target.eval();
 
