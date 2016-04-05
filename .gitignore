@@ -96,5 +96,8 @@ target/
 # Qt Creator
 *.user
 
+# Vim
+*.swp
+
 # Docker
 Dockerfile
