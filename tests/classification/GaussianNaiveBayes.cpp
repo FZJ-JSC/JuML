@@ -21,7 +21,7 @@ static const float THETA[3][4] = {{5.00599957f, 3.41800022f, 1.46399999f, 0.2439
 static const float STDDEV[3][4] = {{0.34894692f, 0.37719490f, 0.17176733f, 0.10613199f},
                                    {0.51098338f, 0.31064451f, 0.46518815f, 0.19576517f},
                                    {0.62948868f, 0.31925543f, 0.54634780f, 0.27188972f}};
-                                   
+
 static const float ACCURACY = 0.95999999999999996f;
 
 TEST_ALL(GAUSSIAN_NAIVE_BAYES_TEST, IRIS) {
