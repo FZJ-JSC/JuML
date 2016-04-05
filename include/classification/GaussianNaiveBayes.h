@@ -33,7 +33,7 @@ namespace juml {
      * Example:
      *
      * using namespace juml;
-     * 
+     *
      * Dataset X("train.h5", "data");
      * Dataset y("train.h5", "labels");
      * Dataset C("test.h5", "data"):
@@ -69,7 +69,6 @@ namespace juml {
     public:
         /**
          * GaussianNaiveBayes constructor
-         *
          * @param backend The execution backend (@see Backend)
          * @param comm The MPI communicator for the execution
          */
