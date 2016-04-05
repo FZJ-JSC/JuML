@@ -20,20 +20,32 @@
 
 #include "core/Backend.h"
 
-#define TEST_ALL_CPU(GROUP, NAME)   TEST(GROUP, NAME ## _CPU)   { test_multiple_af_backends_ ## GROUP ## _ ## NAME(juml::Backend::CPU); }
-#define TEST_ALL_CPU_F(GROUP, NAME) TEST_F(GROUP, NAME ## _CPU) { test_multiple_af_backends_ ## GROUP ## _ ## NAME(juml::Backend::CPU); }
+#define TEST_ALL_CPU(GROUP, NAME)   TEST(GROUP, NAME ## _CPU)   { \
+	af::setBackend(AF_BACKEND_CPU); \
+	test_multiple_af_backends_ ## GROUP ## _ ## NAME(juml::Backend::CPU); }
+#define TEST_ALL_CPU_F(GROUP, NAME) TEST_F(GROUP, NAME ## _CPU) { \
+	af::setBackend(AF_BACKEND_CPU); \
+	test_multiple_af_backends_ ## GROUP ## _ ## NAME(juml::Backend::CPU); }
 
 #ifdef JUML_CUDA
-#define TEST_ALL_CUDA(GROUP, NAME)   TEST(GROUP, NAME ## _CUDA)   { test_multiple_af_backends_ ## GROUP ## _ ## NAME(juml::Backend::CUDA); }
-#define TEST_ALL_CUDA_F(GROUP, NAME) TEST_F(GROUP, NAME ## _CUDA) { test_multiple_af_backends_ ## GROUP ## _ ## NAME(juml::Backend::CUDA); }
+#define TEST_ALL_CUDA(GROUP, NAME)   TEST(GROUP, NAME ## _CUDA)   { \
+	af::setBackend(AF_BACKEND_CUDA); \
+	test_multiple_af_backends_ ## GROUP ## _ ## NAME(juml::Backend::CUDA); }
+#define TEST_ALL_CUDA_F(GROUP, NAME) TEST_F(GROUP, NAME ## _CUDA) { \
+	af::setBackend(AF_BACKEND_CUDA); \
+	test_multiple_af_backends_ ## GROUP ## _ ## NAME(juml::Backend::CUDA); }
 #else
 #define TEST_ALL_CUDA(GROUP, NAME)
 #define TEST_ALL_CUDA_F(GROUP, NAME)
 #endif // JUML_CUDA
 
 #ifdef JUML_OPENCL
-#define TEST_ALL_OPENCL(GROUP, NAME)   TEST(GROUP, NAME ## _OPENCL)   { test_multiple_af_backends_ ## GROUP ## _ ## NAME(juml::Backend::OPENCL); }
-#define TEST_ALL_OPENCL_F(GROUP, NAME) TEST_F(GROUP, NAME ## _OPENCL) { test_multiple_af_backends_ ## GROUP ## _ ## NAME(juml::Backend::OPENCL); }
+#define TEST_ALL_OPENCL(GROUP, NAME)   TEST(GROUP, NAME ## _OPENCL)   { \
+	af::setBackend(AF_BACKEND_OPENCL); \
+	test_multiple_af_backends_ ## GROUP ## _ ## NAME(juml::Backend::OPENCL); }
+#define TEST_ALL_OPENCL_F(GROUP, NAME) TEST_F(GROUP, NAME ## _OPENCL) { \
+	af::setBackend(AF_BACKEND_OPENCL); \
+	test_multiple_af_backends_ ## GROUP ## _ ## NAME(juml::Backend::OPENCL); }
 #else
 #define TEST_ALL_OPENCL(GROUP, NAME)
 #define TEST_ALL_OPENCL_F(GROUP, NAME)
