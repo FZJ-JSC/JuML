@@ -96,6 +96,20 @@ namespace juml {
         virtual Dataset predict_probability(Dataset& X) const;
         virtual float accuracy(Dataset& X, Dataset& y) const;
 
+        /**
+         * Loads a trained GaussianNaiveBayes model from a file.
+         * @param filename The filename of the loaded file.
+         * TODO: Implement
+         */
+        virtual void load(const std::string& filename) {};
+
+        /**
+         * Saves a trained GaussianNaiveBayes model to a file.
+         * @param filename The filename of the saved file.
+         * TODO: Implement
+         */
+        virtual void save(const std::string& filename) const {};
+
         const af::array& class_counts() const;
         const af::array& prior() const;
         const af::array& stddev() const;

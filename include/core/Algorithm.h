@@ -63,13 +63,13 @@ namespace juml {
          * Abstract interface to load an algorithm from a hdf5 file.
          * @param filename The filename of the loaded file.
          */
-        void load(const std::string& filename) = 0;
+        virtual void load(const std::string& filename) = 0;
 
         /**
          * Abstract interface to save an algorithm to a hdf5 file.
          * @param filename The filename of the saved file.
          */
-        void save(const std::string& filename) = 0;
+        virtual void save(const std::string& filename) const = 0;
     }; // Algorithm
 }  // juml
 #endif // ALGORITHM_H
