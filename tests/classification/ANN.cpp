@@ -13,7 +13,6 @@ TEST_ALL(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	using juml::ann::FunctionLayer;
 	using juml::SequentialNeuralNet;
 	using juml::ann::Activation;
-	af::setBackend((af::Backend)BACKEND);
 	float X[] = {
 		0, 0, 1,
 		1, 1, 1,
@@ -40,7 +39,6 @@ TEST_ALL(ANN_TEST, TEST_IDENTITY) {
 	using juml::ann::FunctionLayer;
 	using juml::ann::Activation;
 	using juml::SequentialNeuralNet;
-	af::setBackend((af::Backend)BACKEND);
 	float X[] = {
 		1, 0, 0, 0, 0,
 		0, 1, 0, 0, 0,
@@ -68,7 +66,6 @@ TEST_ALL(ANN_TEST, TEST_XOR) {
 	using juml::ann::FunctionLayer;
 	using juml::SequentialNeuralNet;
 	using juml::ann::Activation;
-	af::setBackend((af::Backend)BACKEND);
 	af::info();
 
 	float X[] = {
@@ -167,7 +164,6 @@ static const std::string LABELS = "labels";
 
 TEST_ALL(ANN_TEST, IRIS_TEST) {
 	af::info();
-	af::setBackend((af::Backend)BACKEND);
 	using juml::ann::Layer;
 	juml::SequentialNeuralNet net(AF_BACKEND_CPU);
 	net.add(juml::ann::make_SigmoidLayer(4, 100));
