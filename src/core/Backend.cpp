@@ -22,6 +22,10 @@ namespace juml {
         af::setBackend(static_cast<af::Backend>(backend));
     }
 
+    int Backend::of(const af::array& data) {
+        return af::getBackendId(data);
+    }
+
     Backend::Backend(int backend) 
       : backend_(backend) { 
       af::setBackend(static_cast<af::Backend>(this->backend_));

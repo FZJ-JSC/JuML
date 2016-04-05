@@ -95,3 +95,6 @@ target/
 
 # Idea IDEs
 *.idea
+
+# Docker
+Dockerfile
