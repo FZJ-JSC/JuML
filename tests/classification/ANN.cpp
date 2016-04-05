@@ -141,7 +141,7 @@ static const std::string LABELS = "labels";
 TEST_ALL(ANN_TEST, IRIS_TEST) {
 	af::info();
 	using juml::ann::Layer;
-	juml::SequentialNeuralNet net(AF_BACKEND_CPU);
+	juml::SequentialNeuralNet net(BACKEND);
 	net.add(juml::ann::make_SigmoidLayer(4, 100));
 	net.add(juml::ann::make_SigmoidLayer(100, 3));
 	juml::Dataset X(FILE_PATH, SAMPLES);
