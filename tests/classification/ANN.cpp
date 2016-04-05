@@ -133,6 +133,40 @@ TEST(ANN_TEST, TEST_XOR) {
 
 }
 
+TEST(ANN_TEST, SAVE_LOAD_TEST) {
+	const char *filename = "save_load_test_file.h5";
+	using juml::SequentialNeuralNet;
+	using juml::ann::make_SigmoidLayer;
+
+	for (int backend = 1; backend <= 4; backend *= 2) {
+		if ((backend & af::getAvailableBackends()) == 0) {
+			std::cout << "Skipping backend " << backend << " because not present" << std::endl;
+			continue;
+		} else {
+			std::cout << "Trying backend " << backend << std::endl;
+		}
+		SequentialNeuralNet net(backend);
+		net.add(make_SigmoidLayer(5, 5));
+		net.add(make_SigmoidLayer(5, 5));
+		net.save(filename, true);
+
+		SequentialNeuralNet net2(backend);
+		net2.load(filename);
+		auto it1 = net.layers_begin();
+		auto it2 = net2.layers_begin();
+		for (;it1 != net.layers_end() && it2 != net2.layers_end(); it1++, it2++) {
+			ASSERT_TRUE(af::allTrue<bool>((*it1)->getWeights() == (*it2)->getWeights())) << "Failed for " << backend;
+			ASSERT_TRUE(af::allTrue<bool>((*it1)->getBias() == (*it2)->getBias())) << "Failed for " << backend;
+			//TODO: Compare Type
+		}
+		if (it1 != net.layers_end() || it2 != net2.layers_end()) {
+			FAIL() << "ANN loaded from file does not have the same number of layers as ANN in memory";
+		}
+		SUCCEED();
+	}
+
+}
+
 
 static const std::string FILE_PATH = "../../../datasets/iris_ann.h5";
 static const std::string SAMPLES = "samples";
