@@ -93,5 +93,8 @@ target/
 # Idea IDEs
 *.idea
 
+# Qt Creator
+*.user
+
 # Docker
 Dockerfile
