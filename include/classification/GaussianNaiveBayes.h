@@ -79,14 +79,14 @@ namespace juml {
          * @param X The training dataset (@see Dataset)
          * @param y The label dataset to train on
          */
-        virtual void fit(Dataset& X, Dataset& y);
+        virtual void fit(Dataset& X, Dataset& y) override;
 
         /**
          * Classifies the passed test data based on the previously @see fit model.
          * @param X The test dataset (@see Dataset)
          * @returns The predicted labels as dataset
          */
-        virtual Dataset predict(Dataset& X) const;
+        virtual Dataset predict(Dataset& X) const override;
 
         /**
          * Predicts the probability estimates of the passed test data based on the previously @see fit model.
