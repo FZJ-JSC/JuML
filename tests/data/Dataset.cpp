@@ -1,6 +1,6 @@
 #include <arrayfire.h>
+#include <cstdio>
 #include <exception>
-#include <ios>
 #include <iostream>
 #include <gtest/gtest.h>
 #include <mpi.h>
@@ -15,6 +15,12 @@ const std::string TWO_D_FLOAT = "2D_FLOAT";
 const std::string ONE_D_INT   = "1D_INT";
 const std::string TWO_D_INT   = "2D_INT";
 
+const std::string FILE_PATH_ROWNUMBER = JUML_DATASETS"/rownumInColumns5x3.h5";
+const std::string ROWNUMBER_SETNAME = "testset";
+
+const std::string DUMP_FILE = "dumpTest.h5";
+const std::string DUMP_DATASET = "DUMPED";
+
 class DATASET_TEST : public testing::Test
 {
 public:
@@ -26,9 +32,6 @@ public:
         MPI_Comm_size(MPI_COMM_WORLD, &this->size_);
     }
 };
-
-const std::string FILE_PATH_ROWNUMBER = JUML_DATASETS"/rownumInColumns5x3.h5";
-const std::string ROWNUMBER_SETNAME = "testset";
 
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_SINGLE_PROCESS) {
     if (rank_ != 0) return;
@@ -79,7 +82,7 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_CPU_TEST) {
 
     data_2D.load_equal_chunks();
     for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
-	ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == this->rank_));
+	    ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == this->rank_));
     }
 }
 
@@ -103,7 +106,6 @@ TEST_F(DATASET_TEST, CREATE_FROM_ARRAY) {
     set.load_equal_chunks();
 }
 
-
 TEST_F(DATASET_TEST, NORMALIZE_0_TO_1_DEP_ALL) {
     juml::Backend::set(juml::Backend::CPU);
     juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
@@ -113,6 +115,7 @@ TEST_F(DATASET_TEST, NORMALIZE_0_TO_1_DEP_ALL) {
         for (size_t col = 0; col < data_2D.data().dims(1); ++col)
             ASSERT_FLOAT_EQ((float)this->rank_/3.0, data_2D.data()(row,col).scalar<float>());
 }
+
 TEST_F(DATASET_TEST, NORMALIZE_1_TO_1_DEP_ALL) {
     juml::Backend::set(juml::Backend::CPU);
     juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
@@ -132,6 +135,7 @@ TEST_F(DATASET_TEST, NORMALIZE_0_TO_1_INDEP_ALL) {
         for (size_t col = 0; col < data_2D.data().dims(1); ++col)
             ASSERT_FLOAT_EQ((float)this->rank_/3.0, data_2D.data()(row,col).scalar<float>());
 }
+
 TEST_F(DATASET_TEST, NORMALIZE_MINUS20_TO_10_INDEP_ALL) {
     juml::Backend::set(juml::Backend::CPU);
     juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
@@ -141,11 +145,12 @@ TEST_F(DATASET_TEST, NORMALIZE_MINUS20_TO_10_INDEP_ALL) {
         for (size_t col = 0; col < data_2D.data().dims(1); ++col)
             ASSERT_FLOAT_EQ(10.0*(float)this->rank_ - 20.0, data_2D.data()(row,col).scalar<float>());
 }
+
 TEST_F(DATASET_TEST, NORMALIZE_MINUS20_TO_10_INDEP_1_2) {
     juml::Backend::set(juml::Backend::CPU);
     juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
     data_2D.load_equal_chunks();
-    data_2D.normalize(-20, 10, true, af::range(af::dim4(2)));
+    data_2D.normalize(-20, 10, true, af::range(2));
     for (size_t row = 0; row < data_2D.data().dims(0); ++row) {
         for (size_t col = 0; col < data_2D.data().dims(1); ++col) {
             if (row == 2)
@@ -154,6 +159,88 @@ TEST_F(DATASET_TEST, NORMALIZE_MINUS20_TO_10_INDEP_1_2) {
                 ASSERT_FLOAT_EQ(10.0 * (float) this->rank_ - 20.0, data_2D.data()(row, col).scalar<float>());
         }
     }
+}
+
+TEST_F(DATASET_TEST, DUMP_EQUAL_CHUNKS_CPU_TEST) {
+    juml::Backend::set(juml::Backend::CPU);
+    af::array data = af::constant(rank_, 2, 10, 4, s32);
+    juml::Dataset dataset(data, MPI_COMM_WORLD);
+    dataset.dump_equal_chunks(DUMP_FILE, DUMP_DATASET);
+
+    juml::Dataset loaded(DUMP_FILE, DUMP_DATASET);
+    loaded.load_equal_chunks();
+    if (rank_ == 0) {
+        std::remove(DUMP_FILE.c_str());
+    }
+
+    ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data));
+}
+
+#ifdef JUML_CUDA
+TEST_F(DATASET_TEST, DUMP_EQUAL_CHUNKS_CUDA_TEST) {
+    juml::Backend::set(juml::Backend::CUDA);
+    af::array data = af::constant(rank_, 2, 10, 4, s32);
+    juml::Dataset dataset(data, MPI_COMM_WORLD);
+    dataset.dump_equal_chunks(DUMP_FILE, DUMP_DATASET);
+
+    juml::Dataset loaded(DUMP_FILE, DUMP_DATASET);
+    loaded.load_equal_chunks();
+    if (rank_ == 0) {
+        std::remove(DUMP_FILE.c_str());
+    }
+
+    ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data));
+}
+#endif // JUML_CUDA
+
+#ifdef JUML_OPENCL
+TEST_F(DATASET_TEST, DUMP_EQUAL_CHUNKS_OPENCL_TEST) {
+    juml::Backend::set(juml::Backend::OPENCL);
+    af::array data = af::constant(rank_, 2, 10, 4, s32);
+    juml::Dataset dataset(data, MPI_COMM_WORLD);
+    dataset.dump_equal_chunks(DUMP_FILE, DUMP_DATASET);
+
+    juml::Dataset loaded(DUMP_FILE, DUMP_DATASET);
+    loaded.load_equal_chunks();
+    if (rank_ == 0) {
+        std::remove(DUMP_FILE.c_str());
+    }
+
+    ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data));
+}
+#endif // JUML_OPENCL
+
+TEST_F(DATASET_TEST, NORMALIZE_STD_1_DEP_ALL) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    data_2D.normalize_stddev(1.0);
+    af::array std = data_2D.stddev();
+    for (size_t row = 0; row < std.dims(0); ++row)
+        ASSERT_FLOAT_EQ(1.0, std(row).scalar<float>());
+}
+
+TEST_F(DATASET_TEST, NORMALIZE_STD_2_INDEP_ALL) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    data_2D.normalize_stddev(2.0, true);
+    af::array std = data_2D.stddev();
+    for (size_t row = 0; row < std.dims(0); ++row)
+        ASSERT_FLOAT_EQ(2.0, std(row).scalar<float>());
+}
+
+TEST_F(DATASET_TEST, NORMALIZE_STD_3_INDEP_1_2) {
+    juml::Backend::set(juml::Backend::CPU);
+    juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
+    data_2D.load_equal_chunks();
+    data_2D.normalize_stddev(3.0, true, af::range(2));
+    af::array std = data_2D.stddev();
+    for (size_t row = 0; row < std.dims(0); ++row)
+        if(row != 2)
+            ASSERT_FLOAT_EQ(3.0, std(row).scalar<float>());
+        else
+            ASSERT_FLOAT_EQ(1.0671874, std(row).scalar<float>());
 }
 
 TEST_F(DATASET_TEST, MEAN_ALL) {
@@ -177,7 +264,7 @@ TEST_F(DATASET_TEST, STDEV) {
     juml::Backend::set(juml::Backend::CPU);
     juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
     data_2D.load_equal_chunks();
-    af::array stdev = data_2D.stdev();
+    af::array stdev = data_2D.stddev();
     for (size_t col=0; col < stdev.dims(0); col++)
         ASSERT_FLOAT_EQ(stdev(col).scalar<float>(), 1.0671873);
 }
@@ -186,10 +273,9 @@ TEST_F(DATASET_TEST, STDEV_ALL) {
     juml::Backend::set(juml::Backend::CPU);
     juml::Dataset data_2D(FILE_PATH, TWO_D_FLOAT);
     data_2D.load_equal_chunks();
-    af::array stdev = data_2D.stdev(true);
+    af::array stdev = data_2D.stddev(true);
     ASSERT_FLOAT_EQ(stdev.scalar<float>(), 1.0671873);
 }
-
 
 #ifdef JUML_OPENCL
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_OPENCL_TEST) {
@@ -236,8 +322,7 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_OPENCL_TEST) {
         ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == this->rank_));
     }
 }
-#endif
-// OPENCL
+#endif // OPENCL
 
 #ifdef JUML_CUDA
 TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT_CUDA_TEST) {
@@ -283,8 +368,7 @@ TEST_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_2D_INT_CUDA_TEST) {
         ASSERT_TRUE(af::allTrue<bool>(data_2D.data().col(col) == this->rank_));
     }
 }
-#endif
-// CUDA
+#endif // CUDA
 
 int main(int argc, char** argv) {
     int result = -1;
