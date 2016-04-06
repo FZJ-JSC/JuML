@@ -1,2 +1,3 @@
 ADD_SUBDIRECTORY(ann)
 ADD_SUBDIRECTORY(ann-mnist)
+ADD_SUBDIRECTORY(ann-indian)
