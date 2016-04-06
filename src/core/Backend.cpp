@@ -4,11 +4,11 @@
  *
  * This software may be modified and distributed under the terms of BSD-style license.
  *
- * File name: Definitions.cpp
+ * File name: Backend.cpp
  *
- * Description: TODO
+ * Description: Implementation of the Backend class
  *
- * Maintainer: m.glock
+ * Maintainer: m.goetz
  *
  * Email: murxman@gmail.com
  */
@@ -27,7 +27,7 @@ namespace juml {
     }
 
     Backend::Backend(int backend) 
-      : backend_(backend) { 
+      : backend_(backend) {
       af::setBackend(static_cast<af::Backend>(this->backend_));
     }
         
