@@ -24,4 +24,3 @@ namespace juml {
         this->class_normalizer_.index(y);
     };
 } // namespace juml
-

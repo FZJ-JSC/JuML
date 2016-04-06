@@ -5,7 +5,6 @@
 #include <numpy/arrayobject.h>
 #include <numpy/ndarraytypes.h>
 
-
 af::array* toAF(PyArrayObject* np_array, bool copy=true)
 {  
     int ndims = PyArray_NDIM(np_array);

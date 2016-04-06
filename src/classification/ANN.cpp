@@ -183,6 +183,7 @@ float SequentialNeuralNet::accuracy(Dataset& X, Dataset& y) const {
 }
 
 void write_2d_array_into_hdf5(hid_t id, const char *name, const af::array& array) {
+	//Only 2d, only float!
 	hsize_t dims[2] = {
 		static_cast<hsize_t>(array.dims(1)),
 		static_cast<hsize_t>(array.dims(0))
@@ -203,6 +204,7 @@ void write_2d_array_into_hdf5(hid_t id, const char *name, const af::array& array
 		dataptr = array.device<float>();
 	} else {
 		dataptr = new float[array.elements()];
+		array.host(dataptr);
 	}
 	H5Dwrite(dataset_id, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, dataptr);
 	if (devicePtr) {

@@ -5,14 +5,14 @@
 #include <arrayfire.h>
 #include "data/Dataset.h"
 #include "classification/ANN.h"
+#include "core/Test.h"
 
-TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
+TEST_ALL(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	using juml::Dataset;
 	using juml::ann::Layer;
 	using juml::ann::FunctionLayer;
 	using juml::SequentialNeuralNet;
 	using juml::ann::Activation;
-	juml::Backend b = AF_BACKEND_CPU;
 	float X[] = {
 		0, 0, 1,
 		1, 1, 1,
@@ -24,7 +24,7 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	af::array yarray = af::array(1, 4, y);
 	Dataset Xset(Xarray);
 	Dataset yset(yarray);
-	SequentialNeuralNet net(AF_BACKEND_CPU);
+	SequentialNeuralNet net(BACKEND);
 	net.add(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(3, 4)));
 	net.add(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(4, 1)));
 	net.fit(Xset, yset);
@@ -33,7 +33,7 @@ TEST(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	af::print("result", result.data());
 }
 
-TEST(ANN_TEST, TEST_IDENTITY) {
+TEST_ALL(ANN_TEST, TEST_IDENTITY) {
 	using juml::Dataset;
 	using juml::ann::Layer;
 	using juml::ann::FunctionLayer;
@@ -49,7 +49,7 @@ TEST(ANN_TEST, TEST_IDENTITY) {
 	af::array Xarray = af::array(5, 5, X);
 	Dataset Xset(Xarray);
 
-	SequentialNeuralNet net(AF_BACKEND_CPU);
+	SequentialNeuralNet net(BACKEND);
 	net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(5, 5));
 	net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(5, 5));
 
@@ -60,13 +60,12 @@ TEST(ANN_TEST, TEST_IDENTITY) {
 
 }
 
-TEST(ANN_TEST, TEST_XOR) {
+TEST_ALL(ANN_TEST, TEST_XOR) {
 	using juml::Dataset;
 	using juml::ann::Layer;
 	using juml::ann::FunctionLayer;
 	using juml::SequentialNeuralNet;
 	using juml::ann::Activation;
-	af::setBackend(AF_BACKEND_CPU);
 	af::info();
 
 	float X[] = {
@@ -89,7 +88,7 @@ TEST(ANN_TEST, TEST_XOR) {
 	float bias2[] = {0.08};
 
 
-	SequentialNeuralNet net(AF_BACKEND_CPU);
+	SequentialNeuralNet net(BACKEND);
 	net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(
 			af::array(2,2, weights1), af::array(2, bias1)));
 	net.add(std::make_shared<FunctionLayer<Activation::Linear>>(
@@ -113,7 +112,7 @@ TEST(ANN_TEST, TEST_XOR) {
 
 	net.save("xor_trained_net.h5", true);
 
-	SequentialNeuralNet net2(AF_BACKEND_CPU);
+	SequentialNeuralNet net2(BACKEND);
 	net2.load("xor_trained_net.h5");
 	for(auto it = net2.layers_begin(); it != net2.layers_end(); it++) {
 		af::print("loaded weights", (*it)->getWeights());
@@ -133,17 +132,40 @@ TEST(ANN_TEST, TEST_XOR) {
 
 }
 
+TEST_ALL(ANN_TEST, SAVE_LOAD_TEST) {
+	const char *filename = "save_load_test_file.h5";
+	using juml::SequentialNeuralNet;
+	using juml::ann::make_SigmoidLayer;
+
+	SequentialNeuralNet net(BACKEND);
+	net.add(make_SigmoidLayer(5, 5));
+	net.add(make_SigmoidLayer(5, 5));
+	net.save(filename, true);
+
+	SequentialNeuralNet net2(BACKEND);
+	net2.load(filename);
+	auto it1 = net.layers_begin();
+	auto it2 = net2.layers_begin();
+	for (;it1 != net.layers_end() && it2 != net2.layers_end(); it1++, it2++) {
+		ASSERT_TRUE(af::allTrue<bool>((*it1)->getWeights() == (*it2)->getWeights())) << "Failed for " << BACKEND;
+		ASSERT_TRUE(af::allTrue<bool>((*it1)->getBias() == (*it2)->getBias())) << "Failed for " << BACKEND;
+		//TODO: Compare Type
+	}
+	if (it1 != net.layers_end() || it2 != net2.layers_end()) {
+		FAIL() << "ANN loaded from file does not have the same number of layers as ANN in memory";
+	}
+}
+
 
 static const std::string FILE_PATH = "../../../datasets/iris_ann.h5";
 static const std::string SAMPLES = "samples";
 static const std::string LABELS = "labels";
 
 
-TEST(ANN_TEST, IRIS_TEST) {
+TEST_ALL(ANN_TEST, IRIS_TEST) {
 	af::info();
-	af::setBackend(AF_BACKEND_CPU);
 	using juml::ann::Layer;
-	juml::SequentialNeuralNet net(AF_BACKEND_CPU);
+	juml::SequentialNeuralNet net(BACKEND);
 	net.add(juml::ann::make_SigmoidLayer(4, 100));
 	net.add(juml::ann::make_SigmoidLayer(100, 3));
 	juml::Dataset X(FILE_PATH, SAMPLES);
@@ -152,11 +174,11 @@ TEST(ANN_TEST, IRIS_TEST) {
 	net.fit(X, y);
 }
 
-TEST(ANN_TEST, INCOMPATIBLE_LAYERS) {
+TEST_ALL(ANN_TEST, INCOMPATIBLE_LAYERS) {
 	using juml::ann::Layer;
 	using juml::ann::FunctionLayer;
 	using juml::ann::Activation;
-	juml::SequentialNeuralNet net(0);
+	juml::SequentialNeuralNet net(BACKEND);
 	try {
 		net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(4, 5));
 		net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(3, 2));

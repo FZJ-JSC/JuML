@@ -26,4 +26,3 @@ namespace juml {
 } // juml
 
 #endif // DISTANCES_H
-

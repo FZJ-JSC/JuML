@@ -24,18 +24,75 @@
 #include "data/Dataset.h"
 
 namespace juml {
+    /**
+     * Gaussian Naive Bayes (or GNB)
+     *
+     * Simple probabilistic classifier based on Bayes' theorem that assumes independence of the feature variables. In
+     * this model the likelihood of the features is assumed to be normal/gaussian distributed.
+     *
+     * Example:
+     *
+     * using namespace juml;
+     *
+     * Dataset X("train.h5", "data");
+     * Dataset y("train.h5", "labels");
+     * Dataset C("test.h5", "data"):
+     *
+     * GaussianNaiveBayes gnb();
+     * gnb.fit(X, y);
+     * Dataset predictions = gnb.predict(c);
+     */
     class GaussianNaiveBayes : public BaseClassifier {
     protected:
+        /**
+         * @var   class_counts_
+         * @brief A 1 x n arrayfire row-vector. Each column contains the global occurrence of the normalized class.
+         */
         af::array class_counts_;
+        /**
+         * @var   prior_
+         * @brief A 1 x n arrayfire row-vector. Each column represents the relative global occurrence of the respective
+         *        normalized class.
+         */
         af::array prior_;
+        /**
+         * @var   stddev_
+         * @brief A f x n arrayfire matrix. Each column represents the standard deviation of each feature of this class.
+         */
         af::array stddev_;
+        /**
+         * @var   theta_
+         * @brief A f x n arrayfire matrix. Each column represents the mean of the feature of each feature of this class.
+         */
         af::array theta_;
 
     public:
+        /**
+         * GaussianNaiveBayes constructor
+         * @param backend The execution backend (@see Backend)
+         * @param comm The MPI communicator for the execution
+         */
         GaussianNaiveBayes(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
-    
-        virtual void fit(Dataset& X, Dataset& y);
+
+        /**
+         * Fits GNB classifier based on the passed training data and labels
+         * @param X The training dataset (@see Dataset)
+         * @param y The label dataset to train on
+         */
+        virtual void fit(Dataset& X, Dataset& y) override;
+
+        /**
+         * Classifies the passed test data based on the previously @see fit model.
+         * @param X The test dataset (@see Dataset)
+         * @returns The predicted labels as dataset
+         */
         virtual Dataset predict(Dataset& X) const override;
+
+        /**
+         * Predicts the probability estimates of the passed test data based on the previously @see fit model.
+         * @param X The test dataset (@see Dataset)
+         * @return The predicted probabilities for each class (f x n) as dataset
+         */
         virtual Dataset predict_probability(Dataset& X) const;
         virtual float accuracy(Dataset& X, Dataset& y) const override;
 
