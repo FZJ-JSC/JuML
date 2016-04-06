@@ -4,7 +4,6 @@
 #include <mpi.h>
 #include <string>
 
-#include "core/Backend.h"
 #include "core/Test.h"
 #include "data/Dataset.h"
 #include "preprocessing/ClassNormalizer.h"
@@ -13,7 +12,6 @@ static const std::string FILE_PATH = JUML_DATASETS"/random_class_labels.h5";
 static const std::string DATA_SET = "labels";
 
 TEST_ALL(CLASS_NORMALIZER_TEST, MAPPING_TEST) {
-    juml::Backend::set(BACKEND);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
     juml::ClassNormalizer class_normalizer;
@@ -36,10 +34,8 @@ TEST_ALL(CLASS_NORMALIZER_TEST, MAPPING_TEST) {
 }
 
 TEST_ALL(CLASS_NORMALIZER_TEST, MAPPING_EXCEPTION) {
-    juml::Backend::set(BACKEND);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
-
     juml::ClassNormalizer class_normalizer;
 
     // test non row-vector inputs
@@ -58,7 +54,6 @@ TEST_ALL(CLASS_NORMALIZER_TEST, MAPPING_EXCEPTION) {
 }
 
 TEST_ALL(CLASS_NORMALIZER_TEST, VECTOR_MAPPING) {
-    juml::Backend::set(BACKEND);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
     juml::ClassNormalizer class_normalizer;
@@ -69,7 +64,6 @@ TEST_ALL(CLASS_NORMALIZER_TEST, VECTOR_MAPPING) {
 }
 
 TEST_ALL(CLASS_NORMALIZER_TEST, VECTOR_MAPPING_EXCEPTION) {
-    juml::Backend::set(BACKEND);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
 
