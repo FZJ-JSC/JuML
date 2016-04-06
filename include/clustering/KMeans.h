@@ -70,8 +70,8 @@ namespace juml {
                int        backend=Backend::CPU,
                MPI_Comm   comm=MPI_COMM_WORLD);
 
-        virtual void fit(Dataset& X);
-        virtual Dataset predict(Dataset& X) const;
+        virtual void fit(Dataset& X) override;
+        virtual Dataset predict(Dataset& X) const override;
 
         const af::array& centroids() const;
         const uintl k() const;
