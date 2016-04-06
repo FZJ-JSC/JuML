@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
 	const int dataset_stepsize = 11;
 	af::array data_array = data.data();
-	data_array = af::moddims(data_array, 28*28, data_array.dims(2));
+	data_array = af::moddims(data_array, 28*28, data_array.dims(1));
 	data_array = data_array / 255.0;
 	af::array full_data = data_array;
 
