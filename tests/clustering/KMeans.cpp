@@ -35,7 +35,7 @@ TEST_ALL(KMEANS_TEST, IRIS_EUCLIDEAN) {
 
     for (int row = 0; row < 3; ++row) {
         for (int col = 0; col < 4; ++col) {
-            ASSERT_FLOAT_EQ(centroids(col, row).scalar<float>(), EUCLIDEAN_CENTROIDS[row][col]);
+            ASSERT_NEAR(centroids(col, row).scalar<float>(), EUCLIDEAN_CENTROIDS[row][col],0.0001);
         }
     }
 }
