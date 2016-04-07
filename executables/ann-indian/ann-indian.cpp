@@ -34,9 +34,10 @@ int main(int argc, char *argv[]) {
 	double time_init_af = MPI_Wtime();
 
 	juml::SequentialNeuralNet net(backend);
-	if (argc == 3) {
+
+	{
 		struct stat buffer;
-		if (stat(argv[2], &buffer) == 0) {
+		if (argc == 3 && stat(argv[2], &buffer) == 0) {
 			//File exists
 			net.load(argv[2]);
 		} else {
