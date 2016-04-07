@@ -6,7 +6,6 @@
 #include <string>
 
 #include "data/Dataset.h"
-#include "core/Backend.h"
 #include "core/Test.h"
 #include "classification/GaussianNaiveBayes.h"
 

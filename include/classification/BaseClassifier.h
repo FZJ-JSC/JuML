@@ -24,14 +24,53 @@
 
 namespace juml {
     class BaseClassifier : public Algorithm {
-    protected:        
+    protected:
+        /**
+         * @var   class_normalizer_
+         * @brief A @see ClassNormalizer instance, normalizes class labels on calling fit
+         */
         ClassNormalizer class_normalizer_;
 
     public:
+        /**
+         * BaseClassifier constructor
+         *
+         * Stores the processing backend and the MPI communicator for the classification process
+         *
+         * @param backend - The backend, defaults to CPU
+         * @param comm - The MPI communicator
+         */
         BaseClassifier(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
 
+        /**
+         * (Abstract) fit
+         *
+         * Trains the classifier
+         *
+         * @param X - The training data
+         * @param y - The training labels
+         */
         virtual void fit(Dataset& X, Dataset& y);
+
+        /**
+         * (Abstract) predict
+         *
+         * Classifies a dataset according to the previously trained model.
+         *
+         * @param X - The test data to classify
+         * @returns The predicted labels
+         */
         virtual Dataset predict(Dataset& X) const = 0;
+
+        /**
+         * (Abstract) accuracy
+         *
+         * Fits the classification models and returns the prediction accuracy.
+         *
+         * @param X - The training data
+         * @param y - The training labels
+         * @returns The training prediction accuracy between 0 and 1.
+         */
         virtual float accuracy(Dataset& X, Dataset& y) const = 0;
     };
 } // namespace juml
