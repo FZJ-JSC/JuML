@@ -29,7 +29,7 @@ namespace juml {
          * Stores the clustering processing backend and MPI communicator.
          *
          * @param backend - The processing backend, defaults to CPU
-         * @oaram comm - The MPI communicator
+         * @param comm - The MPI communicator
          */
         BaseClusterer(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
 

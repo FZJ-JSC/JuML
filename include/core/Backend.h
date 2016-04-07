@@ -45,7 +45,7 @@ namespace juml {
          *
          * Allows to set the current processing backend, on of Backend::CPU, Backend::CUDA or Backend::OPENCL.
          *
-         * @param The processing backend
+         * @param backend - The processing backend
          */
         static void set(int backend);
 
@@ -54,7 +54,7 @@ namespace juml {
          *
          * Inquires the storage backend of an arrayfire array.
          *
-         * @param   The data array
+         * @param data - The data array
          * @returns The processing backend
          */
         static int of(const af::array& data);
@@ -65,7 +65,7 @@ namespace juml {
          * Constructs a new backend object that automatically sets current processing backend. Is used in algorithms to
          * intercept any subsequent arrayfire array constructions so that they will be created on the proper backend.
          *
-         * @param The processing backend.
+         * @param backend - The processing backend.
          */
         Backend(int backend);
 

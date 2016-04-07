@@ -32,6 +32,8 @@ namespace juml {
      *
      * Example:
      *
+     * @code
+     * #include <JuML.h>
      * using namespace juml;
      *
      * Dataset X("train.h5", "data");
@@ -41,6 +43,7 @@ namespace juml {
      * GaussianNaiveBayes gnb();
      * gnb.fit(X, y);
      * Dataset predictions = gnb.predict(c);
+     * @endcode
      */
     class GaussianNaiveBayes : public BaseClassifier {
     protected:

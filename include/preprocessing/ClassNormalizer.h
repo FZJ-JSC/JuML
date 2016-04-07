@@ -58,7 +58,7 @@ namespace juml {
         /**
          * ClassNormalizer constructor
          *
-         * @params comm The MPI communicator for the execution
+         * @param comm - The MPI communicator for the execution
          */
         ClassNormalizer(MPI_Comm comm=MPI_COMM_WORLD);
 
@@ -67,14 +67,14 @@ namespace juml {
         /**
          * index
          * Indexes and normalizes the class labels contained in the passed dataset to the range [0, #classes)
-         * @param y The class labels to normalize
+         * @param y - The class labels to normalize
          */
         void index(const Dataset& y);
 
         /**
          * invert
          * Denormalizes or transforms a single, integral label back to its original value in the dataset
-         * @param transformed_label The label to denormalize
+         * @param transformed_label - The label to denormalize
          * @returns The original label in the dataset
          * @throws invalid_argument If input cannot be inverted
          */
@@ -92,7 +92,7 @@ namespace juml {
         /**
          * invert
          * Vectorized version of denormalization
-         * @param transformed_labels A 1xn row-vector to be denormalized
+         * @param transformed_labels - A 1xn row-vector to be denormalized
          * @returns A 1xn row-vector containing te denormalized labels
          * @throws invalid_argument If input cannot be inverted or input is not a row-vector
          */
@@ -107,7 +107,7 @@ namespace juml {
         /**
          * transform
          * Normalizes a single, integral class-label
-         * @param class_label The label to be transformed
+         * @param class_label - The label to be transformed
          * @returns The transformed label
          * @throws invalid_arguments If label cannot be transformed
          */
@@ -126,7 +126,7 @@ namespace juml {
         /**
          * transform
          * Vectorized label transformation
-         * @param A 1xn row-vector containing the labels to be normalized
+         * @param original_labels - A 1xn row-vector containing the labels to be normalized
          * @returns A 1xn row-vector containing the normalized labels
          * @throws invalid_argument If labels cannot be transformed or input is not a row-vector
          */

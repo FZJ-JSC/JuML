@@ -33,14 +33,14 @@ Optional:
 
 JuML is built using [CMake](https://cmake.org/). To build it, run the following in JuML's main directory:
 
-    `mkdir build && cd build && cmake .. && make`
+    mkdir build && cd build && cmake .. && make
 
 ## Documentation
 
 The code is documented in the source headers in [Doxygen](http://www.stack.nl/~dimitri/doxygen/) format. A browsable
 HTML version can be generated with doxygen:
 
-    `make doc`
+    make doc
 
 Please refer to the index.html in the build/doc directory. Further information can be obtained
 [here](http://www.stack.nl/~dimitri/doxygen/manual/starting.html).
@@ -49,11 +49,11 @@ Please refer to the index.html in the build/doc directory. Further information c
 
 Testing requires that JuML is built (see above). Once the library is built, the test suite can be executed:
 
-    `make vtest`
+    make vtest
 
 Individual tests for modules can be run using:
 
-    `ctest -R <TEST_NAME>`
+    ctest -R <TEST_NAME>
 
 For more in-depth information about CMake's testing capabilities, refer to [CMake Testing](https://cmake.org/Wiki/CMake/Testing_With_CTest#Running_Individual_Tests).
 
