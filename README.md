@@ -26,6 +26,7 @@ Optional:
 * doxygen
 * python
 * numpy
+* mpi4py
 * swig
 
 ## Building JuML
@@ -39,9 +40,10 @@ JuML is built using [CMake](https://cmake.org/). To build it, run the following 
 The code is documented in the source headers in [Doxygen](http://www.stack.nl/~dimitri/doxygen/) format. A browsable
 HTML version can be generated with doxygen:
 
-    `doxygen <CONFIG_FILE>`
+    `make doc`
 
-Further information can be obtained [here](http://www.stack.nl/~dimitri/doxygen/manual/starting.html).
+Please refer to the index.html in the build/doc directory. Further information can be obtained
+[here](http://www.stack.nl/~dimitri/doxygen/manual/starting.html).
 
 ## Test suite
 

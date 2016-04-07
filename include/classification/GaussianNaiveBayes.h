@@ -69,28 +69,28 @@ namespace juml {
     public:
         /**
          * GaussianNaiveBayes constructor
-         * @param backend The execution backend (@see Backend)
+         * @param backend The execution backend
          * @param comm The MPI communicator for the execution
          */
         GaussianNaiveBayes(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
 
         /**
          * Fits GNB classifier based on the passed training data and labels
-         * @param X The training dataset (@see Dataset)
+         * @param X The training dataset
          * @param y The label dataset to train on
          */
         virtual void fit(Dataset& X, Dataset& y) override;
 
         /**
-         * Classifies the passed test data based on the previously @see fit model.
-         * @param X The test dataset (@see Dataset)
+         * Classifies the passed test data based on the previously fit model.
+         * @param X The test dataset
          * @returns The predicted labels as dataset
          */
         virtual Dataset predict(Dataset& X) const override;
 
         /**
-         * Predicts the probability estimates of the passed test data based on the previously @see fit model.
-         * @param X The test dataset (@see Dataset)
+         * Predicts the probability estimates of the passed test data based on the previously fit model.
+         * @param X The test dataset
          * @return The predicted probabilities for each class (f x n) as dataset
          */
         virtual Dataset predict_probability(Dataset& X) const;

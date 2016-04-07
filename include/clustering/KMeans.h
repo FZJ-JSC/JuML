@@ -73,17 +73,17 @@ namespace juml {
         uintl     max_iter_;
         /**
          * @var   initialization_
-         * @brief The selected centroid initialization method @see Method
+         * @brief The selected centroid initialization method Method
          */
         Method    initialization_;
         /**
          * @var   distance_
-         * @brief The selected distance function (e.g. @see euclidean)
+         * @brief The selected distance function (e.g. euclidean)
          */
         Distance  distance_;
         /**
          * @var   seed_
-         * @brief The random seed for centroid selection, only applicable for @see Method::RANDOM
+         * @brief The random seed for centroid selection, only applicable for Method::RANDOM
          */
         uintl     seed_;
         /**
@@ -97,7 +97,7 @@ namespace juml {
          *
          * Initializes the centroids randomly in a distributed environment
          *
-         * @param data - The training dataset passed to @see fit
+         * @param data - The training dataset passed to fit
          */
         void initialize_random_centroids(const Dataset& data);
 

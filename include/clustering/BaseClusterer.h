@@ -45,7 +45,7 @@ namespace juml {
         /**
          * (Abstract) predict
          *
-         * Predicts to which clusters new, unseen data items belong to, requires that the model was previously @see fit.
+         * Predicts to which clusters new, unseen data items belong to, requires that the model was previously fit.
          *
          * @returns The predicted cluster assignment
          */

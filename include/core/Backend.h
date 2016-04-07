@@ -43,7 +43,7 @@ namespace juml {
         /**
          * set
          *
-         * Allows to set the current processing backend, on of @see CPU, @see CUDA or @see OPENCL.
+         * Allows to set the current processing backend, on of Backend::CPU, Backend::CUDA or Backend::OPENCL.
          *
          * @param The processing backend
          */
