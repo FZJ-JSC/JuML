@@ -24,9 +24,9 @@ namespace juml {
      *
      * Calculates the gaussian (normal) probability function
      *
-     * @param   X the locations for which to calculate the probability values
-     * @param   The mean values of the gaussian curves
-     * @param   The standard deviations of the gaussian curves
+     * @param X      - The locations for which to calculate the probability values
+     * @param mean   - The mean values of the gaussian curves
+     * @param stddev - The standard deviations of the gaussian curves
      * @returns The probability values
      */
     template <typename T>

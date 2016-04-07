@@ -35,6 +35,7 @@ namespace juml {
      *
      * Example:
      *
+     * @code
      * #include <JuML.h>
      *
      * using namespace juml;
@@ -42,6 +43,7 @@ namespace juml {
      * Dataset X("train.h5", "data");
      * juml::KMeans kmeans(3); // k=3
      * kmeans.fit(X);
+     * @endcode
      */
     class KMeans : public BaseClusterer {
     public:
@@ -73,17 +75,17 @@ namespace juml {
         uintl     max_iter_;
         /**
          * @var   initialization_
-         * @brief The selected centroid initialization method @see Method
+         * @brief The selected centroid initialization method Method
          */
         Method    initialization_;
         /**
          * @var   distance_
-         * @brief The selected distance function (e.g. @see euclidean)
+         * @brief The selected distance function (e.g. euclidean)
          */
         Distance  distance_;
         /**
          * @var   seed_
-         * @brief The random seed for centroid selection, only applicable for @see Method::RANDOM
+         * @brief The random seed for centroid selection, only applicable for Method::RANDOM
          */
         uintl     seed_;
         /**
@@ -97,7 +99,7 @@ namespace juml {
          *
          * Initializes the centroids randomly in a distributed environment
          *
-         * @param data - The training dataset passed to @see fit
+         * @param data - The training dataset passed to fit
          */
         void initialize_random_centroids(const Dataset& data);
 
@@ -109,7 +111,7 @@ namespace juml {
          * efficient in distributed environments compared to the original K-Means++ by breaking sequential computation
          * steps, but converges to the same result.
          *
-         * @param data - The training dataset passed to @see fit
+         * @param data - The training dataset passed to fit
          */
         void initialize_kpp_centroids(const Dataset& data);
 
@@ -119,14 +121,14 @@ namespace juml {
          * Internal implementation meat that performs the Lloyd iterations on the data. Performs convergence and
          * maximum iteration checks. The centroids are synchronized across all nodes.
          *
-         * @param data - The training dataset passed to @see fit
+         * @param data - The training dataset passed to fit
          */
         void cluster(const Dataset& data);
 
         /** closest_centroids
          *
          * Utility function that computes for each data item the closest centroid from a set of given centroids. The
-         * function is used both in @see cluster and @predict.
+         * function is used both in cluster and predict.
          *
          * @param centroids - A f x k matrix modeling the centroids
          * @param data      - A f x n matrix modeling the cluster points
@@ -138,15 +140,15 @@ namespace juml {
         /**
          * KMeans constructor
          *
-         * This constructor allows to initialize a K-Means clusterer with a chosen initialization @see Method.
+         * This constructor allows to initialize a K-Means clusterer with a chosen initialization Method.
          *
          * @param k              - The number of clusters k to cluster the data into
          * @param max_iter       - The maximum number of Lloyd iteration to perform, defaults to 100
-         * @param initialization - @see Method how to initialize the initial centroids, defaults to K-Means++
+         * @param initialization - Method how to initialize the initial centroids, defaults to K-Means++
          * @param distance       - The distance metric for the clustering, defaults to euclidean
          * @param tolerance      - Fraction of moved points (rounded up) below which the found clustering is considered
          *                         to have converged, defaults to 1e-3.
-         * @param seed           - Random seed for centroids initialization, is only relevant for @see Method::RANDOM.
+         * @param seed           - Random seed for centroids initialization, is only relevant for Method::RANDOM.
          * @param backend        - The computation backend for the clustering, defaults to CPU
          * @param comm           - The MPI communicator used for the processing
          * @throws invalid_argument if k is less than two or tolerance is less than 0.
@@ -171,7 +173,7 @@ namespace juml {
          * @param distance       - The distance metric for the clustering, defaults to euclidean
          * @param tolerance      - Fraction of moved points (rounded up) below which the found clustering is considered
          *                         to have converged, defaults to 1e-3.
-         * @param seed           - Random seed for centroids initialization, is only relevant for @see Method::RANDOM.
+         * @param seed           - Random seed for centroids initialization, is only relevant for Method::RANDOM.
          * @param backend        - The computation backend for the clustering, defaults to CPU
          * @param comm           - The MPI communicator used for the processing
          * @throws invalid_argument if k is less than two, tolerance is less than 0 or k #centroids mismatch.

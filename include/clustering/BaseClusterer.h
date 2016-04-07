@@ -29,7 +29,7 @@ namespace juml {
          * Stores the clustering processing backend and MPI communicator.
          *
          * @param backend - The processing backend, defaults to CPU
-         * @oaram comm - The MPI communicator
+         * @param comm - The MPI communicator
          */
         BaseClusterer(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
 
@@ -45,7 +45,7 @@ namespace juml {
         /**
          * (Abstract) predict
          *
-         * Predicts to which clusters new, unseen data items belong to, requires that the model was previously @see fit.
+         * Predicts to which clusters new, unseen data items belong to, requires that the model was previously fit.
          *
          * @returns The predicted cluster assignment
          */

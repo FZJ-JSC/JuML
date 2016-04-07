@@ -101,7 +101,7 @@ namespace mpi {
     /**
      * scan_inplace
      *
-     * @see exscan_inplace, except own data-elements are included.
+     * Refer to exscan_inplace, except own data-elements are included.
      *
      * @param data - The input and output parameter for the reduced data
      * @param op   - The MPI reduction operator handle (e.g. MPI_SUM)
