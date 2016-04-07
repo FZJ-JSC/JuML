@@ -8,6 +8,7 @@
 
 #include "core/Backend.h"
 #include "core/HDF5.h"
+#include "core/Test.h"
 #include "data/Dataset.h"
 
 static const std::string WRITE_FILE = "write_test.h5";
@@ -26,18 +27,55 @@ public:
 };
 
 
-TEST_F (HDF5_TEST, WRITE_ARRAY_TEST) {
+TEST_ALL_F (HDF5_TEST, WRITE_ARRAY1D_TEST) {
     juml::Backend::set(juml::Backend::CPU);
     if (rank_ != 0) return;
-    af::array data = af::constant(1, 3, 4);
-    af_print(data);
+    af::array data = af::constant(1, 4);
     hid_t file_id = juml::hdf5::create_file(WRITE_FILE);
     juml::hdf5::write_array(file_id, TEST_SET, data);
     juml::hdf5::close_file(file_id);
 
     juml::Dataset loaded(WRITE_FILE, TEST_SET, MPI_COMM_SELF);
+    loaded.load_equal_chunks();
+    if (rank_ == 0) {
+        std::remove(WRITE_FILE.c_str());
+    }
     ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data));
 }
+
+TEST_ALL_F (HDF5_TEST, WRITE_ARRAY2D_TEST) {
+    juml::Backend::set(juml::Backend::CPU);
+    if (rank_ != 0) return;
+    af::array data = af::constant(1, 4, 6);
+    hid_t file_id = juml::hdf5::create_file(WRITE_FILE);
+    juml::hdf5::write_array(file_id, TEST_SET, data);
+    juml::hdf5::close_file(file_id);
+
+    juml::Dataset loaded(WRITE_FILE, TEST_SET, MPI_COMM_SELF);
+    loaded.load_equal_chunks();
+    if (rank_ == 0) {
+        std::remove(WRITE_FILE.c_str());
+    }
+    ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data));
+}
+
+TEST_ALL_F (HDF5_TEST, WRITE_ARRAY3D_TEST) {
+    juml::Backend::set(juml::Backend::CPU);
+    if (rank_ != 0) return;
+    af::array data = af::constant(1, 4, 6, 5);
+    hid_t file_id = juml::hdf5::create_file(WRITE_FILE);
+    juml::hdf5::write_array(file_id, TEST_SET, data);
+    juml::hdf5::close_file(file_id);
+
+    juml::Dataset loaded(WRITE_FILE, TEST_SET, MPI_COMM_SELF);
+    loaded.load_equal_chunks();
+    if (rank_ == 0) {
+        std::remove(WRITE_FILE.c_str());
+    }
+    ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data));
+}
+
+
 
 int main(int argc, char** argv) {
     int result = -1;

@@ -13,6 +13,8 @@
 * Email: phil.glock@gmail.com
 */
 
+#include <algorithm>
+
 #include "core/HDF5.h"
 
 namespace juml {
@@ -47,14 +49,15 @@ namespace hdf5 {
     void write_array(hid_t file_id, const std::string& dataset, const af::array& data){
 
         // create dataspace for dataset
-        unsigned int dimensions = data.numdims();
+        // min dimension has to be 2, else dimension swap causes data loss
+        unsigned int min_dim = 2;
+        unsigned int dimensions = std::max(data.numdims(), min_dim);
         hsize_t dims[dimensions];
 
-        dims[0] = static_cast<hsize_t>(data.dims(1));
-        dims[1] = static_cast<hsize_t>(data.dims(0));
-        for (unsigned int i = 2; i < dimensions; ++i) {
+        for (unsigned int i = 0; i < dimensions; ++i) {
             dims[i] = static_cast<hsize_t>(data.dims(i));
         }
+        std::reverse(dims, dims + dimensions);
         hid_t filespace = H5Screate_simple(dimensions, dims, NULL);
         // create dataset and close filespace
         hid_t type = af_to_h5(data.type());
