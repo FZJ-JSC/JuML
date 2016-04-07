@@ -94,6 +94,24 @@ TEST_ALL_F(DATASET_TEST, DUMP_EQUAL_CHUNKS) {
     ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data));
 }
 
+TEST_ALL_F(DATASET_TEST, DUMP_EQUAL_CHUNKS_APPEND) {
+    juml::Backend::set(juml::Backend::CPU);
+    af::array data1 = af::constant(rank_, 2, 3, s32);
+    juml::Dataset dataset1(data1, MPI_COMM_WORLD);
+    dataset1.dump_equal_chunks(DUMP_FILE, DUMP_DATASET);
+
+    af::array data2 = af::constant(rank_ * -1, 2, 4, s32);
+    juml::Dataset dataset2(data2, MPI_COMM_WORLD);
+    dataset2.dump_equal_chunks(DUMP_FILE, DUMP_DATASET);
+    juml::Dataset loaded(DUMP_FILE, DUMP_DATASET);
+    loaded.load_equal_chunks();
+    if (rank_ == 0) {
+        std::remove(DUMP_FILE.c_str());
+    }
+    af::array joined = af::join(1, data1, data2);
+    ASSERT_TRUE(af::allTrue<bool>(loaded.data() == joined));
+}
+
 TEST_ALL_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_PREVENT_RELOAD) {
     juml::Dataset data_1D(FILE_PATH, ONE_D_INT);
     time_t loading_time = data_1D.loading_time();
