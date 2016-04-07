@@ -1,9 +1,10 @@
 # JuML
 
 JuML (Juelich Machine Learning library) is a parallel, high-performance software library that makes large-scale data
-analysis in common HPC-setups simple. It supports common machine learning algorithms such Gaussian Naive Bayes, K-Means
-or Neural Networks, bundled with a rich set of convenience functions such as data normalization. JuML provides high-
-level APIs for C++ and Python that allows to compute both, on native CPUs as well as accelerators like GPGPUs.
+analysis in common HPC-setups simple. It supports common machine learning algorithms such as Gaussian Naive Bayes,
+K-Means or Neural Networks, bundled with a rich set of convenience functions for tasks like data normalization. JuML
+provides high-level APIs for C++ and Python that allow to compute on both, native CPUs as well as accelerators like
+GPGPUs.
 
 ## Dependencies
 
