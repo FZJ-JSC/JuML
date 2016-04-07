@@ -29,17 +29,23 @@ int main(int argc, char *argv[]) {
 	af::setBackend(backend);
 	cout << "Backend set" << endl;
 	af::info();
-	if (argc == 3) {
-		af::setSeed(atoi(argv[2]));
-	}
 	cout << "Seed: " << af::getSeed() << endl;
 
 	double time_init_af = MPI_Wtime();
 
 	juml::SequentialNeuralNet net(backend);
-	net.add(juml::ann::make_SigmoidLayer(n_features, 100));
-	net.add(juml::ann::make_SigmoidLayer(100, 70));
-	net.add(juml::ann::make_SigmoidLayer(70, n_classes));
+	if (argc == 3) {
+		struct stat buffer;
+		if (stat(argv[2], &buffer) == 0) {
+			//File exists
+			net.load(argv[2]);
+		} else {
+			net.add(juml::ann::make_SigmoidLayer(n_features, 400));
+			net.add(juml::ann::make_SigmoidLayer(400, 100));
+			net.add(juml::ann::make_SigmoidLayer(100, n_classes));
+		}
+
+	}
 	
 	double time_init_net = MPI_Wtime();	
 
@@ -118,7 +124,10 @@ int main(int argc, char *argv[]) {
 	/*juml::Dataset trainset(data_array);
 	juml::Dataset labelset(target);
 	net.fit(trainset, labelset);*/
-
+	if (argc == 3) {
+		net.save(argv[2], true);
+	}
+	double time_saved = MPI_Wtime();
 	cout << "Time Measuerment: " << endl;
 	#define Fs(time, name) printf("%20s %3.4f\n", name, time);
 	#define F(start,end,name) Fs(end - start, name);
@@ -131,7 +140,8 @@ int main(int argc, char *argv[]) {
 	Fs(time_train_batch_test, "Training-Test");
 	Fs(time_train_sync, "Training-Sync");
 	F(time_trained, time_tested, "Testing");
-	F(time_start, time_tested, "Total");
+	F(time_tested, time_saved, "Saving Net");
+	F(time_start, time_saved, "Total");
 
 	MPI_Finalize();
 }
