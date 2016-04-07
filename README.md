@@ -21,6 +21,7 @@ Mandatory:
 
 Optional:
 
+* gtest
 * cuda
 * opencl
 * doxygen
