@@ -46,8 +46,33 @@ namespace juml {
 
     public:
         //! Dataset constructor
-        Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm=MPI_COMM_WORLD);        
+        Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm=MPI_COMM_WORLD);
         Dataset(const af::array& data, MPI_Comm comm=MPI_COMM_WORLD);
+        template<typename T>
+        Dataset(const af::dim4& dims, const T* pointer, MPI_Comm comm=MPI_COMM_WORLD, af::source src=afHost) {
+            MPI_Comm_rank(comm, this->mpi_rank_);
+            MPI_Comm_size(comm, this->mpi_size_);
+            this->data_ = af::array(dims, pointer, src);
+        }
+
+        template<typename T>
+        Dataset(dim_t dim0, const T* pointer, MPI_Comm comm = MPI_COMM_WORLD, af::source src=afHost) :
+            Dataset(dim0, 1, 1, 1, pointer, comm, src) {}
+
+        template<typename T>
+        Dataset(dim_t dim0, dim_t dim1, const T* pointer, MPI_Comm comm = MPI_COMM_WORLD, af::source src=afHost) :
+            Dataset(dim0, dim1, 1, 1, pointer, comm, src) {}
+
+        template<typename T>
+        Dataset(dim_t dim0, dim_t dim1, dim_t dim2, const T* pointer, MPI_Comm comm = MPI_COMM_WORLD, af::source src=afHost) :
+            Dataset(dim0, dim1, dim2, 1, pointer, comm, src) {}
+
+        template<typename T>
+        Dataset(dim_t dim0, dim_t dim1, dim_t dim2, dim_t dim3, const T* pointer, MPI_Comm comm=MPI_COMM_WORLD, af::source src=afHost) {
+            MPI_Comm_rank(comm, this->mpi_rank_);
+            MPI_Comm_size(comm, this->mpi_size_);
+            this->data_ = af::array(dim0, dim1, dim2, dim3, pointer, src);
+        }
 
         time_t modified_time() const;
         void normalize(float min = 0, float max = 1, bool independent_features = false,
