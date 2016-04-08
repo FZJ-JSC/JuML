@@ -54,8 +54,7 @@ namespace juml {
             throw std::invalid_argument("Transformed labels needs to be a row-vector");
         }
 
-        dim_t labels = transformed_labels.elements();
-        if (af::anyTrue<bool>(transformed_labels < 0 || transformed_labels >= labels)) {
+        if (af::anyTrue<bool>(transformed_labels < 0 || transformed_labels >= this->n_classes())) {
             throw std::invalid_argument("Could not invert transformed labels - out of bounds");
         }
         return this->class_labels_(transformed_labels);
