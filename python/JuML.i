@@ -9,6 +9,15 @@
     #include "classification/GaussianNaiveBayes.h"
 %}
 
+/* Convert C++ exceptions to Python exception */
+%exception {
+   try {
+      $action
+   } catch (std::exception &e) {
+      PyErr_SetString(PyExc_Exception, const_cast<char*>(e.what()));
+      return NULL;
+   }
+}
 /* Wrap std::string */
 %include std_string.i
 
