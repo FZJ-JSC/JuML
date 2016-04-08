@@ -18,7 +18,7 @@ const std::string TWO_D_INT   = "2D_INT";
 const std::string FILE_PATH_ROWNUMBER = JUML_DATASETS"/rownumInColumns5x3.h5";
 const std::string ROWNUMBER_SETNAME = "testset";
 
-const std::string DUMP_FILE = "dumpTest.h5";
+const std::string DUMP_FILE    = "dumpTest.h5";
 const std::string DUMP_DATASET = "DUMPED";
 
 class DATASET_TEST : public testing::Test
