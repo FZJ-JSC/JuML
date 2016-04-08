@@ -216,6 +216,7 @@ namespace juml {
     void Dataset::dump_equal_chunks(const std::string& filename, const std::string& dataset) {
         af::array n_rows = af::constant(this->data_.dims(1), 1);
         mpi::allgather(n_rows, this->comm_);
+        n_rows = af::moddims(n_rows, 1, n_rows.elements());
         af::array start = af::accum(n_rows, 1);
         intl total_rows = start(af::end).scalar<intl>();
 
