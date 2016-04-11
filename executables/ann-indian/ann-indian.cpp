@@ -40,13 +40,25 @@ int main(int argc, char *argv[]) {
 		if (argc == 3 && stat(argv[2], &buffer) == 0) {
 			//File exists
 			net.load(argv[2]);
+			cout << "ANN loaded from file " << argv[2] << endl;
 		} else {
-			net.add(juml::ann::make_SigmoidLayer(n_features, 400));
-			net.add(juml::ann::make_SigmoidLayer(400, 100));
-			net.add(juml::ann::make_SigmoidLayer(100, n_classes));
+			cout << "Creating new ANN" << endl;
+			net.add(juml::ann::make_SigmoidLayer(n_features, 2000));
+//			net.add(juml::ann::make_SigmoidLayer(4000, 400));
+			net.add(juml::ann::make_SigmoidLayer(2000, n_classes));
 		}
 
 	}
+	
+	//Print network layer counts:
+	{
+		auto it = net.layers_begin();
+		cout << "Layers: " << (*it)->input_count;
+		for (;it != net.layers_end(); it++) {
+			cout << "-" << (*it)->node_count;
+		}
+		cout << endl;
+	}	
 	
 	double time_init_net = MPI_Wtime();	
 
@@ -94,7 +106,7 @@ int main(int argc, char *argv[]) {
 			int last = std::min((int)data_array.dims(1) - 1, batch + batchsize - 1);
 			af::array batchsamples = data_array(af::span, af::seq(batch, last));
 			af::array batchtarget = target(af::span, af::seq(batch, last));
-			lasterror = net.fitBatch(batchsamples, batchtarget, 2);
+			lasterror = net.fitBatch(batchsamples, batchtarget, 0.01);
 			error += lasterror;
 		}
 		double time_buf = MPI_Wtime();
@@ -127,6 +139,7 @@ int main(int argc, char *argv[]) {
 	net.fit(trainset, labelset);*/
 	if (argc == 3) {
 		net.save(argv[2], true);
+		cout << "Saved ANN to " << argv[2] << endl;
 	}
 	double time_saved = MPI_Wtime();
 	cout << "Time Measuerment: " << endl;
