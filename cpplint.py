@@ -6335,7 +6335,7 @@ def main():
   finally:
     sys.stderr = backup_err
 
-  sys.exit(_cpplint_state.error_count > 0)
+  #sys.exit(_cpplint_state.error_count > 0)
 
 
 if __name__ == '__main__':
