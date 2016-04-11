@@ -338,7 +338,10 @@ namespace juml {
         H5Pset_fapl_mpio(plist_id, this->comm_, info);
 
         // create a file and close property list identifier
-        hid_t file_id = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+        hid_t file_id = H5Fcreate(filename.c_str(), H5F_ACC_EXCL, H5P_DEFAULT, plist_id);
+        if (file_id < 0) {
+            file_id = H5Fopen(filename.c_str(), H5F_ACC_RDWR, plist_id);
+        }
         H5Pclose(plist_id);
 
         // create dataspace for dataset
