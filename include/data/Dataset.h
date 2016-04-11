@@ -40,14 +40,14 @@ namespace juml {
         dim_t sample_dim_;
         dim_t global_n_samples_;
         dim_t global_offset_;
-        
+
         af::dtype h5_to_af(hid_t h5_type);
         hid_t af_to_h5(af::dtype af_type);
 
     public:
         //! Dataset constructor
-        Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm=MPI_COMM_WORLD);        
-        Dataset(const af::array& data, MPI_Comm comm=MPI_COMM_WORLD);
+        Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm = MPI_COMM_WORLD); 
+        Dataset(const af::array& data, MPI_Comm comm = MPI_COMM_WORLD);
 
         time_t modified_time() const;
         void normalize(float min = 0, float max = 1, bool independent_features = false,
@@ -56,7 +56,7 @@ namespace juml {
                               const af::array &selected_features = af::array());
         af::array mean(bool total = false) const;
         time_t loading_time() const;
-        void load_equal_chunks(bool force=false);
+        void load_equal_chunks(bool force = false);
         void dump_equal_chunks(const std::string& filename, const std::string& dataset);
         af::array stddev(bool total = false) const;
 
@@ -68,5 +68,5 @@ namespace juml {
         virtual dim_t global_offset() const;
         virtual dim_t sample_dim() const;
     }; // Dataset
-}  // juml
+}  // namespace juml
 #endif // DATASET_H

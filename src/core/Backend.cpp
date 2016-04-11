@@ -26,13 +26,13 @@ namespace juml {
         return af::getBackendId(data);
     }
 
-    Backend::Backend(int backend) 
+    Backend::Backend(int backend)
       : backend_(backend) {
       af::setBackend(static_cast<af::Backend>(this->backend_));
     }
-        
+
     int Backend::get() const {
         return this->backend_;
     }
-} // juml
+} // namespace juml
 

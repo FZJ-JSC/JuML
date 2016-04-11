@@ -154,13 +154,13 @@ namespace juml {
          * @throws invalid_argument if k is less than two or tolerance is less than 0.
          */
         KMeans(uintl      k,
-               uintl      max_iter=100,
-               Method     initialization=KMEANS_PLUS_PLUS,
-               Distance   distance=euclidean,
-               float      tolerance=1e-3,
-               uintl      seed=42L,
-               int        backend=Backend::CPU,
-               MPI_Comm   comm=MPI_COMM_WORLD);
+               uintl      max_iter = 100,
+               Method     initialization = KMEANS_PLUS_PLUS,
+               Distance   distance = euclidean,
+               float      tolerance = 1e-3,
+               uintl      seed = 42L,
+               int        backend = Backend::CPU,
+               MPI_Comm   comm = MPI_COMM_WORLD);
 
         /**
          * KMeans constructor
@@ -180,12 +180,12 @@ namespace juml {
          */
         KMeans(uintl      k,
                af::array& centroids,
-               uintl      max_iter=100,
-               Distance   distance=euclidean,
-               float      tolerance=1e-3,
-               uintl      seed=42L,
-               int        backend=Backend::CPU,
-               MPI_Comm   comm=MPI_COMM_WORLD);
+               uintl      max_iter = 100,
+               Distance   distance = euclidean,
+               float      toleranc e =1e-3,
+               uintl      seed = 42L,
+               int        backend = Backend::CPU,
+               MPI_Comm   comm = MPI_COMM_WORLD);
 
         /**
          * fit

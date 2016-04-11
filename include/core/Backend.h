@@ -22,7 +22,7 @@ namespace juml {
     class Backend {
     protected:
         int backend_;
-    
+
     public:
         /**
          * @var   CPU

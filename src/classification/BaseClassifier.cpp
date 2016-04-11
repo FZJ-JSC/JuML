@@ -17,7 +17,7 @@
 
 namespace juml {
     BaseClassifier::BaseClassifier(int backend, MPI_Comm comm)
-      : Algorithm(backend, comm), class_normalizer_(comm) 
+      : Algorithm(backend, comm), class_normalizer_(comm)
     {};
 
     void BaseClassifier::fit(Dataset& X, Dataset& y) {

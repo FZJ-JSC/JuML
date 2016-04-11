@@ -26,12 +26,12 @@ namespace juml {
     class Algorithm {
     protected:
         Backend backend_;
-        
+
         MPI_Comm comm_;
         int mpi_rank_;
         int mpi_size_;
     public:
-        Algorithm(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
+        Algorithm(int backend = Backend::CPU, MPI_Comm comm = MPI_COMM_WORLD);
     }; // Algorithm
-}  // juml
+}  // namespace juml
 #endif // ALGORITHM_H
