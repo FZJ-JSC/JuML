@@ -61,13 +61,14 @@ TEST_ALL(GAUSSIAN_NAIVE_BAYES_TEST, IRIS) {
     ASSERT_FLOAT_EQ(gnb.accuracy(X_not_loaded, y_not_loaded), ACCURACY);
 }
 
-TEST_F (GAUSSIAN_NAIVE_BAYES_TEST, SAVE_LOAD_CPU_TEST) {
+TEST (GAUSSIAN_NAIVE_BAYES_TEST, SAVE_LOAD_TEST) {
+    int rank_;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
     // create and train gnb
     juml::GaussianNaiveBayes gnb(juml::Backend::CPU);
     juml::Dataset X(FILE_PATH, SAMPLES);
     juml::Dataset y(FILE_PATH, LABELS);
     gnb.fit(X, y);
-
     // save model
     gnb.save(DUMP_GNB);
     std::ifstream fin(DUMP_GNB.c_str());
@@ -76,63 +77,22 @@ TEST_F (GAUSSIAN_NAIVE_BAYES_TEST, SAVE_LOAD_CPU_TEST) {
     // load model
     juml::GaussianNaiveBayes loaded(juml::Backend::CPU);
     loaded.load(DUMP_GNB);
+
     if (rank_ == 0) {
         std::remove(DUMP_GNB.c_str());
     }
-    ASSERT_TRUE(af::allTrue<bool>(loaded.prior() == gnb.prior()));
-    ASSERT_TRUE(af::allTrue<bool>(loaded.theta() == gnb.theta()));
-    ASSERT_TRUE(af::allTrue<bool>(loaded.stddev() == gnb.stddev()));
-}
 
-#ifdef JUML_OPENCL
-TEST_F (GAUSSIAN_NAIVE_BAYES_TEST, SAVE_LOAD_OPENCL_TEST) {
-    // create and train gnb
-    juml::GaussianNaiveBayes gnb(juml::Backend::OPENCL);
-    juml::Dataset X(FILE_PATH, SAMPLES);
-    juml::Dataset y(FILE_PATH, LABELS);
-    gnb.fit(X, y);
-
-    // save model
-    gnb.save(DUMP_GNB);
-    std::ifstream fin(DUMP_GNB.c_str());
-    ASSERT_TRUE(fin.is_open());
-
-    // load model
-    juml::GaussianNaiveBayes loaded(juml::Backend::CUDA);
-    loaded.load(DUMP_GNB);
-    if (rank_ == 0) {
-        std::remove(DUMP_GNB.c_str());
+    const af::array& prior = loaded.prior();
+    const af::array& theta = loaded.theta();
+    const af::array& stddev = loaded.stddev();
+    for (int row = 0; row < 3; ++row) {
+        ASSERT_FLOAT_EQ(prior(row).scalar<float>(), gnb.prior()(row).scalar<float>());
+        for (int col = 0; col < 4; ++col) {
+            ASSERT_NEAR(theta(col, row).scalar<float>(), gnb.theta()(col, row).scalar<float>(), 0.001);
+            ASSERT_FLOAT_EQ(stddev(col, row).scalar<float>(), gnb.stddev()(col, row).scalar<float>());
+        }
     }
-    ASSERT_TRUE(af::allTrue<bool>(loaded.prior() == gnb.prior()));
-    ASSERT_TRUE(af::allTrue<bool>(loaded.theta() == gnb.theta()));
-    ASSERT_TRUE(af::allTrue<bool>(loaded.stddev() == gnb.stddev()));
 }
-#endif
-
-#ifdef JUML_CUDA
-TEST_F (GAUSSIAN_NAIVE_BAYES_TEST, SAVE_LOAD_CUDA_TEST) {
-    // create and train gnb
-    juml::GaussianNaiveBayes gnb(juml::Backend::CUDA);
-    juml::Dataset X(FILE_PATH, SAMPLES);
-    juml::Dataset y(FILE_PATH, LABELS);
-    gnb.fit(X, y);
-
-    // save model
-    gnb.save(DUMP_GNB);
-    std::ifstream fin(DUMP_GNB.c_str());
-    ASSERT_TRUE(fin.is_open());
-
-    // load model
-    juml::GaussianNaiveBayes loaded(juml::Backend::CUDA);
-    loaded.load(DUMP_GNB);
-    if (rank_ == 0) {
-        std::remove(DUMP_GNB.c_str());
-    }
-    ASSERT_TRUE(af::allTrue<bool>(loaded.prior() == gnb.prior()));
-    ASSERT_TRUE(af::allTrue<bool>(loaded.theta() == gnb.theta()));
-    ASSERT_TRUE(af::allTrue<bool>(loaded.stddev() == gnb.stddev()));
-}
-#endif
 
 int main(int argc, char** argv) {
     int result = -1;

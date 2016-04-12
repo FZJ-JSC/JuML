@@ -22,10 +22,13 @@
 
 namespace juml {
 namespace hdf5 {
+    af::dtype h5_to_af(hid_t h5_type);
     hid_t af_to_h5(af::dtype af_type);
-    hid_t create_file(const std::string& filename);
-    void close_file(hid_t file_id);
+    hid_t open_file(const std::string &filename);
+    void close_file(hid_t& file_id);
     void write_array(hid_t file_id, const std::string& dataset, const af::array& data);
+    hid_t popen_file(const std::string &filename, hid_t& access_plist,MPI_Comm comm);
+    af::array pread_array(hid_t file_id, const std::string& dataset);
 } // namespace hdf5
 } // namespace juml
 

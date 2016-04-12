@@ -314,7 +314,7 @@ namespace juml {
             uint8_t* buffer = new uint8_t[size];
             H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, buffer);
             af_write_array(this->data_.get(), buffer, size, afHost); 
-            delete[] buffer;	
+            delete[] buffer;
         }
 
         // release resources

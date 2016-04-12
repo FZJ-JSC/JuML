@@ -99,16 +99,14 @@ namespace juml {
         /**
          * Loads a trained GaussianNaiveBayes model from a file.
          * @param filename The filename of the loaded file.
-         * TODO: Implement
          */
-        virtual void load(const std::string& filename) {};
+        virtual void load(const std::string& filename);
 
         /**
          * Saves a trained GaussianNaiveBayes model to a file.
          * @param filename The filename of the saved file.
-         * TODO: Implement
          */
-        virtual void save(const std::string& filename) const {};
+        virtual void save(const std::string& filename) const;
 
         const af::array& class_counts() const;
         const af::array& prior() const;

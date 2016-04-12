@@ -28,10 +28,9 @@ public:
 
 
 TEST_ALL_F (HDF5_TEST, WRITE_ARRAY1D_TEST) {
-    juml::Backend::set(juml::Backend::CPU);
     if (rank_ != 0) return;
     af::array data = af::constant(1, 4);
-    hid_t file_id = juml::hdf5::create_file(WRITE_FILE);
+    hid_t file_id = juml::hdf5::open_file(WRITE_FILE);
     juml::hdf5::write_array(file_id, TEST_SET, data);
     juml::hdf5::close_file(file_id);
 
@@ -44,10 +43,9 @@ TEST_ALL_F (HDF5_TEST, WRITE_ARRAY1D_TEST) {
 }
 
 TEST_ALL_F (HDF5_TEST, WRITE_ARRAY2D_TEST) {
-    juml::Backend::set(juml::Backend::CPU);
     if (rank_ != 0) return;
     af::array data = af::constant(1, 4, 6);
-    hid_t file_id = juml::hdf5::create_file(WRITE_FILE);
+    hid_t file_id = juml::hdf5::open_file(WRITE_FILE);
     juml::hdf5::write_array(file_id, TEST_SET, data);
     juml::hdf5::close_file(file_id);
 
@@ -60,10 +58,9 @@ TEST_ALL_F (HDF5_TEST, WRITE_ARRAY2D_TEST) {
 }
 
 TEST_ALL_F (HDF5_TEST, WRITE_ARRAY3D_TEST) {
-    juml::Backend::set(juml::Backend::CPU);
     if (rank_ != 0) return;
     af::array data = af::constant(1, 4, 6, 5);
-    hid_t file_id = juml::hdf5::create_file(WRITE_FILE);
+    hid_t file_id = juml::hdf5::open_file(WRITE_FILE);
     juml::hdf5::write_array(file_id, TEST_SET, data);
     juml::hdf5::close_file(file_id);
 
@@ -73,6 +70,28 @@ TEST_ALL_F (HDF5_TEST, WRITE_ARRAY3D_TEST) {
         std::remove(WRITE_FILE.c_str());
     }
     ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data));
+}
+
+TEST_F (HDF5_TEST, PREAD_ARRAY_TEST) {
+    juml::Backend::set(juml::Backend::CPU);
+    af::array data = af::constant(1, 4, 6);
+    if (rank_ == 0) {
+
+        hid_t file_id = juml::hdf5::open_file(WRITE_FILE);
+        juml::hdf5::write_array(file_id, TEST_SET, data);
+        juml::hdf5::close_file(file_id);
+    }
+
+    hid_t plist;
+    hid_t in_file = juml::hdf5::popen_file(WRITE_FILE, plist,MPI_COMM_WORLD);
+    ASSERT_GT(in_file, 0);
+    af::array loaded = juml::hdf5::pread_array(in_file, TEST_SET);
+    ASSERT_TRUE(af::allTrue<bool>(loaded == data));
+    juml::hdf5::close_file(in_file);
+    H5Pclose(plist);
+    if (rank_ == 0) {
+        std::remove(WRITE_FILE.c_str());
+    }
 }
 
 
