@@ -61,11 +61,11 @@ TEST_ALL(GAUSSIAN_NAIVE_BAYES_TEST, IRIS) {
     ASSERT_FLOAT_EQ(gnb.accuracy(X_not_loaded, y_not_loaded), ACCURACY);
 }
 
-TEST (GAUSSIAN_NAIVE_BAYES_TEST, SAVE_LOAD_TEST) {
+TEST_ALL (GAUSSIAN_NAIVE_BAYES_TEST, SAVE_LOAD_TEST) {
     int rank_;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
     // create and train gnb
-    juml::GaussianNaiveBayes gnb(juml::Backend::CPU);
+    juml::GaussianNaiveBayes gnb(BACKEND);
     juml::Dataset X(FILE_PATH, SAMPLES);
     juml::Dataset y(FILE_PATH, LABELS);
     gnb.fit(X, y);
@@ -74,7 +74,7 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, SAVE_LOAD_TEST) {
     std::ifstream fin(DUMP_GNB.c_str());
     ASSERT_TRUE(fin.is_open());
     // load model
-    juml::GaussianNaiveBayes loaded(juml::Backend::CPU);
+    juml::GaussianNaiveBayes loaded(BACKEND);
     loaded.load(DUMP_GNB);
 
     if (rank_ == 0) {

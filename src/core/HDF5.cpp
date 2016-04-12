@@ -151,13 +151,24 @@ namespace hdf5 {
         } else if (n_dims == 1) {
             arrayDim4 = af::dim4(1, dimensions[0]);
         }
-        af::array buffer = af::array(arrayDim4, array_type);
-        herr_t status = H5Dread(dataset_id, native_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer.device<uint8_t>());
+        af::array data = af::array(arrayDim4, array_type);
+        data.eval();
+        // read the actual data
+        if (af::getBackendId(af::constant(0, 1)) == AF_BACKEND_CPU) {
+            H5Dread(dataset_id, native_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.device<uint8_t>());
+            data.unlock();
+        } else {
+            size_t size = data.bytes();
+            uint8_t* buffer = new uint8_t[size];
+            H5Dread(dataset_id, native_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
+            af_write_array(data.get(), buffer, size, afHost);
+            delete[] buffer;
+        }
 
         H5Tclose(native_type);
         H5Sclose(file_space_id);
         H5Dclose(dataset_id);
-        return buffer;
+        return data;
     }
 } // namespace hdf5
 } // namespace juml

@@ -72,8 +72,7 @@ TEST_ALL_F (HDF5_TEST, WRITE_ARRAY3D_TEST) {
     ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data));
 }
 
-TEST_F (HDF5_TEST, PREAD_ARRAY_TEST) {
-    juml::Backend::set(juml::Backend::CPU);
+TEST_ALL_F (HDF5_TEST, PREAD_ARRAY_TEST) {
     af::array data = af::constant(1, 4, 6);
     if (rank_ == 0) {
 
