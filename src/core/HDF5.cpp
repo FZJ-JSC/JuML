@@ -100,9 +100,9 @@ namespace hdf5 {
         H5Dclose(dset_id);
     }
 
-    hid_t popen_file(const std::string &filename, hid_t& access_plist ,MPI_Comm comm) {
+    hid_t popen_file(const std::string &filename, MPI_Comm comm) {
         // create access list for parallel IO
-        access_plist = H5Pcreate(H5P_FILE_ACCESS);
+        hid_t access_plist = H5Pcreate(H5P_FILE_ACCESS);
         if (access_plist < 0)
             throw std::runtime_error("Could not create file access property list");
         H5Pset_fapl_mpio(access_plist, comm, MPI_INFO_NULL);
@@ -114,6 +114,8 @@ namespace hdf5 {
             error << "Could not open file " << filename;
             throw std::runtime_error(error.str().c_str());
         }
+
+        H5Pclose(access_plist);
         return file_id;
     }
 

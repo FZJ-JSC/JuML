@@ -82,13 +82,11 @@ TEST_F (HDF5_TEST, PREAD_ARRAY_TEST) {
         juml::hdf5::close_file(file_id);
     }
 
-    hid_t plist;
-    hid_t in_file = juml::hdf5::popen_file(WRITE_FILE, plist,MPI_COMM_WORLD);
+    hid_t in_file = juml::hdf5::popen_file(WRITE_FILE, MPI_COMM_WORLD);
     ASSERT_GT(in_file, 0);
     af::array loaded = juml::hdf5::pread_array(in_file, TEST_SET);
     ASSERT_TRUE(af::allTrue<bool>(loaded == data));
     juml::hdf5::close_file(in_file);
-    H5Pclose(plist);
     if (rank_ == 0) {
         std::remove(WRITE_FILE.c_str());
     }

@@ -161,22 +161,16 @@ namespace juml {
             hdf5::write_array(file_id, "theta", this->theta_);
             hdf5::close_file(file_id);
         }
+        MPI_Barrier(this->comm_);
     }
 
     void GaussianNaiveBayes::load(const std::string &filename) {
-        hid_t plist;
-        //hid_t file_id = hdf5::popen_file(filename, plist,this->comm_);
-        hid_t access_plist;
-
-        access_plist = H5Pcreate(H5P_FILE_ACCESS);
-        H5Pset_fapl_mpio(access_plist, MPI_COMM_WORLD, MPI_INFO_NULL);
-        hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDWR, access_plist);
+        hid_t file_id = hdf5::popen_file(filename,this->comm_);
         this->class_counts_ = hdf5::pread_array(file_id, "class_counts");
         this->prior_ = hdf5::pread_array(file_id, "prior");
         this->stddev_ = hdf5::pread_array(file_id, "stddev");
         this->theta_ = hdf5::pread_array(file_id, "theta");
         hdf5::close_file(file_id);
-        H5Pclose(access_plist);
     }
 
     const af::array& GaussianNaiveBayes::class_counts() const {

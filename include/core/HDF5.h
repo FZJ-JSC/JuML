@@ -27,7 +27,7 @@ namespace hdf5 {
     hid_t open_file(const std::string &filename);
     void close_file(hid_t& file_id);
     void write_array(hid_t file_id, const std::string& dataset, const af::array& data);
-    hid_t popen_file(const std::string &filename, hid_t& access_plist,MPI_Comm comm);
+    hid_t popen_file(const std::string &filename, MPI_Comm comm);
     af::array pread_array(hid_t file_id, const std::string& dataset);
 } // namespace hdf5
 } // namespace juml

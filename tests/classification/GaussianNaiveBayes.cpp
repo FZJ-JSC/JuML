@@ -73,7 +73,6 @@ TEST (GAUSSIAN_NAIVE_BAYES_TEST, SAVE_LOAD_TEST) {
     gnb.save(DUMP_GNB);
     std::ifstream fin(DUMP_GNB.c_str());
     ASSERT_TRUE(fin.is_open());
-
     // load model
     juml::GaussianNaiveBayes loaded(juml::Backend::CPU);
     loaded.load(DUMP_GNB);
