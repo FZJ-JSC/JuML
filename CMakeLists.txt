@@ -84,10 +84,18 @@ IF(PYTHONINTERP_FOUND)
     FILE(GLOB_RECURSE lintable_h_files RELATIVE ${CMAKE_SOURCE_DIR} "include/*/*.h")
     ADD_CUSTOM_TARGET(lint ALL
         ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cpplint.py
-	--verbose=3 #Reduce verbosity for now
-	${lintable_cpp_files} ${lintable_h_files}
-	COMMAND echo Finished
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        --verbose=3 #Reduce verbosity for now
+        --filter=-whitespace/line_length
+	--project=JuML
+	--root=src
+        ${lintable_cpp_files}
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cpplint.py
+        --verbose=3 #Reduce verbosity for now
+        --filter=-whitespace/line_length
+	--project=JuML
+	--root=include
+        ${lintable_h_files}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Executing cpplint" VERBATIM
     )
 ENDIF()
