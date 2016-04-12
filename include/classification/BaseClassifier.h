@@ -13,8 +13,8 @@
 * Email: murxman@gmail.com
 */
 
-#ifndef BASECLASSIFIER_H
-#define BASECLASSIFIER_H
+#ifndef JUML_CLASSIFICATION_BASECLASSIFIER_H_
+#define JUML_CLASSIFICATION_BASECLASSIFIER_H_
 
 #include <mpi.h>
 
@@ -24,14 +24,14 @@
 
 namespace juml {
     class BaseClassifier : public Algorithm {
-    protected:
+     protected:
         /**
          * @var   class_normalizer_
          * @brief A ClassNormalizer instance, normalizes class labels on calling fit
          */
         ClassNormalizer class_normalizer_;
 
-    public:
+     public:
         /**
          * BaseClassifier constructor
          *
@@ -40,7 +40,7 @@ namespace juml {
          * @param backend - The backend, defaults to CPU
          * @param comm - The MPI communicator
          */
-        BaseClassifier(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
+        explicit BaseClassifier(int backend = Backend::CPU, MPI_Comm comm = MPI_COMM_WORLD);
 
         /**
          * (Abstract) fit
@@ -75,5 +75,5 @@ namespace juml {
     };
 } // namespace juml
 
-#endif // BASECLASSIFIER_H
+#endif // JUML_CLASSIFICATION_BASECLASSIFIER_H_
 

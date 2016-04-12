@@ -13,8 +13,8 @@
 * Email: murxman@gmail.com
 */
 
-#ifndef JUML_MPI_H
-#define JUML_MPI_H
+#ifndef JUML_CORE_MPI_H_
+#define JUML_CORE_MPI_H_
 
 #include <arrayfire.h>
 #include <mpi.h>
@@ -56,7 +56,7 @@ namespace mpi {
      * @param merge - The dimension on which to merge the data, defaults to 1 (sample dimension for 2D data)
      * @returns The MPI error code
      */
-    int allgather(af::array& data, MPI_Comm comm, dim_t merge=1);
+    int allgather(af::array& data, MPI_Comm comm, dim_t merge = 1);
     /**
      * allgatherv
      *
@@ -69,7 +69,7 @@ namespace mpi {
      * @param merge - The dimension along which to merge the data, defaults to 1 (sample dimension for 2D data)
      * @returns The MPI error code
      */
-    int allgatherv(af::array& data, MPI_Comm comm, dim_t merge=1);
+    int allgatherv(af::array& data, MPI_Comm comm, dim_t merge = 1);
 
     /**
      * allreduce_inplace
@@ -128,4 +128,4 @@ namespace mpi {
 } // namespace mpi
 } // namespace juml
 
-#endif //JUML_MPI_H
+#endif // JUML_CORE_MPI_H_

@@ -13,12 +13,13 @@
 * Email: murxman@gmail.com
 */
 
+#include "data/Dataset.h"
+#include <core/MPI.h>
 #include <algorithm>
 #include <stdexcept>
 #include <sstream>
-#include <core/MPI.h>
+#include <string>
 
-#include "data/Dataset.h"
 
 namespace juml {
     //! Dataset constructor
@@ -60,9 +61,9 @@ namespace juml {
     time_t Dataset::loading_time() const {
         return this->loading_time_;
     }
-    
+
     af::dtype Dataset::h5_to_af(hid_t h5_type) {
-             if (H5Tequal(h5_type, H5T_NATIVE_CHAR))    return u8;
+             if (H5Tequal(h5_type, H5T_NATIVE_CHAR))    return u8; //NOLINT
         else if (H5Tequal(h5_type, H5T_NATIVE_UCHAR))   return u8;
         else if (H5Tequal(h5_type, H5T_NATIVE_B8))      return b8;
         else if (H5Tequal(h5_type, H5T_NATIVE_SHORT))   return s16;
@@ -80,7 +81,7 @@ namespace juml {
     }
 
     hid_t Dataset::af_to_h5(af::dtype af_type) {
-            if  (af_type == u8)     return H5T_NATIVE_CHAR;
+            if  (af_type == u8)     return H5T_NATIVE_CHAR; //NOLINT
         else if (af_type == b8)     return H5T_NATIVE_B8;
         else if (af_type == s16)    return H5T_NATIVE_SHORT;
         else if (af_type == u16)    return H5T_NATIVE_USHORT;
@@ -94,8 +95,7 @@ namespace juml {
         throw std::domain_error("Unsupported af type");
     }
 
-    void Dataset::normalize(float min, float max, bool independent_features, const af::array& selected_features)
-    {
+    void Dataset::normalize(float min, float max, bool independent_features, const af::array& selected_features) {
         // Check if min == max
         if (min == max) {
             this->data_ = min;
@@ -117,8 +117,8 @@ namespace juml {
         int num_features = af::sum<int>(mask);
 
         // Compute local minimum
-        af::array minimum = af::min(data(mask,af::span), 1);
-        af::array maximum = af::max(data(mask,af::span), 1);
+        af::array minimum = af::min(data(mask, af::span), 1);
+        af::array maximum = af::max(data(mask, af::span), 1);
 
         if (!independent_features) {
             minimum = af::min(minimum);
@@ -158,7 +158,7 @@ namespace juml {
     void Dataset::normalize_stddev(float x_std, bool independent_features, const af::array &selected_features) {
 
         // Check parameters
-        if(x_std <= 0)
+        if (x_std <= 0)
             throw std::runtime_error("multiple of std must be greater than 0");
 
         // Check if selected_features is empty and its size
@@ -178,7 +178,7 @@ namespace juml {
 
         if (!independent_features) {
             mean = af::tile(mean(0), num_features);
-            std = af::tile(std(0),num_features);
+            std = af::tile(std(0), num_features);
         }
 
         // Normalize data
@@ -189,13 +189,12 @@ namespace juml {
 
     void Dataset::load_equal_chunks(bool force) {
         if (this->filename_.empty()) {
-            return ;
+            return;
         }
         time_t mod_time = this->modified_time();
         if (!force && mod_time <= this->loading_time_) {
-            return ;
-        }
-        else {
+            return;
+        } else {
             this->loading_time_ = mod_time;
         }
         // create access list for parallel IO
@@ -204,7 +203,7 @@ namespace juml {
             throw std::runtime_error("Could not create file access property list");
         H5Pset_fapl_mpio(access_plist, this->comm_, MPI_INFO_NULL);
 
-        // create file handle 
+        // create file handle
         const hid_t file_id = H5Fopen(this->filename_.c_str(), H5F_ACC_RDWR, access_plist);
         if (file_id < 0) {
             std::stringstream error;
@@ -219,7 +218,7 @@ namespace juml {
             error << "Could not open dataset " << this->dataset_ << " in file " << this->filename_;
             throw std::runtime_error(error.str().c_str());
         }
-        
+
         // create file space
         const hid_t file_space_id = H5Dget_space(data_id);
         if (file_space_id < 0) {
@@ -227,7 +226,7 @@ namespace juml {
             error << "Could not get file space of file " << this->filename_;
             throw std::runtime_error(error.str().c_str());
         }
-        
+
         // check dimesionality of the dataset
         const int n_dims = H5Sget_simple_extent_ndims(file_space_id);
         if (n_dims < 1 || n_dims > 4) {
@@ -267,7 +266,7 @@ namespace juml {
         hid_t mem_space = H5Screate_simple(n_dims, chunk_dimensions, NULL);
         if (mem_space < 0)
             throw std::runtime_error("Could not create memory space");
-        
+
         // select hyperslab
         herr_t err = H5Sselect_hyperslab(file_space_id, H5S_SELECT_SET, row_col_offset, NULL, chunk_dimensions, NULL);
         if (err < 0) {
@@ -279,7 +278,7 @@ namespace juml {
         size_t total_size = chunk_size;
         for (int i = 1; i < n_dims; ++i)
             total_size *= dimensions[i];
-        
+
         // determine the dataset type
         hid_t native_type = H5Tget_native_type(H5Dget_type(data_id), H5T_DIR_ASCEND);
         af::dtype array_type;
@@ -291,9 +290,9 @@ namespace juml {
             H5Dclose(data_id);
             H5Fclose(file_id);
             H5Pclose(access_plist);
-            throw e;        
+            throw e;
         }
-        
+
         // initialize the array, swap the row and column dimensions before (HDF5 row-major, AF column-major)
         af::dim4 arrayDim4;
         if (n_dims > 1) {
@@ -303,7 +302,7 @@ namespace juml {
             arrayDim4 = af::dim4(1, chunk_dimensions[0]);
         }
         this->data_ = af::array(arrayDim4, array_type);
-        
+
         // read the actual data
         if (af::getBackendId(af::constant(0, 1)) == AF_BACKEND_CPU) {
             H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, this->data_.device<uint8_t>());
@@ -312,8 +311,8 @@ namespace juml {
             size_t size = this->data_.bytes();
             uint8_t* buffer = new uint8_t[size];
             H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, buffer);
-            af_write_array(this->data_.get(), buffer, size, afHost); 
-            delete[] buffer;	
+            af_write_array(this->data_.get(), buffer, size, afHost);
+            delete[] buffer;
         }
 
         // release resources
@@ -397,10 +396,10 @@ namespace juml {
         af:: array mean = this->mean(total);
         af::array stddev;
 
-        if (total)
+        if (total) {
             stddev = this->data_ - af::tile(mean, this->data_.dims());
-        else {
-            af::dim4 broadcast(1,1,1,1);
+        } else {
+            af::dim4 broadcast(1, 1, 1, 1);
             broadcast[this->sample_dim()] = n_samples();
             stddev = this->data_ - af::tile(mean, broadcast);
         }
@@ -416,15 +415,15 @@ namespace juml {
     af::array& Dataset::data() {
         return this->data_;
     }
-    
+
     const af::array& Dataset::data() const {
         return this->data_;
     }
-    
+
     dim_t Dataset::n_samples() const {
         return this->data_.dims(this->sample_dim_);
     }
-    
+
     dim_t Dataset::n_features() const {
         return this->data_.dims(0);
     }

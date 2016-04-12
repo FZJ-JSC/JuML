@@ -13,8 +13,8 @@
 * Email: murxman@gmail.com
 */
 
-#ifndef KMEANS_H
-#define KMEANS_H
+#ifndef JUML_CLUSTERING_KMEANS_H_
+#define JUML_CLUSTERING_KMEANS_H_
 
 #include <arrayfire.h>
 #include <mpi.h>
@@ -46,7 +46,7 @@ namespace juml {
      * @endcode
      */
     class KMeans : public BaseClusterer {
-    public:
+     public:
         /**
          * Method
          *
@@ -56,8 +56,8 @@ namespace juml {
             RANDOM,          /** Choose initial centroids randomly */
             KMEANS_PLUS_PLUS /** Use a smart heuristic to guess the initial centroids */
         };
-        
-    protected:
+
+     protected:
         /**
          * @var   centroids_
          * @brief The centroids of the K-Means clustering, defaults to empty array before fit
@@ -135,8 +135,8 @@ namespace juml {
          * @returns A 1 x n row-vector with the index of the closest centroid
          */
         af::array closest_centroids(const af::array& centroids, const af::array& data) const;
-        
-    public:
+
+     public:
         /**
          * KMeans constructor
          *
@@ -154,13 +154,13 @@ namespace juml {
          * @throws invalid_argument if k is less than two or tolerance is less than 0.
          */
         KMeans(uintl      k,
-               uintl      max_iter=100,
-               Method     initialization=KMEANS_PLUS_PLUS,
-               Distance   distance=euclidean,
-               float      tolerance=1e-3,
-               uintl      seed=42L,
-               int        backend=Backend::CPU,
-               MPI_Comm   comm=MPI_COMM_WORLD);
+               uintl      max_iter = 100,
+               Method     initialization = KMEANS_PLUS_PLUS,
+               Distance   distance = euclidean,
+               float      tolerance = 1e-3,
+               uintl      seed = 42L,
+               int        backend = Backend::CPU,
+               MPI_Comm   comm = MPI_COMM_WORLD);
 
         /**
          * KMeans constructor
@@ -180,12 +180,12 @@ namespace juml {
          */
         KMeans(uintl      k,
                af::array& centroids,
-               uintl      max_iter=100,
-               Distance   distance=euclidean,
-               float      tolerance=1e-3,
-               uintl      seed=42L,
-               int        backend=Backend::CPU,
-               MPI_Comm   comm=MPI_COMM_WORLD);
+               uintl      max_iter = 100,
+               Distance   distance = euclidean,
+               float      tolerance = 1e-3,
+               uintl      seed = 42L,
+               int        backend = Backend::CPU,
+               MPI_Comm   comm = MPI_COMM_WORLD);
 
         /**
          * fit
@@ -195,7 +195,7 @@ namespace juml {
          * @param X - The training data
          * @throws invalid_argument if X has more then two dimensions or the initialization method is not applicable
          */
-        virtual void fit(Dataset& X) override;
+        void fit(Dataset& X) override;
 
         /**
          * predict
@@ -205,7 +205,7 @@ namespace juml {
          * @param X - The data to be predicted
          * @returns A dataset with 1xn row-vector with the predicted labels/centroid indices
          */
-        virtual Dataset predict(Dataset& X) const override;
+        Dataset predict(Dataset& X) const override;
 
         const af::array& centroids() const;
         const uintl k() const;
@@ -215,6 +215,6 @@ namespace juml {
         const uintl seed() const;
         const float tolerance() const;
     }; // KMeans
-}  // juml
+}  // namespace juml
 
-#endif // KMEANS_H
+#endif // JUML_CLUSTERING_KMEANS_H_

@@ -76,6 +76,30 @@ IF(GTEST_FOUND)
     )
 endif(GTEST_FOUND)
 
+
+#Use Google cpplint to check our .cpp and .h files.
+FIND_PACKAGE(PythonInterp)
+IF(PYTHONINTERP_FOUND)
+    FILE(GLOB_RECURSE lintable_cpp_files RELATIVE ${CMAKE_SOURCE_DIR} "src/*/*.cpp")
+    FILE(GLOB_RECURSE lintable_h_files RELATIVE ${CMAKE_SOURCE_DIR} "include/*/*.h")
+    ADD_CUSTOM_TARGET(lint ALL
+        ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cpplint.py
+        --verbose=3 #Reduce verbosity for now
+        --filter=-whitespace/line_length
+	--project=JuML
+	--root=src
+        ${lintable_cpp_files}
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cpplint.py
+        --verbose=3 #Reduce verbosity for now
+        --filter=-whitespace/line_length
+	--project=JuML
+	--root=include
+        ${lintable_h_files}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Executing cpplint" VERBATIM
+    )
+ENDIF()
+
 # ADD DOCUMENTATION # OPTIONAL
 FIND_PACKAGE(Doxygen)
 IF(DOXYGEN_FOUND)

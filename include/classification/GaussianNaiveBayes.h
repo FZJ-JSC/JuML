@@ -13,8 +13,8 @@
 * Email: phil.glock@gmail.com
 */
 
-#ifndef GAUSSIANNAIVEBAYES_H
-#define GAUSSIANNAIVEBAYES_H
+#ifndef JUML_CLASSIFICATION_GAUSSIANNAIVEBAYES_H_
+#define JUML_CLASSIFICATION_GAUSSIANNAIVEBAYES_H_
 
 #include <arrayfire.h>
 #include <mpi.h>
@@ -46,7 +46,7 @@ namespace juml {
      * @endcode
      */
     class GaussianNaiveBayes : public BaseClassifier {
-    protected:
+     protected:
         /**
          * @var   class_counts_
          * @brief A 1 x n arrayfire row-vector. Each column contains the global occurrence of the normalized class.
@@ -69,27 +69,27 @@ namespace juml {
          */
         af::array theta_;
 
-    public:
+     public:
         /**
          * GaussianNaiveBayes constructor
          * @param backend The execution backend
          * @param comm The MPI communicator for the execution
          */
-        GaussianNaiveBayes(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
+        explicit GaussianNaiveBayes(int backend = Backend::CPU, MPI_Comm comm = MPI_COMM_WORLD);
 
         /**
          * Fits GNB classifier based on the passed training data and labels
          * @param X The training dataset
          * @param y The label dataset to train on
          */
-        virtual void fit(Dataset& X, Dataset& y) override;
+        void fit(Dataset& X, Dataset& y) override;
 
         /**
          * Classifies the passed test data based on the previously fit model.
          * @param X The test dataset
          * @returns The predicted labels as dataset
          */
-        virtual Dataset predict(Dataset& X) const override;
+        Dataset predict(Dataset& X) const override;
 
         /**
          * Predicts the probability estimates of the passed test data based on the previously fit model.
@@ -97,7 +97,7 @@ namespace juml {
          * @return The predicted probabilities for each class (f x n) as dataset
          */
         virtual Dataset predict_probability(Dataset& X) const;
-        virtual float accuracy(Dataset& X, Dataset& y) const override;
+        float accuracy(Dataset& X, Dataset& y) const override;
 
         const af::array& class_counts() const;
         const af::array& prior() const;
@@ -106,4 +106,4 @@ namespace juml {
     };
 } // namespace juml
 
-#endif // GAUSSIANNAIVEBAYES_H
+#endif // JUML_CLASSIFICATION_GAUSSIANNAIVEBAYES_H_

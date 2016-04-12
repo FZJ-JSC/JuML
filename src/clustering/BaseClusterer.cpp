@@ -17,7 +17,7 @@
 
 namespace juml {
     BaseClusterer::BaseClusterer(int backend, MPI_Comm comm)
-      : Algorithm(backend, comm) 
+      : Algorithm(backend, comm)
     {};
 } // namespace juml
 

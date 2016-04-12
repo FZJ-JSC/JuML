@@ -13,17 +13,17 @@
 * Email: murxman@gmail.com
 */
 
-#ifndef BACKEND_H
-#define BACKEND_H
+#ifndef JUML_CORE_BACKEND_H_
+#define JUML_CORE_BACKEND_H_
 
 #include <arrayfire.h>
 
 namespace juml {
     class Backend {
-    protected:
+     protected:
         int backend_;
-    
-    public:
+
+     public:
         /**
          * @var   CPU
          * @brief Symbolic variable for the CPU backend
@@ -67,7 +67,7 @@ namespace juml {
          *
          * @param backend - The processing backend.
          */
-        Backend(int backend);
+        explicit Backend(int backend);
 
         /**
          * get
@@ -78,5 +78,5 @@ namespace juml {
     };
 } // namespace juml
 
-#endif // BACKEND_H
+#endif  // JUML_CORE_BACKEND_H_
 

@@ -77,7 +77,7 @@ namespace juml {
         }
         mpi::allreduce_inplace(this->centroids_, MPI_SUM, this->comm_);
     }
-    
+
     void KMeans::initialize_kpp_centroids(const Dataset& dataset) {
         const af::array& data = dataset.data();
 
@@ -220,7 +220,7 @@ namespace juml {
             previous_assignments = locations;
         }
     }
-    
+
     void KMeans::fit(Dataset& X) {
         // initialize backend and load data
         Backend::set(this->backend_.get());

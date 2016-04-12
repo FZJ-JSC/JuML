@@ -13,8 +13,8 @@
 * Email: murxman@gmail.com
 */
 
-#ifndef DISTANCES_H
-#define DISTANCES_H
+#ifndef JUML_SPATIAL_DISTANCES_H_
+#define JUML_SPATIAL_DISTANCES_H_
 
 #include <arrayfire.h>
 
@@ -44,6 +44,6 @@ namespace juml {
      * @throws  invalid_argument, if from or to has more then two dimensions or from and to have varying feature count
      */
     af::array manhattan(const af::array& from, const af::array& to);
-} // juml
+} // namespace juml
 
-#endif // DISTANCES_H
+#endif // JUML_SPATIAL_DISTANCES_H_
