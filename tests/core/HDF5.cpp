@@ -45,6 +45,11 @@ TEST_ALL_F (HDF5_TEST, WRITE_ARRAY1D_TEST) {
 TEST_ALL_F (HDF5_TEST, WRITE_ARRAY2D_TEST) {
     if (rank_ != 0) return;
     af::array data = af::constant(1, 4, 6);
+    for (int x=0; x < data.dims(0); ++x) {
+        for (int y=0; y < data.dims(1); ++y) {
+            data(x, y) = x * 10 + y;
+        }
+    }
     hid_t file_id = juml::hdf5::open_file(WRITE_FILE);
     juml::hdf5::write_array(file_id, TEST_SET, data);
     juml::hdf5::close_file(file_id);
@@ -60,6 +65,13 @@ TEST_ALL_F (HDF5_TEST, WRITE_ARRAY2D_TEST) {
 TEST_ALL_F (HDF5_TEST, WRITE_ARRAY3D_TEST) {
     if (rank_ != 0) return;
     af::array data = af::constant(1, 4, 6, 5);
+    for (int x=0; x < data.dims(0); ++x) {
+        for (int y=0; y < data.dims(1); ++y) {
+            for (int z=0; z < data.dims(2); ++z) {
+                data(x, y) = x * 100 + y * 10 + z;
+            }
+        }
+    }
     hid_t file_id = juml::hdf5::open_file(WRITE_FILE);
     juml::hdf5::write_array(file_id, TEST_SET, data);
     juml::hdf5::close_file(file_id);
@@ -74,6 +86,11 @@ TEST_ALL_F (HDF5_TEST, WRITE_ARRAY3D_TEST) {
 
 TEST_ALL_F (HDF5_TEST, PREAD_ARRAY_TEST) {
     af::array data = af::constant(1, 4, 6);
+    for (int x=0; x < data.dims(0); ++x) {
+        for (int y=0; y < data.dims(1); ++y) {
+            data(x, y) = x * 10 + y;
+        }
+    }
     if (rank_ == 0) {
 
         hid_t file_id = juml::hdf5::open_file(WRITE_FILE);
