@@ -60,7 +60,7 @@ _valid_extensions = set(['c', 'cc', 'cpp', 'cxx', 'c++', 'h', 'hpp', 'hxx',
 _USAGE = """
 Syntax: cpplint.py [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
                    [--counting=total|toplevel|detailed] [--root=subdir]
-                   [--linelength=digits]
+                   [--project=name] [--linelength=digits]
         <file> [file] ...
 
   The style guidelines this tries to follow are those in
@@ -125,6 +125,14 @@ Syntax: cpplint.py [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
         No flag => CHROME_BROWSER_UI_BROWSER_H_
         --root=chrome => BROWSER_UI_BROWSER_H_
         --root=chrome/browser => UI_BROWSER_H_
+
+    project=name
+      The name of the project used for deriving header guard CPP variable.
+      Is prepended to the variable name.
+
+    Examples:
+      No flag => CHROME_BROWSER_UI_BROWSER_H_
+      --project=chrome --root=chrome/browser => CHROME_UI_BROWSER_H_
 
     linelength=digits
       This is the allowed line length for the project. The default value is
@@ -497,6 +505,10 @@ _error_suppressions = {}
 # The root directory used for deriving header guard CPP variable.
 # This is set by --root flag.
 _root = None
+
+# The project name used for deriving header guard CPP variable.
+# This is set by --project flag.
+_projectname = None
 
 # The allowed line length of files.
 # This is set by --linelength flag.
@@ -1689,7 +1701,7 @@ def GetHeaderGuardCPPVariable(filename):
   file_path_from_root = fileinfo.RepositoryName()
   if _root:
     file_path_from_root = re.sub('^' + _root + os.sep, '', file_path_from_root)
-  return re.sub(r'[^a-zA-Z0-9]', '_', file_path_from_root).upper() + '_'
+  return (_projectname + "_" if _projectname else "") + re.sub(r'[^a-zA-Z0-9]', '_', file_path_from_root).upper() + '_'
 
 
 def CheckForHeaderGuard(filename, clean_lines, error):
@@ -6266,6 +6278,7 @@ def ParseArguments(args):
                                                  'counting=',
                                                  'filter=',
                                                  'root=',
+                                                 'project=',
                                                  'linelength=',
                                                  'extensions='])
   except getopt.GetoptError:
@@ -6296,6 +6309,9 @@ def ParseArguments(args):
     elif opt == '--root':
       global _root
       _root = val
+    elif opt == '--project':
+        global _projectname
+        _projectname = val.upper()
     elif opt == '--linelength':
       global _line_length
       try:
