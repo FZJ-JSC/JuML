@@ -13,8 +13,8 @@
 * Email: murxman@gmail.com
 */
 
-#ifndef DISTRIBUTIONS_H
-#define DISTRIBUTIONS_H
+#ifndef JUML_STATS_DISTRIBUTIONS_H_
+#define JUML_STATS_DISTRIBUTIONS_H_
 
 #include <arrayfire.h>
 
@@ -38,18 +38,18 @@ namespace juml {
     template <>
     af::array gaussian_pdf(const af::array& X, const af::array& means, const af::array& stddevs) {
         af::array sigma = af::pow(stddevs, 2);
-        af::array prob = 1.0 / af::sqrt(2.0 * af::Pi * sigma);        
+        af::array prob = 1.0 / af::sqrt(2.0 * af::Pi * sigma);
         af::array e = af::exp(af::pow(X - means, 2) / (-2.0 * sigma));
 
         return prob * e;
     }
-    
+
     template <>
     double gaussian_pdf(const double& X, const double& mean, const double& stddev) {
         af::array result = gaussian_pdf(af::constant(X, 1, f64), af::constant(mean, 1, f64), af::constant(stddev, 1, f64));
         return *(result.host<double>());
     }
-} // juml
+} // namespace juml
 
-#endif // DISTRIBUTIONS_H
+#endif // JUML_STATS_DISTRIBUTIONS_H_
 

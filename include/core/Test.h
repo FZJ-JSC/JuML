@@ -13,8 +13,8 @@
 * Email: murxman@gmail.com
 */
 
-#ifndef JUML_TEST_H
-#define JUML_TEST_H
+#ifndef JUML_CORE_TEST_H_
+#define JUML_CORE_TEST_H_
 
 #include <arrayfire.h>
 
@@ -80,4 +80,4 @@ TEST_ALL_CUDA_F(GROUP, NAME) \
 TEST_ALL_OPENCL_F(GROUP, NAME) \
 void TEST_INTERCEPTOR_CLASS_NAME(GROUP, NAME)::TEST_INTERCEPTOR_METHOD_NAME(int Backend)
 
-#endif //JUML_TEST_H
+#endif // JUML_CORE_TEST_H_

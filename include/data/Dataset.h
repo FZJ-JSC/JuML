@@ -13,20 +13,20 @@
 * Email: murxman@gmail.com
 */
 
-#ifndef DATASET_H
-#define DATASET_H
+#ifndef JUML_DATA_DATASET_H_
+#define JUML_DATA_DATASET_H_
 
 #include <arrayfire.h>
 #include <hdf5.h>
 #include <mpi.h>
-#include <string>
 #include <sys/stat.h>
+#include <string>
 
 namespace juml {
     //! Dataset
     //! TODO: Describe me
     class Dataset {
-    protected:
+     protected:
         af::array data_;
 
         const std::string filename_;
@@ -44,10 +44,10 @@ namespace juml {
         af::dtype h5_to_af(hid_t h5_type);
         hid_t af_to_h5(af::dtype af_type);
 
-    public:
+     public:
         //! Dataset constructor
-        Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm = MPI_COMM_WORLD); 
-        Dataset(const af::array& data, MPI_Comm comm = MPI_COMM_WORLD);
+        Dataset(const std::string& filename, const std::string& dataset, const MPI_Comm comm = MPI_COMM_WORLD);
+        explicit Dataset(const af::array& data, MPI_Comm comm = MPI_COMM_WORLD);
 
         time_t modified_time() const;
         void normalize(float min = 0, float max = 1, bool independent_features = false,
@@ -69,4 +69,4 @@ namespace juml {
         virtual dim_t sample_dim() const;
     }; // Dataset
 }  // namespace juml
-#endif // DATASET_H
+#endif // JUML_DATA_DATASET_H_

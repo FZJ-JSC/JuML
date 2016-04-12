@@ -13,12 +13,13 @@
 * Email: murxman@gmail.com
 */
 
+#include "data/Dataset.h"
+#include <core/MPI.h>
 #include <algorithm>
 #include <stdexcept>
 #include <sstream>
-#include <core/MPI.h>
+#include <string>
 
-#include "data/Dataset.h"
 
 namespace juml {
     //! Dataset constructor
@@ -62,7 +63,7 @@ namespace juml {
     }
 
     af::dtype Dataset::h5_to_af(hid_t h5_type) {
-             if (H5Tequal(h5_type, H5T_NATIVE_CHAR))    return u8;
+             if (H5Tequal(h5_type, H5T_NATIVE_CHAR))    return u8; //NOLINT
         else if (H5Tequal(h5_type, H5T_NATIVE_UCHAR))   return u8;
         else if (H5Tequal(h5_type, H5T_NATIVE_B8))      return b8;
         else if (H5Tequal(h5_type, H5T_NATIVE_SHORT))   return s16;
@@ -80,7 +81,7 @@ namespace juml {
     }
 
     hid_t Dataset::af_to_h5(af::dtype af_type) {
-            if  (af_type == u8)     return H5T_NATIVE_CHAR;
+            if  (af_type == u8)     return H5T_NATIVE_CHAR; //NOLINT
         else if (af_type == b8)     return H5T_NATIVE_B8;
         else if (af_type == s16)    return H5T_NATIVE_SHORT;
         else if (af_type == u16)    return H5T_NATIVE_USHORT;

@@ -13,8 +13,8 @@
 * Email: murxman@gmail.com
 */
 
-#ifndef BASECLUSTERER_H
-#define BASECLUSTERER_H
+#ifndef JUML_CLUSTERING_BASECLUSTERER_H_
+#define JUML_CLUSTERING_BASECLUSTERER_H_
 
 #include "core/Algorithm.h"
 #include "core/Backend.h"
@@ -22,7 +22,7 @@
 
 namespace juml {
     class BaseClusterer : public Algorithm {
-    public:
+     public:
         /**
          * BaseClusterer constructor
          *
@@ -31,7 +31,7 @@ namespace juml {
          * @param backend - The processing backend, defaults to CPU
          * @param comm - The MPI communicator
          */
-        BaseClusterer(int backend=Backend::CPU, MPI_Comm comm=MPI_COMM_WORLD);
+        explicit BaseClusterer(int backend = Backend::CPU, MPI_Comm comm = MPI_COMM_WORLD);
 
         /**
          * (Abstract) fit
@@ -53,5 +53,5 @@ namespace juml {
     };
 } // namespace juml
 
-#endif // BASECLUSTERER_H
+#endif // JUML_CLUSTERING_BASECLUSTERER_H_
 

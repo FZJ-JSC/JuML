@@ -16,9 +16,9 @@
 #include "core/Algorithm.h"
 
 namespace juml {
-    Algorithm::Algorithm(int backend, MPI_Comm comm) 
+    Algorithm::Algorithm(int backend, MPI_Comm comm)
       : backend_(backend), comm_(comm) {
         MPI_Comm_rank(this->comm_, &this->mpi_rank_);
-        MPI_Comm_size(this->comm_, &this->mpi_size_);  
+        MPI_Comm_size(this->comm_, &this->mpi_size_);
     }
 } // namespace juml

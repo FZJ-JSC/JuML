@@ -13,12 +13,12 @@
  * Email: phil.glock@gmail.com
  */
 
-#ifndef CLASS_NORMALIZER_H
-#define CLASS_NORMALIZER_H
+#ifndef JUML_PREPROCESSING_CLASSNORMALIZER_H_
+#define JUML_PREPROCESSING_CLASSNORMALIZER_H_
 
 #include <arrayfire.h>
-#include <cstdint>
 #include <mpi.h>
+#include <cstdint>
 #include <stdexcept>
 #include <sstream>
 
@@ -32,7 +32,7 @@ namespace juml {
      * the range [0, #classes) across all nodes. It is used in various classifiers to simply their implementation.
      */
     class ClassNormalizer {
-    protected:
+     protected:
         /**
          * @var   class_labels_
          * @brief A 1xn row vector, where each original label is placed at the normalized label it will be converted to
@@ -53,14 +53,14 @@ namespace juml {
          * @brief The number of nodes in comm_
          */
         int mpi_size_;
-        
-    public:
+
+     public:
         /**
          * ClassNormalizer constructor
          *
          * @param comm - The MPI communicator for the execution
          */
-        ClassNormalizer(MPI_Comm comm=MPI_COMM_WORLD);
+        explicit ClassNormalizer(MPI_Comm comm = MPI_COMM_WORLD);
 
         const af::array& classes() const;
 
@@ -86,7 +86,7 @@ namespace juml {
                 throw std::invalid_argument(message.str().c_str());
             }
             af::array::array_proxy index = this->class_labels_(transformed_label);
-            
+
             return static_cast<T>(index.scalar<intl>());
         }
         /**
@@ -119,7 +119,7 @@ namespace juml {
                 message << "Class " << class_label << " not found";
                 throw std::invalid_argument(message.str().c_str());
             }
-            
+
             return static_cast<intl>(indices.scalar<unsigned int>());
         }
 
@@ -132,5 +132,5 @@ namespace juml {
          */
         af::array transform(const af::array& original_labels) const;
     }; // ClassNormalizer
-}  // juml
-#endif // CLASS_NORMALIZER_H
+}  // namespace juml
+#endif // JUML_PREPROCESSING_CLASSNORMALIZER_H_

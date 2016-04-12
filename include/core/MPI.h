@@ -13,8 +13,8 @@
 * Email: murxman@gmail.com
 */
 
-#ifndef JUML_MPI_H
-#define JUML_MPI_H
+#ifndef JUML_CORE_MPI_H_
+#define JUML_CORE_MPI_H_
 
 #include <arrayfire.h>
 #include <mpi.h>
@@ -128,4 +128,4 @@ namespace mpi {
 } // namespace mpi
 } // namespace juml
 
-#endif // JUML_MPI_H
+#endif // JUML_CORE_MPI_H_
