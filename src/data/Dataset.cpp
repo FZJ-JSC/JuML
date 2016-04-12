@@ -327,10 +327,7 @@ namespace juml {
 
     void Dataset::dump_equal_chunks(const std::string& filename, const std::string& dataset) {
         unsigned int dimensions = this->data_.numdims();
-        af::array n_rows = af::constant(this->data_.dims(dimensions-1), 1);
-        mpi::allgather(n_rows, this->comm_);
-        af::array start = af::accum(n_rows, 1);
-        intl total_rows = start(af::end).scalar<intl>();
+        intl total_rows = this->global_n_samples_;
 
         // create parallel access list
         MPI_Info info = MPI_INFO_NULL;
@@ -371,7 +368,7 @@ namespace juml {
 
         // select hyperslab
         hsize_t offset[dimensions]{0};
-        offset[0] = (this->mpi_rank_ == 0 ? 0 : static_cast<hsize_t>(start(this->mpi_rank_ - 1).scalar<intl>()));
+        offset[0] = (this->mpi_rank_ == 0 ? 0 : static_cast<hsize_t>(this->global_offset_));
         filespace = H5Dget_space(dset_id);
         H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL, local_dims, NULL);
 
