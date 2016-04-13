@@ -16,6 +16,7 @@
 #include <random>
 #include <set>
 #include <stdexcept>
+#include <core/HDF5.h>
 
 #include "core/MPI.h"
 #include "clustering/KMeans.h"
@@ -279,5 +280,21 @@ namespace juml {
 
     const float KMeans::tolerance() const {
         return this->tolerance_;
+    }
+
+    void KMeans::save(const std::string& filename) const {
+        if (this->mpi_rank_ == 0) {
+            hid_t file_id = juml::hdf5::open_file(filename);
+            juml::hdf5::write_array(file_id, "centroids", this->centroids_);
+            juml::hdf5::close_file(file_id);
+        }
+        MPI_Barrier(this->comm_);
+    }
+
+    void KMeans::load(const std::string& filename) {
+        hid_t file_id = juml::hdf5::popen_file(filename, this->comm_);
+        this->centroids_ = juml::hdf5::pread_array(file_id, "centroids");
+        this->k_ = this->centroids_.dims(0);
+        juml::hdf5::close_file(file_id);
     }
 } // namespace juml

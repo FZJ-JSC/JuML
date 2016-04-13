@@ -81,8 +81,8 @@ namespace juml {
         const uintl seed() const;
         const float tolerance() const;
 
-        virtual void load(const std::string& filename) {};
-        virtual void save(const std::string& filename) const {};
+        virtual void load(const std::string& filename);
+        virtual void save(const std::string& filename) const;
     }; // KMeans
 }  // juml
 
