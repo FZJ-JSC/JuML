@@ -49,6 +49,8 @@ int main(int argc, char *argv[]) {
 		}
 
 	}
+	const float LEARNINGRATE=0.01;
+	cout << "Learningrate: " << LEARNINGRATE << endl;
 	
 	//Print network layer counts:
 	{
@@ -106,7 +108,7 @@ int main(int argc, char *argv[]) {
 			int last = std::min((int)data_array.dims(1) - 1, batch + batchsize - 1);
 			af::array batchsamples = data_array(af::span, af::seq(batch, last));
 			af::array batchtarget = target(af::span, af::seq(batch, last));
-			lasterror = net.fitBatch(batchsamples, batchtarget, 0.01);
+			lasterror = net.fitBatch(batchsamples, batchtarget, LEARNINGRATE);
 			error += lasterror;
 		}
 		double time_buf = MPI_Wtime();
