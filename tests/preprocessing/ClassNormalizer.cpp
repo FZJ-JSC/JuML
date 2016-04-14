@@ -5,14 +5,15 @@
 #include <string>
 
 #include "core/Backend.h"
+#include "core/Test.h"
 #include "data/Dataset.h"
 #include "preprocessing/ClassNormalizer.h"
 
 static const std::string FILE_PATH = JUML_DATASETS"/random_class_labels.h5";
 static const std::string DATA_SET = "labels";
 
-TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_CPU) {
-    juml::Backend::set(juml::Backend::CPU);
+TEST_ALL(CLASS_NORMALIZER_TEST, MAPPING_TEST) {
+    juml::Backend::set(BACKEND);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
     juml::ClassNormalizer class_normalizer;
@@ -34,60 +35,30 @@ TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_CPU) {
     }
 }
 
-#ifdef JUML_OPENCL
-TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_OPENCL) {
-    juml::Backend::set(juml::Backend::OPENCL);
+TEST_ALL(CLASS_NORMALIZER_TEST, MAPPING_EXCEPTION) {
+    juml::Backend::set(BACKEND);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
+
     juml::ClassNormalizer class_normalizer;
+
+    // test non row-vector inputs
+    ASSERT_THROW(class_normalizer.index(juml::Dataset(af::constant(0, 100, 1, 1, 1))), std::invalid_argument);
+    ASSERT_THROW(class_normalizer.index(juml::Dataset(af::constant(0, 1, 1, 100, 1))), std::invalid_argument);
+    ASSERT_THROW(class_normalizer.index(juml::Dataset(af::constant(0, 1, 1, 1, 100))), std::invalid_argument);
+
+    // set up a working normalizer and wrong labels
     class_normalizer.index(labels);
+    int out_of_range_transform = af::max<int>(class_normalizer.classes()) + 1;
+    int out_of_range_invert = static_cast<int>(class_normalizer.n_classes()) + 1;
 
-    // check number of classes
-    ASSERT_EQ(class_normalizer.n_classes(), 19);
-
-    // check transform and invert
-    // skip class label -5 because it is missing
-    int original, transformed;
-    for (original = -10, transformed = 0; original < 10; ++original, ++transformed) {
-        if (original == -5) {
-            --transformed;
-            continue;
-        }
-        ASSERT_EQ(class_normalizer.transform(original), transformed);
-        ASSERT_EQ(class_normalizer.invert<int>(transformed), original);
-    }
+    // singular input
+    ASSERT_THROW(class_normalizer.transform<int>(out_of_range_transform), std::invalid_argument);
+    ASSERT_THROW(class_normalizer.invert<int>(out_of_range_invert), std::invalid_argument);
 }
 
-#endif // JUML_OPENCL
-
-#ifdef JUML_CUDA
-TEST (CLASS_NORMALIZER_TEST, MAPPING_TEST_CUDA) {
-    juml::Backend::set(juml::Backend::CUDA);
-    juml::Dataset labels(FILE_PATH, DATA_SET);
-    labels.load_equal_chunks();
-    juml::ClassNormalizer class_normalizer;
-    class_normalizer.index(labels);
-
-    // check number of classes
-    ASSERT_EQ(class_normalizer.n_classes(), 19);
-
-    // check transform and invert
-    // skip class label -5 because it is missing
-    int original, transformed;
-    for (original = -10, transformed = 0; original < 10; ++original, ++transformed) {
-        if (original == -5) {
-            --transformed;
-            continue;
-        }
-        ASSERT_EQ(class_normalizer.transform(original), transformed);
-        ASSERT_EQ(class_normalizer.invert<int>(transformed), original);
-    }
-}
-
-#endif // JUML_CUDA
-
-TEST (CLASS_NORMALIZER_TEST, VECTOR_MAPPING_TEST_CPU) {
-    juml::Backend::set(juml::Backend::CPU);
+TEST_ALL(CLASS_NORMALIZER_TEST, VECTOR_MAPPING) {
+    juml::Backend::set(BACKEND);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
     juml::ClassNormalizer class_normalizer;
@@ -97,33 +68,27 @@ TEST (CLASS_NORMALIZER_TEST, VECTOR_MAPPING_TEST_CPU) {
     ASSERT_TRUE(af::allTrue<bool>(class_normalizer.invert(transformed) == labels.data()));
 }
 
-#ifdef JUML_OPENCL
-TEST (CLASS_NORMALIZER_TEST, VECTOR_MAPPING_TEST_OPENCL) {
-    juml::Backend::set(juml::Backend::OPENCL);
+TEST_ALL(CLASS_NORMALIZER_TEST, VECTOR_MAPPING_EXCEPTION) {
+    juml::Backend::set(BACKEND);
     juml::Dataset labels(FILE_PATH, DATA_SET);
     labels.load_equal_chunks();
+
     juml::ClassNormalizer class_normalizer;
     class_normalizer.index(labels);
 
-    af::array transformed = class_normalizer.transform(labels.data());
-    ASSERT_TRUE(af::allTrue<bool>(class_normalizer.invert(transformed) == labels.data()));
+    // test misshapes vectors
+    ASSERT_THROW(class_normalizer.transform(af::constant(-1, 100, 1, 1, 1)), std::invalid_argument);
+    ASSERT_THROW(class_normalizer.transform(af::constant(-1, 1, 1, 100, 1)), std::invalid_argument);
+    ASSERT_THROW(class_normalizer.transform(af::constant(-1, 1, 1, 1, 100)), std::invalid_argument);
+
+    ASSERT_THROW(class_normalizer.invert(af::constant(-1, 100, 1, 1, 1)), std::invalid_argument);
+    ASSERT_THROW(class_normalizer.invert(af::constant(-1, 1, 1, 100, 1)), std::invalid_argument);
+    ASSERT_THROW(class_normalizer.invert(af::constant(-1, 1, 1, 1, 100)), std::invalid_argument);
+
+    // test faulty input
+//    ASSERT_THROW(class_normalizer.transform(af::constant(100, 1, 100)), std::invalid_argument);
+    ASSERT_THROW(class_normalizer.invert(af::constant(100, 1, 100)), std::invalid_argument);
 }
-
-#endif // JUML_OPENCL
-
-#ifdef JUML_CUDA
-TEST (CLASS_NORMALIZER_TEST, VECTOR_MAPPING_TEST_CUDA) {
-    juml::Backend::set(juml::Backend::CUDA);
-    juml::Dataset labels(FILE_PATH, DATA_SET);
-    labels.load_equal_chunks();
-    juml::ClassNormalizer class_normalizer;
-    class_normalizer.index(labels);
-
-    af::array transformed = class_normalizer.transform(labels.data());
-    ASSERT_TRUE(af::allTrue<bool>(class_normalizer.invert(transformed) == labels.data()));
-}
-
-#endif // JUML_CUDA
 
 int main(int argc, char** argv) {
     int result = -1;

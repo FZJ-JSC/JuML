@@ -8,6 +8,8 @@
 #include "clustering/KMeans.h"
 #include "spatial/Distances.h"
 
+#include "core/MPI.h"
+
 static const std::string FILE_PATH = JUML_DATASETS"/iris.h5";
 static const std::string SAMPLES = "samples";
 

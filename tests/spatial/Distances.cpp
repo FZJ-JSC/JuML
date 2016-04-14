@@ -1,7 +1,6 @@
 #include <arrayfire.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
-#include <armadillo>
 
 #include "core/Backend.h"
 #include "spatial/Distances.h"

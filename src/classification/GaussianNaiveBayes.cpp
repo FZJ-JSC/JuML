@@ -14,9 +14,10 @@
 */
 
 #include <algorithm>
-#include <iostream>
+#include <limits>
 
 #include "core/Backend.h"
+#include "core/MPI.h"
 #include "classification/GaussianNaiveBayes.h"
 #include "stats/Distributions.h"
 
@@ -38,8 +39,8 @@ namespace juml {
         const dim_t n_classes = this->class_normalizer_.n_classes();
         this->class_counts_ = af::constant(0.0f, 1, n_classes);
         this->prior_ = af::constant(0.0f, 1, n_classes);
-        this->theta_ = af::constant(0.0f, X.n_features(), n_classes);
         this->stddev_ = af::constant(0.0f, X.n_features(), n_classes);
+        this->theta_ = af::constant(0.0f, X.n_features(), n_classes);
         
         af::array transformed_labels = this->class_normalizer_.transform(y_);
         for (int label = 0; label < n_classes; ++label) {
@@ -54,7 +55,9 @@ namespace juml {
         
         // copy variables into one array and use only one mpi call
         const dim_t n_floats = n_classes * (2 + X.n_features()) + 1;
-        float* message = new float[n_floats];
+        if (n_floats > std::numeric_limits<int>::max())
+            throw std::domain_error("Message too large");
+        float message[n_floats];
         
         // create message
         this->class_counts_.host(reinterpret_cast<void*>(message));
@@ -63,7 +66,7 @@ namespace juml {
         message[n_floats - 1] = (float)y.n_samples();
         
         // reduce to obtain global view
-        MPI_Allreduce(MPI_IN_PLACE, message, n_floats, MPI_FLOAT, MPI_SUM, this->comm_);
+        MPI_Allreduce(MPI_IN_PLACE, message, static_cast<int>(n_floats), MPI_FLOAT, MPI_SUM, this->comm_);
         
         // copy the reduced elements back        
         this->class_counts_.write(message, n_classes * sizeof(float));
@@ -71,7 +74,7 @@ namespace juml {
         this->theta_.write(message + n_classes * 2, this->theta_.elements() * sizeof(float));
         
         // extract reduced class counts, prior and theta from message
-        const intl total_n_y = (intl) message[n_floats - 1];
+        const intl total_n_y = static_cast<intl>(message[n_floats - 1]);
         this->prior_ /= total_n_y;        
         gfor (af::seq row, X.n_features()) {
             this->theta_(row, af::span) /= this->class_counts_;
@@ -90,19 +93,13 @@ namespace juml {
         }
         
         // exchange the standard deviations values
-        const size_t n_stddev = n_classes * X_.dims(0);
-        this->stddev_.host(reinterpret_cast<void*>(message));
-        MPI_Allreduce(MPI_IN_PLACE, message, n_stddev, MPI_FLOAT, MPI_SUM, this->comm_);
-        this->stddev_.write(message, n_stddev * sizeof(float));
+        mpi::allreduce_inplace(this->stddev_, MPI_SUM, this->comm_);
         
         // normalize standard deviation by class counts and calculate root (not variance)
         gfor (af::seq row, X.n_features()) {
             this->stddev_(row, af::span) /= this->class_counts_;
         }
         this->stddev_ = af::sqrt(this->stddev_);
-        
-        // release message buffer
-        delete[] message;
     }
 
     Dataset GaussianNaiveBayes::predict_probability(Dataset& X) const {
