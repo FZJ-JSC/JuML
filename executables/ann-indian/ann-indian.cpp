@@ -43,9 +43,9 @@ int main(int argc, char *argv[]) {
 			cout << "ANN loaded from file " << argv[2] << endl;
 		} else {
 			cout << "Creating new ANN" << endl;
-			net.add(juml::ann::make_SigmoidLayer(n_features, 2000));
+			net.add(juml::ann::make_SigmoidLayer(n_features, 16000));
 //			net.add(juml::ann::make_SigmoidLayer(4000, 400));
-			net.add(juml::ann::make_SigmoidLayer(2000, n_classes));
+			net.add(juml::ann::make_SigmoidLayer(16000, n_classes));
 		}
 
 	}
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
 	double time_train_batch_test = 0;
 	double time_train_sync = 0;
 
-	int batchsize = 10;
+	int batchsize = 200;
 	int nbatches = N/batchsize;
 	cout << "N: " << N << " n_batches: " << nbatches << endl
 		<< "batchsize: " << batchsize <<endl;
@@ -112,7 +112,6 @@ int main(int argc, char *argv[]) {
 			error += lasterror;
 		}
 		double time_buf = MPI_Wtime();
-		net.sync();
 
 		MPI_Allreduce(MPI_IN_PLACE, &error, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
 		error /= mpi_size;
