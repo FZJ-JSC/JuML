@@ -6,7 +6,7 @@
 int main(int argc, char *argv[]) {
 	const int n_classes = 52;
 	const int n_features = 30;
-	const int n_hidden_nodes = 4000;
+	const int n_hidden_nodes = 16000;
 	const float LEARNINGRATE=0.01;
 	const int batchsize = 10;
 	const int max_epochs = 1000;
