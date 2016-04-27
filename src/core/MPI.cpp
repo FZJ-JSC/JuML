@@ -13,6 +13,7 @@
 * Email: murxman@gmail.com
 */
 
+#include <math.h>
 #include <stdexcept>
 
 #include "core/Backend.h"
@@ -55,7 +56,7 @@ namespace mpi {
         }
     }
 
-    int allgather(af::array& data, MPI_Comm comm, dim_t merge) {
+    int allgather(af::array& data, MPI_Comm comm) {
         // MPI administration
         int mpi_size;
         MPI_Comm_size(comm, &mpi_size);
@@ -63,7 +64,7 @@ namespace mpi {
 
         // allocate target memory
         af::dim4 dimensions = data.dims();
-        dimensions[merge] *= mpi_size;
+        dimensions[data.numdims() - 1] *= mpi_size;
         af::array target = af::array(dimensions, data.type());
 
         // force evaluations of operations and allocation
@@ -74,7 +75,7 @@ namespace mpi {
         if (can_use_device_pointer(data)) {
             void* data_pointer = reinterpret_cast<void *>(data.device<unsigned char>());
             void* gather_buffer = reinterpret_cast<void *>(target.device<unsigned char>());
-            int error = MPI_Allgather(data_pointer, (int) data.elements(), type, gather_buffer, (int)data.elements(), type, comm);
+            int error = MPI_Allgather(data_pointer, (int)data.elements(), type, gather_buffer, (int)data.elements(), type, comm);
             data.unlock();
             target.unlock();
             if (error != MPI_SUCCESS) {
@@ -101,27 +102,26 @@ namespace mpi {
         return MPI_SUCCESS;
     }
 
-    int allgatherv(af::array& data, MPI_Comm comm, dim_t merge) {
-        // mpi book-keeping and sanity check for number of counts
-        int mpi_rank;
-        int mpi_size;
-        int mpi_error;
-
+    int allgatherv(af::array& data, MPI_Comm comm) {
+        // mpi book-keeping
+        int mpi_rank, mpi_size, mpi_error;
         MPI_Comm_rank(comm, &mpi_rank);
         MPI_Comm_size(comm, &mpi_size);
 
         // exchange the element counts and displacements
-        int counts[mpi_size];
+        int counts[mpi_size + 1] = {0};
         int displacements[mpi_size];
         int total_elements = 0;
         counts[mpi_rank] = static_cast<int>(data.elements());
+        counts[mpi_size] = static_cast<int>(data.numdims());
         displacements[0] = 0;
 
-        mpi_error = MPI_Allgather(counts + mpi_rank, 1, MPI_INT, counts, 1, MPI_INT, comm);
+        mpi_error = MPI_Allreduce(MPI_IN_PLACE, counts, mpi_size + 1, MPI_INT, MPI_SUM, comm);
         for (int i = 1; i < mpi_size; ++i) {
             displacements[i] = displacements[i - 1] + counts[i - 1];
             total_elements += counts[i];
         }
+        int num_dims = (int)std::ceil(counts[mpi_size] / (float)mpi_size);
         total_elements += counts[0];
 
         // prepare the source and target buffers
@@ -130,7 +130,7 @@ namespace mpi {
 
         // allocate target
         af::dim4 dimensions = data.dims();
-        dimensions[merge] = total_elements / (data.elements() / data.dims(static_cast<unsigned int>(merge)));
+        dimensions[num_dims - 1] = total_elements / (data.elements() / data.dims(static_cast<unsigned int>(num_dims - 1)));
         af::array target = af::array(dimensions, data.type());
         data.eval();
         target.eval();
@@ -151,13 +151,13 @@ namespace mpi {
                 delete[] reinterpret_cast<unsigned char*>(gather_buffer);
                 return mpi_error;
             }
-            af_write_array(target.get(), gather_buffer, target.bytes() / target.elements() * total_elements, afHost);
+            af_write_array(target.get(), gather_buffer, data.bytes() / data.elements() * total_elements, afHost);
             data.unlock();
             delete[] reinterpret_cast<unsigned char*>(data_buffer);
             delete[] reinterpret_cast<unsigned char*>(gather_buffer);
         }
-
         data = target;
+
         return MPI_SUCCESS;
     }
 
