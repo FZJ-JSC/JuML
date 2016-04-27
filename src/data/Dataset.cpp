@@ -297,7 +297,8 @@ namespace juml {
         // initialize the array, swap the row and column dimensions before (HDF5 row-major, AF column-major)
         af::dim4 arrayDim4;
         if (n_dims > 1) {
-            std::swap(chunk_dimensions[0], chunk_dimensions[1]);
+            //std::swap(chunk_dimensions[0], chunk_dimensions[1]);
+            std::reverse(chunk_dimensions, chunk_dimensions + n_dims);
             arrayDim4 = af::dim4(n_dims, reinterpret_cast<dim_t*>(chunk_dimensions));
         } else if (n_dims == 1) {
             arrayDim4 = af::dim4(1, chunk_dimensions[0]);
@@ -313,7 +314,7 @@ namespace juml {
             uint8_t* buffer = new uint8_t[size];
             H5Dread(data_id, native_type, mem_space, file_space_id, H5P_DEFAULT, buffer);
             af_write_array(this->data_.get(), buffer, size, afHost); 
-            delete[] buffer;	
+            delete[] buffer;
         }
 
         // release resources
@@ -325,10 +326,8 @@ namespace juml {
     }
 
     void Dataset::dump_equal_chunks(const std::string& filename, const std::string& dataset) {
-        af::array n_rows = af::constant(this->data_.dims(1), 1);
-        mpi::allgather(n_rows, this->comm_);
-        af::array start = af::accum(n_rows, 1);
-        intl total_rows = start(af::end).scalar<intl>();
+        unsigned int dimensions = this->data_.numdims();
+        intl total_rows = this->global_n_samples_;
 
         // create parallel access list
         MPI_Info info = MPI_INFO_NULL;
@@ -336,18 +335,22 @@ namespace juml {
         H5Pset_fapl_mpio(plist_id, this->comm_, info);
 
         // create a file and close property list identifier
-        hid_t file_id = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+        hid_t file_id = H5Fcreate(filename.c_str(), H5F_ACC_EXCL, H5P_DEFAULT, plist_id);
+        if (file_id < 0) {
+            file_id = H5Fopen(filename.c_str(), H5F_ACC_RDWR, plist_id);
+        }
         H5Pclose(plist_id);
 
         // create dataspace for dataset
-        unsigned int dimensions = this->data_.numdims();
         hsize_t dims[dimensions];
 
-        dims[0] = static_cast<hsize_t>(total_rows);
-        dims[1] = static_cast<hsize_t>(this->data_.dims(0));
-        for (unsigned int i = 2; i < dimensions; ++i) {
+
+        for (unsigned int i = 0; i < dimensions; ++i) {
             dims[i] = static_cast<hsize_t>(this->data_.dims(i));
         }
+        dims[dimensions-1] = static_cast<hsize_t>(total_rows);
+        std::reverse(dims, dims+dimensions);
+
         hid_t filespace = H5Screate_simple(dimensions, dims, NULL);
 
         // create dataset and close filespace
@@ -357,16 +360,15 @@ namespace juml {
 
         // define dataset in memory
         hsize_t local_dims[dimensions];
-        local_dims[0] = static_cast<hsize_t>(this->data_.dims(1));
-        local_dims[1] = static_cast<hsize_t>(this->data_.dims(0));
-        for (unsigned int i = 2; i < dimensions; ++i) {
+        for (unsigned int i = 0; i < dimensions; ++i) {
             local_dims[i] = static_cast<hsize_t>(this->data_.dims(i));
         }
+        std::reverse(local_dims, local_dims + dimensions);
         hid_t memspace = H5Screate_simple(dimensions, local_dims, NULL);
 
         // select hyperslab
         hsize_t offset[dimensions]{0};
-        offset[0] = (this->mpi_rank_ == 0 ? 0 : static_cast<hsize_t>(start(this->mpi_rank_ - 1).scalar<intl>()));
+        offset[0] = (this->mpi_rank_ == 0 ? 0 : static_cast<hsize_t>(this->global_offset_));
         filespace = H5Dget_space(dset_id);
         H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL, local_dims, NULL);
 

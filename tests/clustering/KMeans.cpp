@@ -1,4 +1,5 @@
 #include <exception>
+#include <fstream>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <mpi.h>
@@ -10,6 +11,8 @@
 
 static const std::string FILE_PATH = JUML_DATASETS"/iris.h5";
 static const std::string SAMPLES = "samples";
+
+static const std::string DUMP_KM = "km_model.h5";
 
 static const float EUCLIDEAN_CENTROIDS[3][4] = {{5.0059996f, 3.4180002f, 1.4640000f, 0.2440000f},
                                                 {5.8836064f, 2.7409837f, 4.3885250f, 1.4344264f},
@@ -76,6 +79,30 @@ TEST_ALL(KMEANS_TEST, IRIS_PASS_CENTROIDS) {
 
     const af::array& kmeans_centroids = kmeans.centroids();
     ASSERT_EQ(af::allTrue(centroids == kmeans_centroids).scalar<char>(), 1);
+}
+
+
+TEST_ALL (KMEANS_TEST, SAVE_LOAD_TEST) {
+    int rank_;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
+    // create and train gnb
+    juml::KMeans km(3,BACKEND);
+    juml::Dataset X(FILE_PATH, SAMPLES);
+    km.fit(X);
+    // save model
+    km.save(DUMP_KM);
+    std::ifstream fin(DUMP_KM.c_str());
+    ASSERT_TRUE(fin.is_open());
+    // load model
+    juml::KMeans loaded(2, BACKEND);
+    loaded.load(DUMP_KM);
+
+    if (rank_ == 0) {
+        std::remove(DUMP_KM.c_str());
+    }
+
+    const af::array& centroids = loaded.centroids();
+    ASSERT_TRUE(af::allTrue<bool>(centroids == km.centroids()));
 }
 
 int main(int argc, char** argv) {

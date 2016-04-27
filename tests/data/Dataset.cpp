@@ -20,6 +20,7 @@ const std::string ROWNUMBER_SETNAME = "testset";
 
 const std::string DUMP_FILE = "dumpTest.h5";
 const std::string DUMP_DATASET = "DUMPED";
+const std::string DUMP_DATASET2 = "TEST_DUMPED";
 
 class DATASET_TEST : public testing::Test
 {
@@ -92,6 +93,26 @@ TEST_ALL_F(DATASET_TEST, DUMP_EQUAL_CHUNKS) {
         std::remove(DUMP_FILE.c_str());
     }
     ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data));
+}
+
+TEST_ALL_F(DATASET_TEST, DUMP_EQUAL_CHUNKS_APPEND) {
+    juml::Backend::set(juml::Backend::CPU);
+    af::array data1 = af::constant(rank_, 2, 3, s32);
+    juml::Dataset dataset1(data1, MPI_COMM_WORLD);
+    dataset1.dump_equal_chunks(DUMP_FILE, DUMP_DATASET);
+
+    af::array data2 = af::constant(rank_ * -1, 2, 4, s32);
+    juml::Dataset dataset2(data2, MPI_COMM_WORLD);
+    dataset2.dump_equal_chunks(DUMP_FILE, DUMP_DATASET2);
+    juml::Dataset loaded(DUMP_FILE, DUMP_DATASET);
+    juml::Dataset loaded2(DUMP_FILE, DUMP_DATASET2);
+    loaded.load_equal_chunks();
+    loaded2.load_equal_chunks();
+    if (rank_ == 0) {
+        std::remove(DUMP_FILE.c_str());
+    }
+    ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data1));
+    ASSERT_TRUE(af::allTrue<bool>(loaded2.data() == data2));
 }
 
 TEST_ALL_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_PREVENT_RELOAD) {
