@@ -27,7 +27,7 @@ namespace juml {
     protected:
         /**
          * @var   class_normalizer_
-         * @brief A @see ClassNormalizer instance, normalizes class labels on calling fit
+         * @brief A ClassNormalizer instance, normalizes class labels on calling fit
          */
         ClassNormalizer class_normalizer_;
 
