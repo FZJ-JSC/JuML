@@ -24,6 +24,7 @@ namespace juml {
 namespace hdf5 {
     af::dtype h5_to_af(hid_t h5_type);
     hid_t af_to_h5(af::dtype af_type);
+    bool exists(const std::string& filename);
     hid_t open_file(const std::string &filename);
     void close_file(hid_t& file_id);
     void write_array(hid_t file_id, const std::string& dataset, const af::array& data);

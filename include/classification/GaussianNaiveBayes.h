@@ -105,8 +105,9 @@ namespace juml {
         /**
          * Saves a trained GaussianNaiveBayes model to a file.
          * @param filename The filename of the saved file.
+         * @param override If true (default) an existing file is overriden, else an exception is thrown.
          */
-        virtual void save(const std::string& filename) const;
+        virtual void save(const std::string& filename, bool override=true) const;
 
         const af::array& class_counts() const;
         const af::array& prior() const;

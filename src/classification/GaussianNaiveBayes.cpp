@@ -152,7 +152,7 @@ namespace juml {
         return local_results[0] / local_results[1];
     }
 
-    void GaussianNaiveBayes::save(const std::string& filename) const {
+    void GaussianNaiveBayes::save(const std::string& filename, bool override) const {
         if (this->mpi_rank_ == 0) {
             hid_t file_id = hdf5::open_file(filename.c_str());
             hdf5::write_array(file_id, "class_counts", this->class_counts_);

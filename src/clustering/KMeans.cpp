@@ -282,7 +282,8 @@ namespace juml {
         return this->tolerance_;
     }
 
-    void KMeans::save(const std::string& filename) const {
+    void KMeans::save(const std::string& filename, bool override) const {
+        Algorithm::save(filename, override);
         if (this->mpi_rank_ == 0) {
             hid_t file_id = juml::hdf5::open_file(filename);
             juml::hdf5::write_array(file_id, "centroids", this->centroids_);

@@ -14,6 +14,7 @@
 */
 
 #include <algorithm>
+#include <fstream>
 
 #include "core/HDF5.h"
 
@@ -51,6 +52,11 @@ namespace hdf5 {
         else if (af_type == f64)    return H5T_NATIVE_DOUBLE;
 
         throw std::domain_error("Unsupported af type");
+    }
+
+    bool exists(const std::string& filename) {
+        std::ifstream file(filename.c_str());
+        return file.good();
     }
 
     hid_t open_file(const std::string &filename) {

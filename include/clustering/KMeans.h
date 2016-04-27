@@ -82,7 +82,7 @@ namespace juml {
         const float tolerance() const;
 
         virtual void load(const std::string& filename);
-        virtual void save(const std::string& filename) const;
+        virtual void save(const std::string& filename, bool override=true) const;
     }; // KMeans
 }  // juml
 

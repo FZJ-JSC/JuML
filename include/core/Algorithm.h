@@ -68,8 +68,9 @@ namespace juml {
         /**
          * Abstract interface to save an algorithm to a hdf5 file.
          * @param filename The filename of the saved file.
+         * @param override If true (default) an existing file is overriden, else an exception is thrown.
          */
-        virtual void save(const std::string& filename) const = 0;
+        virtual void save(const std::string& filename, bool override=true) const;
     }; // Algorithm
 }  // juml
 #endif // ALGORITHM_H
