@@ -4,9 +4,6 @@
 #include <iostream>
 
 int main(int argc, char *argv[]) {
-	int n_classes = 58;
-	int n_features = 189;
-
 	using std::cout;
 	using std::endl;
 	MPI_Init(&argc, &argv);
@@ -16,6 +13,16 @@ int main(int argc, char *argv[]) {
 	int mpi_size, mpi_rank;
 	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
+	const int n_classes = 52;
+	const int n_features = 30;
+	const int n_hidden_nodes = 16000;
+	const float LEARNINGRATE=0.01;
+	const int batchsize = 400 / mpi_size;
+	const int max_epochs = 1000;
+	const char *xDatasetName = "Data";
+	const char *yDatasetName = "Label";
+	const float max_error = 0.25;
 
 	if (argc != 2 && argc != 3) return 1;
 	const af::Backend backend = AF_BACKEND_CUDA;
@@ -43,13 +50,11 @@ int main(int argc, char *argv[]) {
 			cout << "ANN loaded from file " << argv[2] << endl;
 		} else {
 			cout << "Creating new ANN" << endl;
-			net.add(juml::ann::make_SigmoidLayer(n_features, 16000));
-//			net.add(juml::ann::make_SigmoidLayer(4000, 400));
-			net.add(juml::ann::make_SigmoidLayer(16000, n_classes));
+			net.add(juml::ann::make_SigmoidLayer(n_features, n_hidden_nodes));
+			net.add(juml::ann::make_SigmoidLayer(n_hidden_nodes, n_classes));
 		}
 
 	}
-	const float LEARNINGRATE=0.01;
 	cout << "Learningrate: " << LEARNINGRATE << endl;
 	
 	//Print network layer counts:
@@ -64,9 +69,8 @@ int main(int argc, char *argv[]) {
 	
 	double time_init_net = MPI_Wtime();	
 
-	//70000 x 28 x 28 will be read as 28 x 28 x 70000?
-	juml::Dataset data(argv[1], "Data");
-	juml::Dataset label(argv[1], "Label");
+	juml::Dataset data(argv[1], xDatasetName);
+	juml::Dataset label(argv[1], yDatasetName);
 
 	data.load_equal_chunks();
 	label.load_equal_chunks();
@@ -96,12 +100,11 @@ int main(int argc, char *argv[]) {
 	double time_train_batch_test = 0;
 	double time_train_sync = 0;
 
-	int batchsize = 200;
 	int nbatches = N/batchsize;
 	cout << "N: " << N << " n_batches: " << nbatches << endl
 		<< "batchsize: " << batchsize <<endl;
-	printf("%5s %10s %10s %10s\n", "Epoch", "Last Error", "Error", "Accuracy");
-	for (int epoch = 0; epoch < 1000; epoch++) {
+	printf("%5s %10s %10s %10s\n", "Epoch", "Error", "Last Error", "Accuracy");
+	for (int epoch = 0; epoch < max_epochs; epoch++) {
 		float error = 0;
 		float lasterror;
 		for (int batch = 0; batch < N; batch += batchsize) {
@@ -118,12 +121,9 @@ int main(int argc, char *argv[]) {
 		time_train_sync += MPI_Wtime() - time_buf;
 		time_buf = MPI_Wtime();
 
-		//cout << " Epoch " << epoch << " Error: " << error / nbatches 
-		//	<< " Last: " << lasterror << endl;
-		//cout << "Train-Class-Accuracy: " << (net.classify_accuracy_array(data_array, label_array) / (float) globalN) << endl;
 		printf("%5d %10.6f %10.6f %10.6f\n", epoch, error/nbatches, lasterror, net.classify_accuracy_array(data_array, label_array) / (float) globalN);
 		time_train_batch_test += MPI_Wtime() - time_buf;
-		if (error / nbatches < 0.25) {
+		if (error / nbatches < max_error) {
 			break;
 		}
 	}
