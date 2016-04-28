@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <core/HDF5.h>
 
 #include "core/Backend.h"
 #include "core/MPI.h"
@@ -150,7 +151,28 @@ namespace juml {
         
         return local_results[0] / local_results[1];
     }
-    
+
+    void GaussianNaiveBayes::save(const std::string& filename, bool override) const {
+        if (this->mpi_rank_ == 0) {
+            hid_t file_id = hdf5::open_file(filename.c_str());
+            hdf5::write_array(file_id, "class_counts", this->class_counts_);
+            hdf5::write_array(file_id, "prior", this->prior_);
+            hdf5::write_array(file_id, "stddev", this->stddev_);
+            hdf5::write_array(file_id, "theta", this->theta_);
+            hdf5::close_file(file_id);
+        }
+        MPI_Barrier(this->comm_);
+    }
+
+    void GaussianNaiveBayes::load(const std::string &filename) {
+        hid_t file_id = hdf5::popen_file(filename,this->comm_);
+        this->class_counts_ = hdf5::pread_array(file_id, "class_counts");
+        this->prior_ = hdf5::pread_array(file_id, "prior");
+        this->stddev_ = hdf5::pread_array(file_id, "stddev");
+        this->theta_ = hdf5::pread_array(file_id, "theta");
+        hdf5::close_file(file_id);
+    }
+
     const af::array& GaussianNaiveBayes::class_counts() const {
         return this->class_counts_;
     }

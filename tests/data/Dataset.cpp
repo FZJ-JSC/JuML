@@ -18,8 +18,9 @@ const std::string TWO_D_INT   = "2D_INT";
 const std::string FILE_PATH_ROWNUMBER = JUML_DATASETS"/rownumInColumns5x3.h5";
 const std::string ROWNUMBER_SETNAME = "testset";
 
-const std::string DUMP_FILE = "dumpTest.h5";
+const std::string DUMP_FILE    = "dumpTest.h5";
 const std::string DUMP_DATASET = "DUMPED";
+const std::string DUMP_DATASET2 = "TEST_DUMPED";
 
 class DATASET_TEST : public testing::Test
 {
@@ -50,7 +51,6 @@ TEST_ALL_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT) {
     juml::Dataset data_1D(FILE_PATH, ONE_D_FLOAT);
     data_1D.load_equal_chunks();
 
-    af_print(data_1D.data());
     for (size_t col = 0; col < data_1D.data().dims(1); ++col) {
         ASSERT_TRUE(af::allTrue<bool>(data_1D.data().col(col) == (float)this->rank_));
     }
@@ -92,6 +92,26 @@ TEST_ALL_F(DATASET_TEST, DUMP_EQUAL_CHUNKS) {
         std::remove(DUMP_FILE.c_str());
     }
     ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data));
+}
+
+TEST_ALL_F(DATASET_TEST, DUMP_EQUAL_CHUNKS_APPEND) {
+    juml::Backend::set(juml::Backend::CPU);
+    af::array data1 = af::constant(rank_, 2, 3, s32);
+    juml::Dataset dataset1(data1, MPI_COMM_WORLD);
+    dataset1.dump_equal_chunks(DUMP_FILE, DUMP_DATASET);
+
+    af::array data2 = af::constant(rank_ * -1, 2, 4, s32);
+    juml::Dataset dataset2(data2, MPI_COMM_WORLD);
+    dataset2.dump_equal_chunks(DUMP_FILE, DUMP_DATASET2);
+    juml::Dataset loaded(DUMP_FILE, DUMP_DATASET);
+    juml::Dataset loaded2(DUMP_FILE, DUMP_DATASET2);
+    loaded.load_equal_chunks();
+    loaded2.load_equal_chunks();
+    if (rank_ == 0) {
+        std::remove(DUMP_FILE.c_str());
+    }
+    ASSERT_TRUE(af::allTrue<bool>(loaded.data() == data1));
+    ASSERT_TRUE(af::allTrue<bool>(loaded2.data() == data2));
 }
 
 TEST_ALL_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_PREVENT_RELOAD) {

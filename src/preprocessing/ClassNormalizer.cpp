@@ -42,11 +42,12 @@ namespace juml {
         // setup backend, local classes and collect globally
         Backend::set(af::getBackendId(data));
         af::array class_labels = af::setUnique(af::moddims(data, n));
-        mpi::allgatherv(class_labels, this->comm_, 0);
+        mpi::allgatherv(class_labels, this->comm_);
 
         // compute global unique classes
         class_labels = af::setUnique(class_labels);
         this->class_labels_ = af::moddims(class_labels, 1, class_labels.dims(0)).as(s64);
+        af_print(this->class_labels_);
     }
 
     af::array ClassNormalizer::invert(const af::array& transformed_labels) const  {

@@ -49,27 +49,25 @@ namespace mpi {
      *
      * Performs an allgather operation using the passed data and on the given MPI communicator. Assumes that the data
      * portion sizes on all nodes match. The gathered data will be stored in a new arrayfire array and returned via the
-     * input/output parameter data.
+     * input/output parameter data. The data will be merged along the highest dimension of the input.
      *
      * @param data  - The input and output parameter for the gather data
      * @param comm  - The MPI communicator to perform the gather operation on
-     * @param merge - The dimension on which to merge the data, defaults to 1 (sample dimension for 2D data)
      * @returns The MPI error code
      */
-    int allgather(af::array& data, MPI_Comm comm, dim_t merge=1);
+    int allgather(af::array& data, MPI_Comm comm);
     /**
      * allgatherv
      *
      * Performs an allgatherv operation using the passed data and MPI communicator. Assumes that the data portions vary
-     * in size along the merge dimension and inquires the displacements automatically. The gathered data will be
+     * in size along the highest dimension and inquires the displacements automatically. The gathered data will be
      * collected in a new arrayfire array and returned via the input/output parameter data.
      *
      * @param data  - The input and output parameter for the gather data
      * @param comm  - The MPI communicator to perform the gather operation on
-     * @param merge - The dimension along which to merge the data, defaults to 1 (sample dimension for 2D data)
      * @returns The MPI error code
      */
-    int allgatherv(af::array& data, MPI_Comm comm, dim_t merge=1);
+    int allgatherv(af::array& data, MPI_Comm comm);
 
     /**
      * allreduce_inplace
