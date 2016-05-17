@@ -1,3 +1,4 @@
+#include<tclap/CmdLine.h>
 #include <classification/ANN.h>
 #include <mpi.h>
 #include<arrayfire.h>
@@ -10,30 +11,72 @@ int main(int argc, char *argv[]) {
 
 	double time_start = MPI_Wtime();
 
+
 	int mpi_size, mpi_rank;
 	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
-	const int n_classes = 52;
-	const int n_features = 30;
-	const int n_hidden_nodes = 16000;
-	const float LEARNINGRATE=0.01;
-	const int batchsize = 400 / mpi_size;
-	const int max_epochs = 1000;
-	const char *xDatasetName = "Data";
-	const char *yDatasetName = "Label";
-	const float max_error = 0.25;
+	int n_classes = 52;
+	int n_features = 30;
+	int n_hidden_nodes = 16000;
+	float LEARNINGRATE=0.01;
+	int batchsize = 400 / mpi_size;
+	int max_epochs = 1000;
+	std::string trainingFilePath;
+	std::string xDatasetName = "Data";
+	std::string yDatasetName = "Label";
+	float max_error = 0.25;
+
+	std::vector<int> hidden_layers;
+
+	std::string networkFilePath;
+
+	try {
+		TCLAP::CmdLine cmd("Train a Artificial Neural Network for Classification", ' ', "0.1-alpha");
+
+		TCLAP::ValueArg<int> cmd_classes("c", "classes", "The number of classes the classifier should be trained for.", true, 0, "Number of Classes", cmd);
+		TCLAP::ValueArg<int> cmd_features("f", "features", "The number of features the data will contain", true, 0, "Number of Features", cmd);
+		TCLAP::ValueArg<float> cmd_learningrate("l", "learningrate", "Learningrate for training of the ANN", false, 0.1, "Learningrate", cmd);
+		TCLAP::MultiArg<int> cmd_hidden("", "hidden", "Add a hidden Layer with N nodes", true, "N", cmd);
+		TCLAP::ValueArg<int> cmd_gbatchsize("b", "batchsize", "Set the global batchsize", true, 0, "Batchsize", cmd);
+		//TCLAP::ValueArg<int> cmd_lbatchsize("B", "local-batchsize", "set teh local batchsize", true, 0, "Local batchsize", cmd);
+
+		TCLAP::ValueArg<int> cmd_epochs("", "epochs", "Set the maximum number of training epochs", false, 1000, "Epochs", cmd);
+		TCLAP::ValueArg<float> cmd_error("", "error", "Set the training error, after which to stop training", false, 0.25, "Error", cmd);
+		TCLAP::ValueArg<std::string> cmd_datafile("d", "data", "Path to HDF5 file, that contains the training data", true, "", "PATH", cmd);
+		TCLAP::ValueArg<std::string> cmd_datafile_dataset("", "data-set", "Name of the HDF5 dataset, that contains the training data", true, "Data", "Dataset Name", cmd);
+		TCLAP::ValueArg<std::string> cmd_datafile_labelset("", "label-set", "Name of the HDF5 dataset, that contains the training labels", true, "Label", "Dataset Name", cmd);
+		TCLAP::ValueArg<std::string> cmd_net("n", "net", "Path to store and read the ANN. If file is already present it will be read and training continued.", true, "", "PATH", cmd);
+
+		n_classes = cmd_classes.getValue();
+		n_features = cmd_features.getValue();
+		LEARNINGRATE = cmd_learningrate.getValue();
+		batchsize = cmd_gbatchsize.getValue() / mpi_size;
+		max_epochs = cmd_epochs.getValue();
+		max_error = cmd_error.getValue();
+
+		hidden_layers = cmd_hidden.getValue();
+
+		trainingFilePath = cmd_datafile.getValue();
+		xDatasetName = cmd_datafile_dataset.getValue();
+		yDatasetName = cmd_datafile_labelset.getValue();
+
+		networkFilePath = cmd_net.getValue();
+
+		cmd.parse(argc, argv);
+	} catch (TCLAP::ArgException e) {
+		std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
+		MPI_Finalize();
+		return 1;
+	}
+
+
 
 	if (argc != 2 && argc != 3) return 1;
 	const af::Backend backend = AF_BACKEND_CUDA;
 	cout << "CUDA_VISIBLE_DEVICES: " << secure_getenv("CUDA_VISIBLE_DEVICES") << endl;
-	{
-		char cuda_env[30];
-		snprintf(cuda_env, 30, "CUDA_VISIBLE_DEVICES=%d", mpi_rank % 4);
-		putenv(cuda_env);
-	}
-	cout << "CUDA_VISIBLE_DEVICES: " << secure_getenv("CUDA_VISIBLE_DEVICES") << endl;
 	af::setBackend(backend);
+	af::setDevice(mpi_rank % 4); //TODO: need to fix this
 	cout << "Backend set" << endl;
 	af::info();
 	cout << "Seed: " << af::getSeed() << endl;
@@ -44,14 +87,22 @@ int main(int argc, char *argv[]) {
 
 	{
 		struct stat buffer;
-		if (argc == 3 && stat(argv[2], &buffer) == 0) {
+		if (stat(networkFilePath.c_str(), &buffer) == 0) {
 			//File exists
-			net.load(argv[2]);
-			cout << "ANN loaded from file " << argv[2] << endl;
+			net.load(networkFilePath);
+			cout << "ANN loaded from file " << networkFilePath << endl;
+			//TODO Check that ANN loaded from file matches specification from command line!
 		} else {
 			cout << "Creating new ANN" << endl;
-			net.add(juml::ann::make_SigmoidLayer(n_features, n_hidden_nodes));
-			net.add(juml::ann::make_SigmoidLayer(n_hidden_nodes, n_classes));
+			auto it = hidden_layers.begin();
+			int previous_layer = *it;
+			net.add(juml::ann::make_SigmoidLayer(n_features, *it));
+			it++;
+			for (;it != hidden_layers.end(); it++) {
+				net.add(juml::ann::make_SigmoidLayer(previous_layer, *it));
+				previous_layer = *it;
+			}
+			net.add(juml::ann::make_SigmoidLayer(previous_layer, n_classes));
 		}
 
 	}
@@ -69,8 +120,8 @@ int main(int argc, char *argv[]) {
 	
 	double time_init_net = MPI_Wtime();	
 
-	juml::Dataset data(argv[1], xDatasetName);
-	juml::Dataset label(argv[1], yDatasetName);
+	juml::Dataset data(trainingFilePath, xDatasetName);
+	juml::Dataset label(trainingFilePath, yDatasetName);
 
 	data.load_equal_chunks();
 	label.load_equal_chunks();
