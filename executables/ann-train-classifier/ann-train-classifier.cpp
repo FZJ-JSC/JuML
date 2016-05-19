@@ -3,6 +3,8 @@
 #include <mpi.h>
 #include<arrayfire.h>
 #include <iostream>
+#include <vector>
+#include <algorithm>
 
 int main(int argc, char *argv[]) {
 	using std::cout;
@@ -19,7 +21,7 @@ int main(int argc, char *argv[]) {
 	int n_classes = 52;
 	int n_features = 30;
 	int n_hidden_nodes = 16000;
-	float LEARNINGRATE=0.01;
+	float LEARNINGRATE = 0.01;
 	int batchsize = 400 / mpi_size;
 	int max_epochs = 1000;
 	std::string trainingFilePath;
@@ -76,7 +78,7 @@ int main(int argc, char *argv[]) {
 	const af::Backend backend = AF_BACKEND_CUDA;
 	cout << "CUDA_VISIBLE_DEVICES: " << secure_getenv("CUDA_VISIBLE_DEVICES") << endl;
 	af::setBackend(backend);
-	af::setDevice(mpi_rank % 4); //TODO: need to fix this
+	af::setDevice(mpi_rank % 4); // TODO: need to fix this
 	cout << "Backend set" << endl;
 	af::info();
 	cout << "Seed: " << af::getSeed() << endl;
@@ -88,37 +90,36 @@ int main(int argc, char *argv[]) {
 	{
 		struct stat buffer;
 		if (stat(networkFilePath.c_str(), &buffer) == 0) {
-			//File exists
+			// File exists
 			net.load(networkFilePath);
 			cout << "ANN loaded from file " << networkFilePath << endl;
-			//TODO Check that ANN loaded from file matches specification from command line!
+			// TODO Check that ANN loaded from file matches specification from command line!
 		} else {
 			cout << "Creating new ANN" << endl;
 			auto it = hidden_layers.begin();
 			int previous_layer = *it;
 			net.add(juml::ann::make_SigmoidLayer(n_features, *it));
 			it++;
-			for (;it != hidden_layers.end(); it++) {
+			for (; it != hidden_layers.end(); it++) {
 				net.add(juml::ann::make_SigmoidLayer(previous_layer, *it));
 				previous_layer = *it;
 			}
 			net.add(juml::ann::make_SigmoidLayer(previous_layer, n_classes));
 		}
-
 	}
 	cout << "Learningrate: " << LEARNINGRATE << endl;
-	
-	//Print network layer counts:
+
+	// Print network layer counts:
 	{
 		auto it = net.layers_begin();
 		cout << "Layers: " << (*it)->input_count;
-		for (;it != net.layers_end(); it++) {
+		for (; it != net.layers_end(); it++) {
 			cout << "-" << (*it)->node_count;
 		}
 		cout << endl;
-	}	
-	
-	double time_init_net = MPI_Wtime();	
+	}
+
+	double time_init_net = MPI_Wtime();
 
 	juml::Dataset data(trainingFilePath, xDatasetName);
 	juml::Dataset label(trainingFilePath, yDatasetName);
@@ -154,12 +155,14 @@ int main(int argc, char *argv[]) {
 	int nbatches = N/batchsize;
 	cout << "N: " << N << " n_batches: " << nbatches << endl
 		<< "batchsize: " << batchsize <<endl;
-	printf("%5s %10s %10s %10s\n", "Epoch", "Error", "Last Error", "Accuracy");
+	if (mpi_rank == 0) {
+		printf("%5s %10s %10s %10s\n", "Epoch", "Error", "Last Error", "Accuracy");
+	}
 	for (int epoch = 0; epoch < max_epochs; epoch++) {
 		float error = 0;
 		float lasterror;
 		for (int batch = 0; batch < N; batch += batchsize) {
-			int last = std::min((int)data_array.dims(1) - 1, batch + batchsize - 1);
+			int last = std::min(static_cast<int>(data_array.dims(1)) - 1, batch + batchsize - 1);
 			af::array batchsamples = data_array(af::span, af::seq(batch, last));
 			af::array batchtarget = target(af::span, af::seq(batch, last));
 			lasterror = net.fitBatch(batchsamples, batchtarget, LEARNINGRATE);
@@ -171,8 +174,10 @@ int main(int argc, char *argv[]) {
 		error /= mpi_size;
 		time_train_sync += MPI_Wtime() - time_buf;
 		time_buf = MPI_Wtime();
-
-		printf("%5d %10.6f %10.6f %10.6f\n", epoch, error/nbatches, lasterror, net.classify_accuracy_array(data_array, label_array) / (float) globalN);
+		float classify_accuracy = net.classify_accuracy_array(data_array, label_array) / static_cast<float>(globalN);
+		if (mpi_rank == 0) {
+			printf("%5d %10.6f %10.6f %10.6f\n", epoch, error/nbatches, lasterror, classify_accuracy);
+		}
 		time_train_batch_test += MPI_Wtime() - time_buf;
 		if (error / nbatches < max_error) {
 			break;
@@ -180,7 +185,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	double time_trained = MPI_Wtime();
-	
+
 	juml::Dataset test_data_set(full_data);
 	juml::Dataset test_label_set(label_array);
 	cout << "Full Class-Accuracy: " << net.classify_accuracy(test_data_set, test_label_set) << endl;
@@ -189,16 +194,15 @@ int main(int argc, char *argv[]) {
 	/*juml::Dataset trainset(data_array);
 	juml::Dataset labelset(target);
 	net.fit(trainset, labelset);*/
-	if (argc == 3) {
-		net.save(argv[2], true);
-		cout << "Saved ANN to " << argv[2] << endl;
-	}
+
+	net.save(networkFilePath, true);
+
 	double time_saved = MPI_Wtime();
 	cout << "Time Measuerment: " << endl;
 	#define Fs(time, name) printf("%20s %3.4f\n", name, time);
-	#define F(start,end,name) Fs(end - start, name);
+	#define F(start, end, name) Fs(end - start, name);
 
-	F(time_start, time_init_af, "AF-init");	
+	F(time_start, time_init_af, "AF-init");
 	F(time_init_af, time_init_net, "Net-init");
 	F(time_init_net, time_loaded_data, "Data load");
 	F(time_loaded_data, time_splitted_data, "Split data");
