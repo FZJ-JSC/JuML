@@ -18,7 +18,7 @@ const std::string TWO_D_INT   = "2D_INT";
 const std::string FILE_PATH_ROWNUMBER = JUML_DATASETS"/rownumInColumns5x3.h5";
 const std::string ROWNUMBER_SETNAME = "testset";
 
-const std::string DUMP_FILE = "dumpTest.h5";
+const std::string DUMP_FILE    = "dumpTest.h5";
 const std::string DUMP_DATASET = "DUMPED";
 
 class DATASET_TEST : public testing::Test
@@ -50,7 +50,6 @@ TEST_ALL_F(DATASET_TEST, LOAD_EQUAL_CHUNKS_1D_FLOAT) {
     juml::Dataset data_1D(FILE_PATH, ONE_D_FLOAT);
     data_1D.load_equal_chunks();
 
-    af_print(data_1D.data());
     for (size_t col = 0; col < data_1D.data().dims(1); ++col) {
         ASSERT_TRUE(af::allTrue<bool>(data_1D.data().col(col) == (float)this->rank_));
     }
