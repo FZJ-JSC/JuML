@@ -229,7 +229,7 @@ namespace juml {
         // dimensionality checks
         af::array& data = X.data();
         if (data.dims(2) > 1 || data.dims(3) > 1) {
-            throw std::logic_error("K-Means clustering is only defined for two-dimensional input data");
+            throw std::invalid_argument("K-Means clustering is only defined for two-dimensional input data");
         }
 
         // initialize centroids

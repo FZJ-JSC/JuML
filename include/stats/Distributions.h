@@ -19,10 +19,20 @@
 #include <arrayfire.h>
 
 namespace juml {
+    /**
+     * gaussian_pdf
+     *
+     * Calculates the gaussian (normal) probability function
+     *
+     * @param X      - The locations for which to calculate the probability values
+     * @param mean   - The mean values of the gaussian curves
+     * @param stddev - The standard deviations of the gaussian curves
+     * @returns The probability values
+     */
     template <typename T>
     T gaussian_pdf(const T& X, const T& mean, const T& stddev) {
         af::array result = gaussian_pdf(af::constant(X, 1), af::constant(mean, 1), af::constant(stddev, 1));
-        return *(result.host<T>());
+        return result.scalar<T>();
     }
 
     template <>
