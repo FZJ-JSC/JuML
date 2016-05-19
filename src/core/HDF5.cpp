@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <stdexcept>
 
 #include "core/HDF5.h"
 
