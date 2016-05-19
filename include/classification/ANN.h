@@ -72,7 +72,7 @@ namespace juml {
 			int classify_accuracy_array(af::array X, af::array y) const;
 
 			void save(std::string filename, bool overwrite);
-			void load(std::string filename);
+			virtual void load(const std::string& filename) override;
 	};
 }
 

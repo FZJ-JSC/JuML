@@ -290,7 +290,7 @@ af::array read_hdf5_into_2d_array(hid_t id, const char *name) {
 	return out;
 }
 
-void SequentialNeuralNet::load(std::string filename) {
+void SequentialNeuralNet::load(const std::string& filename) {
 	bool replace_layers = false;
 	if (this->layers.size() != 0) {
 		replace_layers = true;
