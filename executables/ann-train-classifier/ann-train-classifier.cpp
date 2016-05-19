@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
 	//data_array = data_array(af::span, af::seq(0, data_array.dims(1) - 1, dataset_stepsize));
 	//data_array = data_array(af::span, af::seq(0, 8000/mpi_size - 1));
 
-	af::array label_array = label.data().as(s32) - 1;
+	af::array label_array = label.data().as(s32);
 	//label_array = label_array(af::span, af::seq(0, label_array.dims(1) - 1, dataset_stepsize));
 	//label_array = label_array(af::span, af::seq(0, 8000/mpi_size - 1));
 
@@ -174,21 +174,26 @@ int main(int argc, char *argv[]) {
 		data_array = af::moddims(data_array, n_features, data_array.dims(data_array.numdims() - 1));
 	}
 
-	if (min_label != 0) {
-		if (mpi_rank == 0) {
-			printf("The smallest label is %d and not 1! Use 1-based labels.\n", min_label + 1);
+	if (min_label == 0) {
+		printf("Found 0-based labels\n");
+		if (max_label != n_classes - 1) {
+			printf("The biggest label is %d and not %d. Is your number of classes correct?\n", max_label, n_classes - 1);
+			MPI_Finalize();
+			exit(1);
 		}
+	} else if (min_label == 1) {
+		printf("Found 1-based labels\n");
+		label_array -= 1;
+		if (max_label != n_classes) {
+			printf("The biggest label is %d and not %d. Is your number of classes correct?\n", max_label, n_classes);
+			MPI_Finalize();
+			exit(1);
+		}
+	} else {
+		printf("Labels need to be 1 or 0 based!\n");
 		MPI_Finalize();
 		exit(1);
 	}
-	if (max_label != n_classes - 1) {
-		if (mpi_rank == 0) {
-			printf("The biggest label is %d and not %d, like the number of classes suggests.\n", max_label + 1, n_classes);
-		}
-		MPI_Finalize();
-		exit(1);
-	}
-
 
 	const int N = data_array.dims(1);
 	int globalN;
