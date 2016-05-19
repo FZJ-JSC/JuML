@@ -290,8 +290,9 @@ af::array read_hdf5_into_2d_array(hid_t id, const char *name) {
 }
 
 void SequentialNeuralNet::load(std::string filename) {
+	bool replace_layers = false;
 	if (this->layers.size() != 0) {
-		throw std::runtime_error("Network is already populated with layers.");
+		replace_layers = true;
 	}
 	hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 	if (file_id < 0) {
@@ -313,11 +314,25 @@ void SequentialNeuralNet::load(std::string filename) {
 		af::array weights = read_hdf5_into_2d_array(group_id, "weights");
 		af::array bias = read_hdf5_into_2d_array(group_id, "bias");
 
-		//TODO create the correct layer type
-		this->add(ann::make_SigmoidLayer(weights, bias));
+		if (replace_layers) {
+			if (i >= this->layers.size()) {
+				throw new std::runtime_error("File contains more layers than network.");
+			}
+			if (weights.dims() != this->layers[i]->weights.dims() || bias.dims() != this->layers[i]->bias.dims()) {
+				throw new std::runtime_error("Layer dimensions in file does not match dimension in already present layers.");
+			}
+			this->layers[i]->weights = weights;
+			this->layers[i]->bias = bias;
+		} else {
+			// TODO: Need a way to select  the default here
+			this->add(ann::make_SigmoidLayer(weights, bias));
+		}
 
 		H5Gclose(group_id);
 		i+=1;
+	}
+	if (replace_layers && i < this->layers.size() - 1) {
+		throw std::runtime_error("Not all layers could be supplied with weights and bias from file");
 	}
 	if (i == 0) {
 		throw std::runtime_error("Could not load any layers from the file");

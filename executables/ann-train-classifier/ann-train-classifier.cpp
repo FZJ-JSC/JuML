@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 		TCLAP::ValueArg<float> cmd_learningrate("l", "learningrate", "Learningrate for training of the ANN", false, 0.1, "Learningrate", cmd);
 		TCLAP::MultiArg<int> cmd_hidden("", "hidden", "Add a hidden Layer with N nodes", true, "N", cmd);
 		TCLAP::ValueArg<int> cmd_gbatchsize("b", "batchsize", "Set the global batchsize", true, 0, "Batchsize", cmd);
-		//TCLAP::ValueArg<int> cmd_lbatchsize("B", "local-batchsize", "set teh local batchsize", true, 0, "Local batchsize", cmd);
+		//TCLAP::ValueArg<int> cmd_lbatchsize("B", "local-batchsize", "set the local batchsize", true, 0, "Local batchsize", cmd);
 
 		TCLAP::ValueArg<int> cmd_epochs("", "epochs", "Set the maximum number of training epochs", false, 1000, "Epochs", cmd);
 		TCLAP::ValueArg<float> cmd_error("", "error", "Set the training error, after which to stop training", false, 0.25, "Error", cmd);
@@ -88,24 +88,24 @@ int main(int argc, char *argv[]) {
 	juml::SequentialNeuralNet net(backend);
 
 	{
+		cout << "Creating ANN" << endl;
+		auto it = hidden_layers.begin();
+		int previous_layer = *it;
+		net.add(juml::ann::make_SigmoidLayer(n_features, *it));
+		it++;
+		for (; it != hidden_layers.end(); it++) {
+			net.add(juml::ann::make_SigmoidLayer(previous_layer, *it));
+			previous_layer = *it;
+		}
+		net.add(juml::ann::make_SigmoidLayer(previous_layer, n_classes));
 		struct stat buffer;
 		if (stat(networkFilePath.c_str(), &buffer) == 0) {
 			// File exists
 			net.load(networkFilePath);
 			cout << "ANN loaded from file " << networkFilePath << endl;
 			// TODO Check that ANN loaded from file matches specification from command line!
-		} else {
-			cout << "Creating new ANN" << endl;
-			auto it = hidden_layers.begin();
-			int previous_layer = *it;
-			net.add(juml::ann::make_SigmoidLayer(n_features, *it));
-			it++;
-			for (; it != hidden_layers.end(); it++) {
-				net.add(juml::ann::make_SigmoidLayer(previous_layer, *it));
-				previous_layer = *it;
-			}
-			net.add(juml::ann::make_SigmoidLayer(previous_layer, n_classes));
 		}
+
 	}
 	cout << "Learningrate: " << LEARNINGRATE << endl;
 

@@ -26,9 +26,7 @@ namespace juml {
 	namespace ann {
 		class Layer {
 			protected:
-				af::array weights;
 				af::array weights_update;
-				af::array bias;
 				af::array bias_update;
 				af::array lastOutput;
 				int update_count = 0;
@@ -38,6 +36,8 @@ namespace juml {
 				        this->bias -= learningrate * this->bias_update;
 				}
 			public:
+				af::array bias;
+				af::array weights;
 				const int input_count;
 				const int node_count;
 				Layer(int input_count_, int node_count_) :
