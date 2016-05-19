@@ -232,6 +232,7 @@ void SequentialNeuralNet::save(std::string filename, bool overwrite) {
 		hid_t group_id = H5Gcreate(file_id, groupname.str().c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
 		if (group_id < 0) {
+			H5Fclose(file_id);
 			std::stringstream errMsg;
 			errMsg << "Could not create group " << groupname.str() 
 				<< " in " << filename << " HDF5 Error: " << group_id;
@@ -309,6 +310,7 @@ void SequentialNeuralNet::load(std::string filename) {
 		}
 		hid_t group_id = H5Gopen2(file_id, groupname.str().c_str(), H5P_DEFAULT);
 		if (group_id < 0) {
+			H5Fclose(file_id);
 			throw std::runtime_error("Could not open group");
 		}
 		af::array weights = read_hdf5_into_2d_array(group_id, "weights");
@@ -316,9 +318,13 @@ void SequentialNeuralNet::load(std::string filename) {
 
 		if (replace_layers) {
 			if (i >= this->layers.size()) {
+				H5Gclose(group_id);
+				H5Fclose(file_id);
 				throw new std::runtime_error("File contains more layers than network.");
 			}
 			if (weights.dims() != this->layers[i]->weights.dims() || bias.dims() != this->layers[i]->bias.dims()) {
+				H5Gclose(group_id);
+				H5Fclose(file_id);
 				throw new std::runtime_error("Layer dimensions in file does not match dimension in already present layers.");
 			}
 			this->layers[i]->weights = weights;
@@ -331,6 +337,7 @@ void SequentialNeuralNet::load(std::string filename) {
 		H5Gclose(group_id);
 		i+=1;
 	}
+	H5Fclose(file_id);
 	if (replace_layers && i < this->layers.size() - 1) {
 		throw std::runtime_error("Not all layers could be supplied with weights and bias from file");
 	}
@@ -338,7 +345,6 @@ void SequentialNeuralNet::load(std::string filename) {
 		throw std::runtime_error("Could not load any layers from the file");
 	}
 
-	H5Fclose(file_id);
 }
 
 } //end of namespace
