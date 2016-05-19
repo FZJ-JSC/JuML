@@ -47,8 +47,8 @@ int main(int argc, char *argv[]) {
 		TCLAP::ValueArg<int> cmd_epochs("", "epochs", "Set the maximum number of training epochs", false, 1000, "Epochs", cmd);
 		TCLAP::ValueArg<float> cmd_error("", "error", "Set the training error, after which to stop training", false, 0.25, "Error", cmd);
 		TCLAP::ValueArg<std::string> cmd_datafile("d", "data", "Path to HDF5 file, that contains the training data", true, "", "PATH", cmd);
-		TCLAP::ValueArg<std::string> cmd_datafile_dataset("", "data-set", "Name of the HDF5 dataset, that contains the training data", true, "Data", "Dataset Name", cmd);
-		TCLAP::ValueArg<std::string> cmd_datafile_labelset("", "label-set", "Name of the HDF5 dataset, that contains the training labels", true, "Label", "Dataset Name", cmd);
+		TCLAP::ValueArg<std::string> cmd_datafile_dataset("", "data-set", "Name of the HDF5 dataset, that contains the training data", false, "Data", "Dataset Name", cmd);
+		TCLAP::ValueArg<std::string> cmd_datafile_labelset("", "label-set", "Name of the HDF5 dataset, that contains the training labels", false, "Label", "Dataset Name", cmd);
 		TCLAP::ValueArg<std::string> cmd_net("n", "net", "Path to store and read the ANN. If file is already present it will be read and training continued.", true, "", "PATH", cmd);
 
 		TCLAP::ValueArg<int> cmd_seed("s", "seed", "Set the seed that is used for random initialization", false, 0, "Seed", cmd);
@@ -79,7 +79,6 @@ int main(int argc, char *argv[]) {
 
 
 
-	if (argc != 2 && argc != 3) return 1;
 	const af::Backend backend = AF_BACKEND_CUDA;
 	cout << "CUDA_VISIBLE_DEVICES: " << secure_getenv("CUDA_VISIBLE_DEVICES") << endl;
 	af::setBackend(backend);
