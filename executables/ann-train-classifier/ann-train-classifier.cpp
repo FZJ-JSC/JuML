@@ -18,16 +18,17 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
-	int n_classes = 52;
-	int n_features = 30;
-	int n_hidden_nodes = 16000;
-	float LEARNINGRATE = 0.01;
-	int batchsize = 400 / mpi_size;
-	int max_epochs = 1000;
+	int n_classes;
+	int n_features;
+	int n_hidden_nodes;
+	float LEARNINGRATE;
+	int batchsize;
+	int max_epochs;
 	std::string trainingFilePath;
-	std::string xDatasetName = "Data";
-	std::string yDatasetName = "Label";
-	float max_error = 0.25;
+	std::string xDatasetName;
+	std::string yDatasetName;
+	float max_error;
+	int seed;
 
 	std::vector<int> hidden_layers;
 
@@ -50,6 +51,8 @@ int main(int argc, char *argv[]) {
 		TCLAP::ValueArg<std::string> cmd_datafile_labelset("", "label-set", "Name of the HDF5 dataset, that contains the training labels", true, "Label", "Dataset Name", cmd);
 		TCLAP::ValueArg<std::string> cmd_net("n", "net", "Path to store and read the ANN. If file is already present it will be read and training continued.", true, "", "PATH", cmd);
 
+		TCLAP::ValueArg<int> cmd_seed("s", "seed", "Set the seed that is used for random initialization", false, 0, "Seed", cmd);
+
 		n_classes = cmd_classes.getValue();
 		n_features = cmd_features.getValue();
 		LEARNINGRATE = cmd_learningrate.getValue();
@@ -64,6 +67,8 @@ int main(int argc, char *argv[]) {
 		yDatasetName = cmd_datafile_labelset.getValue();
 
 		networkFilePath = cmd_net.getValue();
+
+		seed = cmd_seed.getValue();
 
 		cmd.parse(argc, argv);
 	} catch (TCLAP::ArgException e) {
@@ -81,6 +86,7 @@ int main(int argc, char *argv[]) {
 	af::setDevice(mpi_rank % 4); // TODO: need to fix this
 	cout << "Backend set" << endl;
 	af::info();
+	af::setSeed(seed);
 	cout << "Seed: " << af::getSeed() << endl;
 
 	double time_init_af = MPI_Wtime();
@@ -105,7 +111,6 @@ int main(int argc, char *argv[]) {
 			cout << "ANN loaded from file " << networkFilePath << endl;
 			// TODO Check that ANN loaded from file matches specification from command line!
 		}
-
 	}
 	cout << "Learningrate: " << LEARNINGRATE << endl;
 
