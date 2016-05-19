@@ -1,5 +1,2 @@
-ADD_SUBDIRECTORY(ann)
-ADD_SUBDIRECTORY(ann-mnist)
 ADD_SUBDIRECTORY(ann-train-classifier)
-ADD_SUBDIRECTORY(ann-rome)
 ADD_SUBDIRECTORY(ann-test)
