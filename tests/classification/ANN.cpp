@@ -189,7 +189,71 @@ TEST_ALL(ANN_TEST, INCOMPATIBLE_LAYERS) {
 	}
 }
 
+TEST_ALL(ANN_TEST, LOAD_NET_WITH_LAYER_REPLACE) {
+	juml::SequentialNeuralNet net(BACKEND);
+	net.add(juml::ann::make_SigmoidLayer(20, 10));
+	net.add(juml::ann::make_TanHLayer(10, 23));
+	net.add(juml::ann::make_LinearLayer(23, 2));
 
+	net.save("save_load_test_file.h5", true);
+	juml::SequentialNeuralNet net2(BACKEND);
+	net2.add(juml::ann::make_SigmoidLayer(20, 10));
+	net2.add(juml::ann::make_TanHLayer(10, 23));
+	net2.add(juml::ann::make_LinearLayer(23, 2));
+	net2.load("save_load_test_file.h5");
+	auto it1 = net.layers_begin();
+	auto it2 = net2.layers_begin();
+	for (;it1 != net.layers_end() && it2 != net2.layers_end(); it1++, it2++) {
+		ASSERT_TRUE(af::allTrue<bool>((*it1)->getWeights() == (*it2)->getWeights())) << "Failed for " << BACKEND;
+		ASSERT_TRUE(af::allTrue<bool>((*it1)->getBias() == (*it2)->getBias())) << "Failed for " << BACKEND;
+		//TODO: Compare Type
+	}
+	if (it1 != net.layers_end() || it2 != net2.layers_end()) {
+		FAIL() << "ANN loaded from file does not have the same number of layers as ANN in memory";
+	}
+}
+
+TEST_ALL(ANN_TEST, LOAD_NET_WITH_LAYER_REPLACE_INCOMPATIBLE) {
+	juml::SequentialNeuralNet net(BACKEND);
+	net.add(juml::ann::make_SigmoidLayer(20, 10));
+	net.add(juml::ann::make_TanHLayer(10, 23));
+	net.add(juml::ann::make_LinearLayer(23, 2));
+
+	net.save("save_load_test_file.h5", true);
+	juml::SequentialNeuralNet net2(BACKEND);
+	net2.add(juml::ann::make_SigmoidLayer(20, 5));
+	net2.add(juml::ann::make_TanHLayer(5, 23));
+	net2.add(juml::ann::make_LinearLayer(23, 2));
+	ASSERT_ANY_THROW(net2.load("save_load_test_file.h5")); // TODO: Check for special exception
+}
+
+TEST_ALL(ANN_TEST, LOAD_NET_WITH_LAYER_REPLACE_INCOMPATIBLE_MISSING) {
+	juml::SequentialNeuralNet net(BACKEND);
+	net.add(juml::ann::make_SigmoidLayer(20, 10));
+	net.add(juml::ann::make_TanHLayer(10, 23));
+	net.add(juml::ann::make_LinearLayer(23, 2));
+
+	net.save("save_load_test_file.h5", true);
+	juml::SequentialNeuralNet net2(BACKEND);
+	net2.add(juml::ann::make_SigmoidLayer(20, 5));
+	net2.add(juml::ann::make_TanHLayer(5, 23));
+	ASSERT_ANY_THROW(net2.load("save_load_test_file.h5")); // TODO: Check for special exception
+}
+
+TEST_ALL(ANN_TEST, LOAD_NET_WITH_LAYER_REPLACE_INCOMPATIBLE_ADDITIONAL) {
+	juml::SequentialNeuralNet net(BACKEND);
+	net.add(juml::ann::make_SigmoidLayer(20, 10));
+	net.add(juml::ann::make_TanHLayer(10, 23));
+	net.add(juml::ann::make_LinearLayer(23, 2));
+
+	net.save("save_load_test_file.h5", true);
+	juml::SequentialNeuralNet net2(BACKEND);
+	net2.add(juml::ann::make_SigmoidLayer(20, 5));
+	net2.add(juml::ann::make_TanHLayer(5, 23));
+	net2.add(juml::ann::make_LinearLayer(23, 2));
+	net2.add(juml::ann::make_SigmoidLayer(2, 3));
+	ASSERT_ANY_THROW(net2.load("save_load_test_file.h5")); // TODO: Check for special exception
+}
 int main(int argc, char** argv) {
     int result = -1;
     int rank;
