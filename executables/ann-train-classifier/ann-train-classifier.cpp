@@ -146,6 +146,31 @@ int main(int argc, char *argv[]) {
 	//label_array = label_array(af::span, af::seq(0, label_array.dims(1) - 1, dataset_stepsize));
 	//label_array = label_array(af::span, af::seq(0, 8000/mpi_size - 1));
 
+	int min_label = af::min<int>(label_array);
+	MPI_Allreduce(MPI_IN_PLACE, &min_label, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+	int max_label = af::max<int>(label_array);
+	MPI_Allreduce(MPI_IN_PLACE, &max_label, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+
+	if (data_array.numdims() > 2) {
+		printf("Data Array has more than 2 dimensions. Transforming to 2 dimensions, keeping the first dimension and collapsing the others.\n");
+		data_array = af::moddims(data_array, n_features, data_array.dims(data_array.numdims() - 1));
+	}
+
+	if (min_label != 0) {
+		if (mpi_rank == 0) {
+			printf("The smallest label is %d and not 1! Use 1-based labels.\n", min_label + 1);
+		}
+		MPI_Finalize();
+		exit(1);
+	}
+	if (max_label != n_classes - 1) {
+		if (mpi_rank == 0) {
+			printf("The biggest label is %d and not %d, like the number of classes suggests.\n", max_label + 1, n_classes);
+		}
+		MPI_Finalize();
+		exit(1);
+	}
+
 	const int N = data_array.dims(1);
 	int globalN;
 	MPI_Allreduce(&N, &globalN, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
