@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
 	std::string yDatasetName;
 	float max_error;
 	int seed;
+	af::Backend backend = AF_BACKEND_CUDA;
 
 	std::vector<int> hidden_layers;
 
@@ -53,6 +54,17 @@ int main(int argc, char *argv[]) {
 
 		TCLAP::ValueArg<int> cmd_seed("s", "seed", "Set the seed that is used for random initialization", false, 0, "Seed", cmd);
 
+		TCLAP::SwitchArg cmd_cuda("", "cuda", "Use the ArrayFire CUDA Backend", true);
+		TCLAP::SwitchArg cmd_opencl("", "opencl", "Use the ArrayFire OpenCL Backend", true);
+		TCLAP::SwitchArg cmd_cpu("", "cpu", "Use the ArrayFire CPU Backend", true);
+
+		std::vector<TCLAP::Arg*> backend_args = {&cmd_cuda, &cmd_opencl, &cmd_cpu};
+
+		cmd.xorAdd(backend_args);
+
+		cmd.parse(argc, argv);
+
+
 		n_classes = cmd_classes.getValue();
 		n_features = cmd_features.getValue();
 		LEARNINGRATE = cmd_learningrate.getValue();
@@ -70,7 +82,15 @@ int main(int argc, char *argv[]) {
 
 		seed = cmd_seed.getValue();
 
-		cmd.parse(argc, argv);
+		if (cmd_cuda.isSet()) {
+			backend = AF_BACKEND_CUDA;
+		} else if (cmd_opencl.isSet()) {
+			backend = AF_BACKEND_OPENCL;
+		} else if (cmd_cpu.isSet()) {
+			backend = AF_BACKEND_CPU;
+		} else {
+			throw std::runtime_error("This should never happen");
+		}
 	} catch (TCLAP::ArgException e) {
 		std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
 		MPI_Finalize();
@@ -79,7 +99,6 @@ int main(int argc, char *argv[]) {
 
 
 
-	const af::Backend backend = AF_BACKEND_CUDA;
 	cout << "CUDA_VISIBLE_DEVICES: " << secure_getenv("CUDA_VISIBLE_DEVICES") << endl;
 	af::setBackend(backend);
 	af::setDevice(mpi_rank % 4); // TODO: need to fix this
@@ -169,6 +188,7 @@ int main(int argc, char *argv[]) {
 		MPI_Finalize();
 		exit(1);
 	}
+
 
 	const int N = data_array.dims(1);
 	int globalN;
