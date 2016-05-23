@@ -212,13 +212,19 @@ int main(int argc, char *argv[]) {
 	if (mpi_rank == 0) {
 		printf("%5s %10s %10s %10s\n", "Epoch", "Error", "Last Error", "Accuracy");
 	}
+
+	af::array shuffled_idx, sorted_randomizer;
+	//Generate shuffled array of indexes
+	af::sort(sorted_randomizer, shuffled_idx, af::randu(N), 1);
+
 	for (int epoch = 0; epoch < max_epochs; epoch++) {
 		float error = 0;
 		float lasterror;
 		for (int batch = 0; batch < N; batch += batchsize) {
 			int last = std::min(static_cast<int>(data_array.dims(1)) - 1, batch + batchsize - 1);
-			af::array batchsamples = data_array(af::span, af::seq(batch, last));
-			af::array batchtarget = target(af::span, af::seq(batch, last));
+			af::array batchidx = shuffled_idx(af::seq(batch, last));
+			af::array batchsamples = data_array(af::span, batchidx);
+			af::array batchtarget = target(af::span, batchidx);
 			lasterror = net.fitBatch(batchsamples, batchtarget, LEARNINGRATE);
 			error += lasterror;
 		}
@@ -236,6 +242,8 @@ int main(int argc, char *argv[]) {
 		if (error / nbatches < max_error) {
 			break;
 		}
+		//Reshuffle Indexes
+		af::sort(sorted_randomizer, shuffled_idx, af::randu(N), 1);
 	}
 
 	double time_trained = MPI_Wtime();
