@@ -220,13 +220,15 @@ int main(int argc, char *argv[]) {
 		af::sort(sorted_randomizer, shuffled_idx, af::randu(N));
 		float error = 0;
 		float lasterror;
-		for (int batch = 0; batch < N; batch += batchsize) {
-			int last = std::min(static_cast<int>(data_array.dims(1)) - 1, batch + batchsize - 1);
+		for (int batch = 0, batchnum = 0; batch < N; batchnum++) {
+			int thisbatchsize = batchsize + (N % batchsize) / nbatches + (batchnum < (N % batchsize) % nbatches ? 1 : 0);
+			int last = std::min(static_cast<int>(data_array.dims(1)) - 1, batch + thisbatchsize - 1);
 			af::array batchidx = shuffled_idx(af::seq(batch, last));
 			af::array batchsamples = data_array(af::span, batchidx);
 			af::array batchtarget = target(af::span, batchidx);
 			lasterror = net.fitBatch(batchsamples, batchtarget, LEARNINGRATE);
 			error += lasterror;
+			batch += thisbatchsize;
 		}
 		double time_buf = MPI_Wtime();
 
