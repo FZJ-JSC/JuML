@@ -214,10 +214,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	af::array shuffled_idx, sorted_randomizer;
-	//Generate shuffled array of indexes
-	af::sort(sorted_randomizer, shuffled_idx, af::randu(N), 1);
 
 	for (int epoch = 0; epoch < max_epochs; epoch++) {
+		//Generate shuffled array of indexes
+		af::sort(sorted_randomizer, shuffled_idx, af::randu(N));
 		float error = 0;
 		float lasterror;
 		for (int batch = 0; batch < N; batch += batchsize) {
@@ -243,7 +243,6 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		//Reshuffle Indexes
-		af::sort(sorted_randomizer, shuffled_idx, af::randu(N), 1);
 	}
 
 	double time_trained = MPI_Wtime();
