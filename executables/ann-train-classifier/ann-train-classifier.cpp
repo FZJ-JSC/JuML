@@ -383,11 +383,16 @@ int main(int argc, char *argv[]) {
 			af::array batchidx = shuffled_idx(af::seq(batch, last));
 			af::array batchsamples = data_array(af::span, batchidx);
 			af::array batchtarget = target(af::span, batchidx);
-			lasterror = net.fitBatch(batchsamples, batchtarget, LEARNINGRATE);
+			//Only sync with other processes if sync_after_batch_update is set
+			lasterror = net.fitBatch(batchsamples, batchtarget, LEARNINGRATE, sync_after_batch_update ? MPI_COMM_NULL : MPI_COMM_SELF);
 			error += lasterror;
 			batch += thisbatchsize;
 		}
 		double time_buf = MPI_Wtime();
+		
+		if (!sync_after_batch_update) {
+			net.sync();
+		}
 
 		MPI_Allreduce(MPI_IN_PLACE, &error, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
 		error /= mpi_size;
