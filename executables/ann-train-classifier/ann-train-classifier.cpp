@@ -5,6 +5,145 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include "optionparser.h"
+struct Arg: public option::Arg
+{
+   static void printError(const char* msg1, const option::Option& opt, const char* msg2)
+   {
+     fprintf(stderr, "ERROR: %s", msg1);
+     fwrite(opt.name, opt.namelen, 1, stderr);
+     fprintf(stderr, "%s", msg2);
+   }
+
+   static option::ArgStatus Unknown(const option::Option& option, bool msg)
+   {
+     if (msg) printError("Unknown option '", option, "'\n");
+     return option::ARG_ILLEGAL;
+   }
+
+   static option::ArgStatus Required(const option::Option& option, bool msg)
+   {
+     if (option.arg != 0)
+       return option::ARG_OK;
+
+     if (msg) printError("Option '", option, "' requires an argument\n");
+     return option::ARG_ILLEGAL;
+   }
+
+   static option::ArgStatus NonEmpty(const option::Option& option, bool msg)
+   {
+     if (option.arg != 0 && option.arg[0] != 0)
+       return option::ARG_OK;
+
+     if (msg) printError("Option '", option, "' requires a non-empty argument\n");
+     return option::ARG_ILLEGAL;
+   }
+
+   static option::ArgStatus Numeric(const option::Option& option, bool msg)
+   {
+     char* endptr = 0;
+     if (option.arg != 0 && strtol(option.arg, &endptr, 10)){};
+     if (endptr != option.arg && *endptr == 0)
+       return option::ARG_OK;
+
+     if (msg) printError("Option '", option, "' requires an integer argument\n");
+     return option::ARG_ILLEGAL;
+   }
+   static option::ArgStatus Float(const option::Option& option, bool msg)
+   {
+	   char *endptr = 0;
+	   if (option.arg != 0 && strtof(option.arg, &endptr)){};
+	   if (endptr != option.arg && *endptr ==0) {
+		   return option::ARG_OK;
+	   }
+	   if (msg) printError("Option '", option, "' requires a numeric argument\n");
+	   return option::ARG_ILLEGAL;
+   }
+   static option::ArgStatus ExistingFile(const option::Option& option, bool msg) {
+	struct stat buffer;
+	if (option.arg != 0 && stat(option.arg, &buffer) == 0) {
+		return option::ARG_OK;
+	}
+	if (msg) printError("Option '", option, "' requires a file argument\n");
+	return option::ARG_ILLEGAL;
+   }
+
+   template<option::ArgStatus F(const option::Option&, bool)>
+   static option::ArgStatus OptionalF(const option::Option& option, bool msg)
+   {
+     if (option.arg == 0) return option::ARG_IGNORE;
+     return F(option, msg);
+   }
+};
+
+enum optionIndex{O_UNKNOWN, O_HELP, O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_HIDDEN, O_BATCHSIZE, O_EPOCHS, O_MAXERROR,
+	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE};
+
+std::vector<int> requiredOptions = {O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_BATCHSIZE, O_MAXERROR, O_DATAFILE, O_NETFILE, O_BACKEND};
+
+//TODO: Document required arguments in USAGE
+const option::Descriptor usage[] = {
+	{O_UNKNOWN, 0, "", "", Arg::Unknown, "Train a Artificial Neural Network for Classification\n\n"
+		"USAGE: juml-ann-train-classifier [options]\n\nGeneral Options:"},
+	{O_HELP, 0, "h", "help", option::Arg::None, "--help, -h\tPrint usage and exit."},
+	{O_SEED, 0, "", "seed", Arg::Numeric, "--seed <N>\tSet the seed used for random initialization"},
+	{O_BACKEND, 1, "", "cpu", option::Arg::None, "--cpu \tUse the ArrayFire CPU Backend"},
+	{O_BACKEND, 2, "", "opencl", option::Arg::None, "--opencl\tUse the ArrayFire OpenCL Backend"},
+	{O_BACKEND, 3, "", "cuda", option::Arg::None, "--cuda \tUse the ArrayFire Cuda Backend"},
+
+	{O_MAXERROR, 0, "", "error", Arg::Float, "--error <E>\tSet the training error, after which to stop training"},
+	{O_EPOCHS, 0, "", "epochs", Arg::Numeric, "--epochs <N>\tSet the maximum number of training epochs"},
+	{O_BATCHSIZE, 0, "b", "batchsize", Arg::Numeric, "--batchsize <B>, -b <B>\tSet the global batchsize."},
+	{O_LEARNINGRATE, 0, "l", "learningrate", Arg::Float, "--learningrate <L>, -l <L>\tLearningrate for training of the ANN"},
+	{O_SYNCTYPE, 1, "", "sync-after-batch", option::Arg::None, "--sync-after-batch\tSyncronize the ANN after each batch."},
+	{O_SYNCTYPE, 0, "", "sync-after-epoch", option::Arg::None, "--sync-after-epoch\tSyncronize the ANN after each epoch."},
+	{O_UNKNOWN, 0, "", "", NULL, 0},
+	{O_UNKNOWN, 0, "", "", Arg::Unknown, "ANN-Options:"},
+	{O_FEATURES, 0, "f", "features", Arg::Numeric, "--features <F>, -f <F>\tThe number of features the data will contain. The same as the number of neurons in the input layer."},
+	{O_HIDDEN, 0, "H", "hidden", Arg::Numeric, "--hidden <N>, -H <N>\tAdd a hidden layer to the ANN."},
+	{O_CLASSES, 0, "c", "classes", Arg::Numeric, "--classes <C>, -c <C>\tThe number of classes in the data. The same as the number of output neurons in the last layer."},
+
+	{O_UNKNOWN, 0, "", "", NULL, 0},
+	{O_UNKNOWN, 0, "", "", Arg::Unknown, "Input and Output Options:"},
+	{O_DATAFILE, 0, "d", "data", Arg::ExistingFile, "--data PATH, -d PATH\tPath to HDF5 File, taht contains the training data"},
+	{O_DATAFILE_DATA_SET, 0, "", "data-set", Arg::NonEmpty, "--data-set <S>\tSet the name of the Dataset inside the HDF5 data file that contains the features"},
+	{O_DATAFILE_LABEL_SET, 0, "", "label-set", Arg::NonEmpty, "--label-set <S>\tSet the name of the Dataaset inside the HDF5 data file that contains the class labels"},
+	{O_NETFILE, 0, "n", "net", Arg::Required, "--net <PATH>, -n <PATH>\tPath to a HDF5 file where the ANN will be loaded from and stored to. If the file does not exist a new ANN will be created"},
+	{0, 0, 0, 0, 0, 0}
+};
+
+void printListOfOrOptions(int index) {
+	int i = 0;
+	bool foundMoreThanOne = false;
+	bool isShortOption;
+	const char *previous = NULL;
+	while (true) {
+		if (usage[i].index == 0 && usage[i].type == 0 && usage[i].shortopt == 0 && usage[i].longopt == 0 && usage[i].check_arg == 0 && usage[i].help == 0) {
+			break;
+		}
+		if (usage[i].index == index) {
+			if (previous == NULL) {
+				isShortOption = usage[i].longopt[0] == 0;
+				previous = isShortOption ? usage[i].shortopt : usage[i].longopt;
+			} else {
+				if (!foundMoreThanOne) {
+					foundMoreThanOne = true;
+					fprintf(stderr, "%s%s", isShortOption ? "-" : "--", previous);
+				} else {
+					fprintf(stderr, ", %s%s", isShortOption ? "-" : "--", previous);
+				}
+				isShortOption = usage[i].longopt[0] == 0;
+				previous = isShortOption ? usage[i].shortopt : usage[i].longopt;
+			}
+		}
+		i += 1;
+	}
+	if (previous != NULL) {
+		if (foundMoreThanOne) fprintf(stderr, " or %s%s", isShortOption ? "-" : "--", previous);
+		else fprintf(stderr, "%s%s", isShortOption ? "-" : "--", previous);
+	}
+}
+
 
 int main(int argc, char *argv[]) {
 	using std::cout;
@@ -30,73 +169,91 @@ int main(int argc, char *argv[]) {
 	float max_error;
 	int seed;
 	af::Backend backend = AF_BACKEND_CUDA;
+	bool sync_after_batch_update;
 
 	std::vector<int> hidden_layers;
 
 	std::string networkFilePath;
 
-	try {
-		TCLAP::CmdLine cmd("Train a Artificial Neural Network for Classification", ' ', "0.1-alpha");
+	{
+		option::Stats stats(usage, argc - 1, argv + 1);
+		std::vector<option::Option> options(stats.options_max);
+		std::vector<option::Option> buffer(stats.buffer_max);
+		option::Parser parse(usage, argc - 1, argv + 1, &options[0], &buffer[0]);
 
-		TCLAP::ValueArg<int> cmd_classes("c", "classes", "The number of classes the classifier should be trained for.", true, 0, "Number of Classes", cmd);
-		TCLAP::ValueArg<int> cmd_features("f", "features", "The number of features the data will contain", true, 0, "Number of Features", cmd);
-		TCLAP::ValueArg<float> cmd_learningrate("l", "learningrate", "Learningrate for training of the ANN", false, 0.1, "Learningrate", cmd);
-		TCLAP::MultiArg<int> cmd_hidden("", "hidden", "Add a hidden Layer with N nodes", true, "N", cmd);
-		TCLAP::ValueArg<int> cmd_gbatchsize("b", "batchsize", "Set the global batchsize", true, 0, "Batchsize", cmd);
-		//TCLAP::ValueArg<int> cmd_lbatchsize("B", "local-batchsize", "set the local batchsize", true, 0, "Local batchsize", cmd);
-
-		TCLAP::ValueArg<int> cmd_epochs("", "epochs", "Set the maximum number of training epochs", false, 1000, "Epochs", cmd);
-		TCLAP::ValueArg<float> cmd_error("", "error", "Set the training error, after which to stop training", false, 0.25, "Error", cmd);
-		TCLAP::ValueArg<std::string> cmd_datafile("d", "data", "Path to HDF5 file, that contains the training data", true, "", "PATH", cmd);
-		TCLAP::ValueArg<std::string> cmd_datafile_dataset("", "data-set", "Name of the HDF5 dataset, that contains the training data", false, "Data", "Dataset Name", cmd);
-		TCLAP::ValueArg<std::string> cmd_datafile_labelset("", "label-set", "Name of the HDF5 dataset, that contains the training labels", false, "Label", "Dataset Name", cmd);
-		TCLAP::ValueArg<std::string> cmd_net("n", "net", "Path to store and read the ANN. If file is already present it will be read and training continued.", true, "", "PATH", cmd);
-
-		TCLAP::ValueArg<int> cmd_seed("s", "seed", "Set the seed that is used for random initialization", false, 0, "Seed", cmd);
-
-		TCLAP::SwitchArg cmd_cuda("", "cuda", "Use the ArrayFire CUDA Backend", true);
-		TCLAP::SwitchArg cmd_opencl("", "opencl", "Use the ArrayFire OpenCL Backend", true);
-		TCLAP::SwitchArg cmd_cpu("", "cpu", "Use the ArrayFire CPU Backend", true);
-
-		std::vector<TCLAP::Arg*> backend_args = {&cmd_cuda, &cmd_opencl, &cmd_cpu};
-
-		cmd.xorAdd(backend_args);
-
-		cmd.parse(argc, argv);
-
-
-		n_classes = cmd_classes.getValue();
-		n_features = cmd_features.getValue();
-		LEARNINGRATE = cmd_learningrate.getValue();
-		batchsize = cmd_gbatchsize.getValue() / mpi_size;
-		max_epochs = cmd_epochs.getValue();
-		max_error = cmd_error.getValue();
-
-		hidden_layers = cmd_hidden.getValue();
-
-		trainingFilePath = cmd_datafile.getValue();
-		xDatasetName = cmd_datafile_dataset.getValue();
-		yDatasetName = cmd_datafile_labelset.getValue();
-
-		networkFilePath = cmd_net.getValue();
-
-		seed = cmd_seed.getValue();
-
-		if (cmd_cuda.isSet()) {
-			backend = AF_BACKEND_CUDA;
-		} else if (cmd_opencl.isSet()) {
-			backend = AF_BACKEND_OPENCL;
-		} else if (cmd_cpu.isSet()) {
-			backend = AF_BACKEND_CPU;
-		} else {
-			throw std::runtime_error("This should never happen");
+		if (parse.error()) {
+			return 1;
 		}
-	} catch (TCLAP::ArgException e) {
-		std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
-		MPI_Finalize();
-		return 1;
-	}
+		if (argc != 1) {
+			for (auto it = requiredOptions.begin(); it != requiredOptions.end(); it++) {
+				if (!options[*it]) {
+					fprintf(stderr, "ERROR: Missing required Argument: ");
+					printListOfOrOptions(*it);
+					fprintf(stderr, "\n");
+					argc = 1;
+				} else if (options[*it].count() > 1) {
+					fprintf(stderr, "ERROR: Only specify once: ");
+					printListOfOrOptions(*it);
+					fprintf(stderr, "\n");
+					argc = 1;
+				}
+			}
+		}
 
+		if (options[O_HELP] || argc == 1) {
+			option::printUsage(std::cout, usage);
+			return 0;
+		}
+
+		n_classes = atoi(options[O_CLASSES].arg);
+		n_features = atoi(options[O_FEATURES].arg);
+		LEARNINGRATE = atof(options[O_LEARNINGRATE].arg);
+		batchsize = atoi(options[O_BATCHSIZE].arg) / mpi_size;
+		if (options[O_EPOCHS])
+			max_epochs = atoi(options[O_EPOCHS].arg);
+		else
+			max_epochs = 1000;
+		max_error = atof(options[O_MAXERROR].arg);
+
+
+		for (option::Option* opt = options[O_HIDDEN]; opt; opt = opt->next()) {
+			hidden_layers.push_back(atoi(opt->arg));
+		}
+
+		trainingFilePath = options[O_DATAFILE].arg;
+		if (options[O_DATAFILE_DATA_SET])
+			xDatasetName = options[O_DATAFILE_DATA_SET].arg;
+		else
+			xDatasetName = "Data";
+		if (options[O_DATAFILE_LABEL_SET])
+			yDatasetName = options[O_DATAFILE_LABEL_SET].arg;
+		else
+			yDatasetName = "Label";
+
+		networkFilePath = options[O_NETFILE].arg;
+		if (options[O_SEED]) 
+			seed = atoi(options[O_SEED].arg);
+
+		switch(options[O_BACKEND].last()->type()) {
+			case 1: backend = AF_BACKEND_CPU; break;
+			case 2: backend = AF_BACKEND_OPENCL; break;
+			case 3: backend = AF_BACKEND_CUDA; break;
+			default:
+				fprintf(stderr, "Could not parse backend Argument to Backend\n");
+		}
+		if (options[O_SYNCTYPE]) {
+			if (options[O_SYNCTYPE].count() > 1) {
+				fprintf(stderr, "Can only specify one of ");
+				printListOfOrOptions(O_SYNCTYPE);
+				fprintf(stderr, "\n");
+				return 1;
+			}
+			sync_after_batch_update = options[O_SYNCTYPE].last()->type();
+		} else {
+			sync_after_batch_update = true;
+		}
+
+	}
 
 
 	cout << "CUDA_VISIBLE_DEVICES: " << secure_getenv("CUDA_VISIBLE_DEVICES") << endl;
