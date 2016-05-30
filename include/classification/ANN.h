@@ -58,14 +58,14 @@ namespace juml {
 				return layers.end();
 			}
 			void fit(Dataset& X, Dataset& y) override;
-			float fitBatch(af::array batch, af::array target, float learningrate);
+			float fitBatch(af::array batch, af::array target, float learningrate, MPI_Comm comm = MPI_COMM_NULL);
 			Dataset predict(Dataset& X) const override;
 			af::array predict_array(af::array X) const;
 
 			Dataset classify(Dataset& X) const;
 			af::array classify_array(af::array X) const;
 
-			void sync();
+			void sync(MPI_Comm comm = MPI_COMM_NULL);
 
 			float accuracy(Dataset& X, Dataset& y) const override;
 			float classify_accuracy(Dataset& X, Dataset &y) const;

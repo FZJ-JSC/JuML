@@ -129,7 +129,10 @@ void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 	}
 }
 
-float SequentialNeuralNet::fitBatch(af::array batch, af::array target, float learningrate) {
+float SequentialNeuralNet::fitBatch(af::array batch, af::array target, float learningrate, MPI_Comm comm) {
+	if (comm == MPI_COMM_NULL) {
+		comm = this->comm_;
+	}
 	this->forward_all(batch);
 	// Oxb = Oxb - Oxb
 	af::array delta = this->layers.back()->getLastOutput() - target;
@@ -142,14 +145,17 @@ float SequentialNeuralNet::fitBatch(af::array batch, af::array target, float lea
 
 
 	for (auto it = this->layers.begin(); it != this->layers.end(); ++it) {
-		(*it)->updateWeights(learningrate, this->comm_);
+		(*it)->updateWeights(learningrate, comm);
 	}
 	return error / fullbatchsize;
 }
 
-void SequentialNeuralNet::sync() {
+void SequentialNeuralNet::sync(MPI_Comm comm) {
+	if (comm == MPI_COMM_NULL) {
+		comm = this->comm_;
+	}
 	for (auto it = this->layers.begin(); it != this->layers.end(); it++) {
-		(*it)->mpi_average_weights(this->comm_);
+		(*it)->mpi_average_weights(comm);
 	}
 }
 
