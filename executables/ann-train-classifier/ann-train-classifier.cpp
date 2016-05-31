@@ -147,8 +147,6 @@ void printListOfOrOptions(int index) {
 
 
 int main(int argc, char *argv[]) {
-	using std::cout;
-	using std::endl;
 	MPI_Init(&argc, &argv);
 
 	double time_start = MPI_Wtime();
@@ -262,9 +260,10 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (options[O_SHUFFLE]) {
+			printf("Enabled shuffling of data");
 			shuffle_samples = true;
 		}
-		
+
 		if (options[O_MOMENTUM]) {
 			momentum = atof(options[O_MOMENTUM].arg);
 			printf("Using Momentum: %f\n",momentum);
@@ -273,20 +272,20 @@ int main(int argc, char *argv[]) {
 	}
 
 
-	cout << "CUDA_VISIBLE_DEVICES: " << secure_getenv("CUDA_VISIBLE_DEVICES") << endl;
+	printf("CUDA_VISIBLE_DEVICES: %s\n", secure_getenv("CUDA_VISIBLE_DEVICES"));
 	af::setBackend(backend);
 	af::setDevice(mpi_rank % 4); // TODO: need to fix this
-	cout << "Backend set" << endl;
+	puts("Backend set");
 	af::info();
 	af::setSeed(seed);
-	cout << "Seed: " << af::getSeed() << endl;
+	printf("Seed: %d\n", af::getSeed());
 
 	double time_init_af = MPI_Wtime();
 
 	juml::SequentialNeuralNet net(backend);
 
 	{
-		cout << "Creating ANN" << endl;
+		puts("Creating ANN");
 		int previous_layer = n_features;
 		for (auto it = hidden_layers.begin(); it != hidden_layers.end(); it++) {
 			if (momentum != 0) {
@@ -305,20 +304,20 @@ int main(int argc, char *argv[]) {
 		if (stat(networkFilePath.c_str(), &buffer) == 0) {
 			// File exists
 			net.load(networkFilePath);
-			cout << "ANN loaded from file " << networkFilePath << endl;
+			printf("ANN loaded from file %s\n", networkFilePath.c_str());;
 			// TODO Check that ANN loaded from file matches specification from command line!
 		}
 	}
-	cout << "Learningrate: " << LEARNINGRATE << endl;
+	printf("Learningrate: %f\n", LEARNINGRATE);
 
 	// Print network layer counts:
 	{
 		auto it = net.layers_begin();
-		cout << "Layers: " << (*it)->input_count;
+		printf("Layers: %d", (*it)->input_count);
 		for (; it != net.layers_end(); it++) {
-			cout << "-" << (*it)->node_count;
+			printf("-%d", (*it)->node_count);
 		}
-		cout << endl;
+		puts("");
 	}
 
 	double time_init_net = MPI_Wtime();
@@ -386,13 +385,12 @@ int main(int argc, char *argv[]) {
 	double time_train_sync = 0;
 
 	if (N < batchsize) {
-		cout << "batchsize is bigger than available samples. reducing batchsize to all samples" << endl;
+		puts("batchsize is bigger than available samples. reducing batchsize to all samples");
 		batchsize = N;
 	}
 
 	int nbatches = N/batchsize;
-	cout << "N: " << N << " n_batches: " << nbatches << endl
-		<< "batchsize: " << batchsize <<endl;
+	printf("N: %d n_batches: %d\n" "batchsize: %d\n", N, nbatches, batchsize);
 	if (mpi_rank == 0) {
 		printf("%5s %10s %10s %10s\n", "Epoch", "Error", "Last Error", "Accuracy");
 	}
@@ -447,7 +445,7 @@ int main(int argc, char *argv[]) {
 
 	juml::Dataset test_data_set(full_data);
 	juml::Dataset test_label_set(label_array);
-	cout << "Full Class-Accuracy: " << net.classify_accuracy(test_data_set, test_label_set) << endl;
+	printf("Full Class-Accuracy: %20.12f\n", net.classify_accuracy(test_data_set, test_label_set));
 
 	double time_tested = MPI_Wtime();
 	/*juml::Dataset trainset(data_array);
@@ -457,7 +455,7 @@ int main(int argc, char *argv[]) {
 	net.save(networkFilePath, true);
 
 	double time_saved = MPI_Wtime();
-	cout << "Time Measuerment: " << endl;
+	puts("Time Measuerment: ");
 	#define Fs(time, name) printf("%20s %3.4f\n", name, time);
 	#define F(start, end, name) Fs(end - start, name);
 
