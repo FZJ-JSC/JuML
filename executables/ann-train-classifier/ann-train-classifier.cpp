@@ -367,6 +367,11 @@ int main(int argc, char *argv[]) {
 	double time_train_batch_test = 0;
 	double time_train_sync = 0;
 
+	if (N < batchsize) {
+		cout << "batchsize is bigger than available samples. reducing batchsize to all samples" << endl;
+		batchsize = N;
+	}
+
 	int nbatches = N/batchsize;
 	cout << "N: " << N << " n_batches: " << nbatches << endl
 		<< "batchsize: " << batchsize <<endl;
