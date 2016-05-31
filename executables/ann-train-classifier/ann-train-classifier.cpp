@@ -1,4 +1,3 @@
-#include<tclap/CmdLine.h>
 #include <classification/ANN.h>
 #include <mpi.h>
 #include<arrayfire.h>
@@ -198,6 +197,11 @@ int main(int argc, char *argv[]) {
 					argc = 1;
 				}
 			}
+		}
+
+		if (parse.nonOptionsCount() > 0) {
+			fprintf(stderr, "ERROR: Trailing arguments\n");
+			argc = 1;
 		}
 
 		if (options[O_HELP] || argc == 1) {
