@@ -76,7 +76,7 @@ struct Arg: public option::Arg
 };
 
 enum optionIndex{O_UNKNOWN, O_HELP, O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_HIDDEN, O_BATCHSIZE, O_EPOCHS, O_MAXERROR,
-	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE};
+	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE, O_SHUFFLE};
 
 std::vector<int> requiredOptions = {O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_BATCHSIZE, O_MAXERROR, O_DATAFILE, O_NETFILE, O_BACKEND};
 
@@ -93,6 +93,7 @@ const option::Descriptor usage[] = {
 	{O_MAXERROR, 0, "", "error", Arg::Float, "--error <E>\tSet the training error, after which to stop training"},
 	{O_EPOCHS, 0, "", "epochs", Arg::Numeric, "--epochs <N>\tSet the maximum number of training epochs"},
 	{O_BATCHSIZE, 0, "b", "batchsize", Arg::Numeric, "--batchsize <B>, -b <B>\tSet the global batchsize."},
+	{O_SHUFFLE, 0, "","shuffle-samples", option::Arg::None, "--shuffle-samples\tChange the order of the samples for each epoch"},
 	{O_LEARNINGRATE, 0, "l", "learningrate", Arg::Float, "--learningrate <L>, -l <L>\tLearningrate for training of the ANN"},
 	{O_SYNCTYPE, 1, "", "sync-after-batch", option::Arg::None, "--sync-after-batch\tSyncronize the ANN after each batch."},
 	{O_SYNCTYPE, 0, "", "sync-after-epoch", option::Arg::None, "--sync-after-epoch\tSyncronize the ANN after each epoch."},
@@ -169,6 +170,7 @@ int main(int argc, char *argv[]) {
 	int seed;
 	af::Backend backend = AF_BACKEND_CUDA;
 	bool sync_after_batch_update;
+	bool shuffle_samples = false;
 
 	std::vector<int> hidden_layers;
 
@@ -255,6 +257,10 @@ int main(int argc, char *argv[]) {
 			sync_after_batch_update = options[O_SYNCTYPE].last()->type();
 		} else {
 			sync_after_batch_update = true;
+		}
+
+		if (options[O_SHUFFLE]) {
+			shuffle_samples = true;
 		}
 
 	}
@@ -382,23 +388,31 @@ int main(int argc, char *argv[]) {
 	af::array shuffled_idx, sorted_randomizer;
 
 	for (int epoch = 0; epoch < max_epochs; epoch++) {
-		//Generate shuffled array of indexes
-		af::sort(sorted_randomizer, shuffled_idx, af::randu(N));
+		if (shuffle_samples) {
+			//Generate shuffled array of indexes
+			af::sort(sorted_randomizer, shuffled_idx, af::randu(N));
+		}
 		float error = 0;
 		float lasterror;
 		for (int batch = 0, batchnum = 0; batch < N; batchnum++) {
 			int thisbatchsize = batchsize + (N % batchsize) / nbatches + (batchnum < (N % batchsize) % nbatches ? 1 : 0);
 			int last = std::min(static_cast<int>(data_array.dims(1)) - 1, batch + thisbatchsize - 1);
-			af::array batchidx = shuffled_idx(af::seq(batch, last));
-			af::array batchsamples = data_array(af::span, batchidx);
-			af::array batchtarget = target(af::span, batchidx);
+			af::array batchsamples, batchtarget;
+			if (shuffle_samples) {
+				af::array batchidx = shuffled_idx(af::seq(batch, last));
+				batchsamples = data_array(af::span, batchidx);
+				batchtarget = target(af::span, batchidx);
+			} else {
+				batchsamples = data_array(af::span, af::seq(batch, last));
+				batchtarget = target(af::span, af::seq(batch, last));
+			}
 			//Only sync with other processes if sync_after_batch_update is set
 			lasterror = net.fitBatch(batchsamples, batchtarget, LEARNINGRATE, sync_after_batch_update ? MPI_COMM_NULL : MPI_COMM_SELF);
 			error += lasterror;
 			batch += thisbatchsize;
 		}
 		double time_buf = MPI_Wtime();
-		
+
 		if (!sync_after_batch_update) {
 			net.sync();
 		}
@@ -415,7 +429,6 @@ int main(int argc, char *argv[]) {
 		if (error / nbatches < max_error) {
 			break;
 		}
-		//Reshuffle Indexes
 	}
 
 	double time_trained = MPI_Wtime();
