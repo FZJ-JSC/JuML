@@ -82,8 +82,12 @@ std::vector<int> requiredOptions = {O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_BAT
 
 //TODO: Document required arguments in USAGE
 const option::Descriptor usage[] = {
-	{O_UNKNOWN, 0, "", "", Arg::Unknown, "Train a Artificial Neural Network for Classification\n\n"
-		"USAGE: juml-ann-train-classifier [options]\n\nGeneral Options:"},
+	{O_UNKNOWN, 0, "", "", Arg::Unknown, 
+		"USAGE: \n"
+		"  juml-ann-train-classifier --help | -h\n"
+		"  juml-ann-train-classifier [--seed=N] (-cpu|--opencl|--cuda) --error=F [--epochs=1000] --batchsize=N --learningrate=F [--momentum=0] "
+		"--features=N [--hidden=N [--hidden=N ...]] --classes=N --data=F [--data-set=Data] [--label-set=Label] --net=F [--shuffle-samples] [--sync-after-batch|--sync-after-epoch]"
+		"\n\nGeneral Options:"},
 	{O_HELP, 0, "h", "help", option::Arg::None, "--help, -h\tPrint usage and exit."},
 	{O_SEED, 0, "", "seed", Arg::Numeric, "--seed <N>\tSet the seed used for random initialization"},
 	{O_BACKEND, 1, "", "cpu", option::Arg::None, "--cpu \tUse the ArrayFire CPU Backend"},
