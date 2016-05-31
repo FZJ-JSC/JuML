@@ -76,7 +76,7 @@ struct Arg: public option::Arg
 };
 
 enum optionIndex{O_UNKNOWN, O_HELP, O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_HIDDEN, O_BATCHSIZE, O_EPOCHS, O_MAXERROR,
-	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE, O_SHUFFLE};
+	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE, O_SHUFFLE, O_MOMENTUM};
 
 std::vector<int> requiredOptions = {O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_BATCHSIZE, O_MAXERROR, O_DATAFILE, O_NETFILE, O_BACKEND};
 
@@ -95,6 +95,7 @@ const option::Descriptor usage[] = {
 	{O_BATCHSIZE, 0, "b", "batchsize", Arg::Numeric, "--batchsize <B>, -b <B>\tSet the global batchsize."},
 	{O_SHUFFLE, 0, "","shuffle-samples", option::Arg::None, "--shuffle-samples\tChange the order of the samples for each epoch"},
 	{O_LEARNINGRATE, 0, "l", "learningrate", Arg::Float, "--learningrate <L>, -l <L>\tLearningrate for training of the ANN"},
+	{O_MOMENTUM, 0, "m", "momentum", Arg::Float, "--momentum <M>, -m <M>\tSpecify the proportion of momentum to be used"},
 	{O_SYNCTYPE, 1, "", "sync-after-batch", option::Arg::None, "--sync-after-batch\tSyncronize the ANN after each batch."},
 	{O_SYNCTYPE, 0, "", "sync-after-epoch", option::Arg::None, "--sync-after-epoch\tSyncronize the ANN after each epoch."},
 	{O_UNKNOWN, 0, "", "", NULL, 0},
@@ -171,6 +172,7 @@ int main(int argc, char *argv[]) {
 	af::Backend backend = AF_BACKEND_CUDA;
 	bool sync_after_batch_update;
 	bool shuffle_samples = false;
+	float momentum = 0;
 
 	std::vector<int> hidden_layers;
 
@@ -262,6 +264,11 @@ int main(int argc, char *argv[]) {
 		if (options[O_SHUFFLE]) {
 			shuffle_samples = true;
 		}
+		
+		if (options[O_MOMENTUM]) {
+			momentum = atof(options[O_MOMENTUM].arg);
+			printf("Using Momentum: %f\n",momentum);
+		}
 
 	}
 
@@ -280,15 +287,20 @@ int main(int argc, char *argv[]) {
 
 	{
 		cout << "Creating ANN" << endl;
-		auto it = hidden_layers.begin();
-		int previous_layer = *it;
-		net.add(juml::ann::make_SigmoidLayer(n_features, *it));
-		it++;
-		for (; it != hidden_layers.end(); it++) {
-			net.add(juml::ann::make_SigmoidLayer(previous_layer, *it));
+		int previous_layer = n_features;
+		for (auto it = hidden_layers.begin(); it != hidden_layers.end(); it++) {
+			if (momentum != 0) {
+				net.add(juml::ann::make_SigmoidMLayer(previous_layer, *it, momentum));
+			} else {
+				net.add(juml::ann::make_SigmoidLayer(previous_layer, *it));
+			}
 			previous_layer = *it;
 		}
-		net.add(juml::ann::make_SigmoidLayer(previous_layer, n_classes));
+		if (momentum != 0) {
+			net.add(juml::ann::make_SigmoidMLayer(previous_layer, n_classes, momentum));
+		} else {
+			net.add(juml::ann::make_SigmoidLayer(previous_layer, n_classes));
+		}
 		struct stat buffer;
 		if (stat(networkFilePath.c_str(), &buffer) == 0) {
 			// File exists
