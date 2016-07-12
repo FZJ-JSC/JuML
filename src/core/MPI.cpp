@@ -18,23 +18,11 @@
 
 #include "core/Backend.h"
 #include "core/MPI.h"
-#include "mpi-ext.h"
 
 namespace juml {
 namespace mpi {
-    bool cuda_aware_mpi_available = false;
-
-    void init(int *argc, char ***argv) {
-        MPI_Init(argc, argv);
-#if defined(MPIX_CUDA_AWARE_SUPPORT)
-        cuda_aware_mpi_available = 1 == MPIX_Query_cuda_support();
-#else
-	cuda_aware_mpi_available = false;
-#endif
-    }
-
     bool can_use_device_pointer(const af::array& data) {
-        return Backend::of(data) == Backend::CPU || (cuda_aware_mpi_available && Backend::of(data) == Backend::CUDA);
+        return Backend::of(data) == Backend::CPU;
     }
 
     MPI_Datatype get_MPI_type(const af::array& data) {

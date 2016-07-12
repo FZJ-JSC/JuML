@@ -151,7 +151,7 @@ void printListOfOrOptions(int index) {
 
 
 int main(int argc, char *argv[]) {
-	juml::mpi::init(&argc, &argv);
+	MPI_Init(&argc, &argv);
 
 	double time_start = MPI_Wtime();
 
@@ -279,12 +279,6 @@ int main(int argc, char *argv[]) {
 	printf("CUDA_VISIBLE_DEVICES: %s\n", secure_getenv("CUDA_VISIBLE_DEVICES"));
 	af::setBackend(backend);
 	af::setDevice(mpi_rank % 4); // TODO: need to fix this
-	
-	if (juml::mpi::cuda_aware_mpi_available)
-		puts("CUDA-Aware MPI is available!");
-	else
-		puts("CUDA-Aware MPI is NOT availbale");
-
 	puts("Backend set");
 	af::info();
 	af::setSeed(seed);
