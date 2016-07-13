@@ -76,7 +76,7 @@ struct Arg: public option::Arg
 };
 
 enum optionIndex{O_UNKNOWN, O_HELP, O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_HIDDEN, O_BATCHSIZE, O_EPOCHS, O_MAXERROR,
-	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE, O_SHUFFLE, O_MOMENTUM};
+	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE, O_SHUFFLE, O_MOMENTUM, O_CUDAMPI};
 
 std::vector<int> requiredOptions = {O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_BATCHSIZE, O_MAXERROR, O_DATAFILE, O_NETFILE, O_BACKEND};
 
@@ -93,6 +93,7 @@ const option::Descriptor usage[] = {
 	{O_BACKEND, 1, "", "cpu", option::Arg::None, "--cpu \tUse the ArrayFire CPU Backend"},
 	{O_BACKEND, 2, "", "opencl", option::Arg::None, "--opencl\tUse the ArrayFire OpenCL Backend"},
 	{O_BACKEND, 3, "", "cuda", option::Arg::None, "--cuda \tUse the ArrayFire Cuda Backend"},
+	{O_CUDAMPI, 0, "", "cudampi", option::Arg::None, "--cudampi \tAssume that the MPI Implementation is CUDA Aware"},
 
 	{O_MAXERROR, 0, "", "error", Arg::Float, "--error <E>\tSet the training error, after which to stop training"},
 	{O_EPOCHS, 0, "", "epochs", Arg::Numeric, "--epochs <N>\tSet the maximum number of training epochs"},
@@ -151,14 +152,8 @@ void printListOfOrOptions(int index) {
 
 
 int main(int argc, char *argv[]) {
-	juml::mpi::init(&argc, &argv);
-
-	double time_start = MPI_Wtime();
 
 
-	int mpi_size, mpi_rank;
-	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
-	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
 	int n_classes;
 	int n_features;
@@ -218,7 +213,7 @@ int main(int argc, char *argv[]) {
 		n_classes = atoi(options[O_CLASSES].arg);
 		n_features = atoi(options[O_FEATURES].arg);
 		LEARNINGRATE = atof(options[O_LEARNINGRATE].arg);
-		batchsize = atoi(options[O_BATCHSIZE].arg) / mpi_size;
+		batchsize = atoi(options[O_BATCHSIZE].arg);
 		if (options[O_EPOCHS])
 			max_epochs = atoi(options[O_EPOCHS].arg);
 		else
@@ -251,6 +246,10 @@ int main(int argc, char *argv[]) {
 			default:
 				fprintf(stderr, "Could not parse backend Argument to Backend\n");
 		}
+
+		if (options[O_CUDAMPI]) {
+			juml::mpi::cuda_aware_mpi_available = true;
+		}
 		if (options[O_SYNCTYPE]) {
 			if (options[O_SYNCTYPE].count() > 1) {
 				fprintf(stderr, "Can only specify one of ");
@@ -278,12 +277,37 @@ int main(int argc, char *argv[]) {
 
 	printf("CUDA_VISIBLE_DEVICES: %s\n", secure_getenv("CUDA_VISIBLE_DEVICES"));
 	af::setBackend(backend);
-	af::setDevice(mpi_rank % 4); // TODO: need to fix this
-	
+	if (juml::mpi::cuda_aware_mpi_available) {
+		char *rank_from_env = NULL;
+		int local_rank;
+		if ((rank_from_env = getenv("MV2_COMM_WORLD_LOCAL_RANK")) != NULL) {
+			local_rank = atoi(rank_from_env);
+		} else if ((rank_from_env = getenv("OMPI_COMM_WORLD_LOCAL_RANK")) != NULL) {
+			local_rank = atoi(rank_from_env);
+		} else {
+			fprintf(stderr, "Could not read WORLD_LOCAL_RANK from environment. Cannot use --cudampi. Are you using MVAPICH or OpenMPI?\n");
+			return 1;
+		}
+		af::setDevice(local_rank % af::getDeviceCount()); 
+	}
+
+	MPI_Init(&argc, &argv);
+
+
+	double time_start = MPI_Wtime();
+
+	int mpi_size, mpi_rank;
+	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
 	if (juml::mpi::cuda_aware_mpi_available)
 		puts("CUDA-Aware MPI is available!");
-	else
+	else {
 		puts("CUDA-Aware MPI is NOT availbale");
+		af::setDevice(mpi_rank % af::getDeviceCount());
+	}
+
+	batchsize /= mpi_size;
 
 	puts("Backend set");
 	af::info();
