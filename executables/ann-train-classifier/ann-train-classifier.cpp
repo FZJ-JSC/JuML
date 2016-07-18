@@ -284,6 +284,10 @@ int main(int argc, char *argv[]) {
 			local_rank = atoi(rank_from_env);
 		} else if ((rank_from_env = getenv("OMPI_COMM_WORLD_LOCAL_RANK")) != NULL) {
 			local_rank = atoi(rank_from_env);
+		} else if ((rank_from_env = getenv("MPI_LOCALRANKID")) != NULL) {
+			local_rank = atoi(rank_from_env);
+		} else if ((rank_from_env = getenv("SLURM_LOCALID")) != NULL) {
+			local_rank = atoi(rank_from_env);
 		} else {
 			fprintf(stderr, "Could not read WORLD_LOCAL_RANK from environment. Cannot use --cudampi. Are you using MVAPICH or OpenMPI?\n");
 			return 1;
