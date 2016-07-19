@@ -76,7 +76,7 @@ struct Arg: public option::Arg
 };
 
 enum optionIndex{O_UNKNOWN, O_HELP, O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_HIDDEN, O_BATCHSIZE, O_EPOCHS, O_MAXERROR,
-	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE, O_SHUFFLE, O_MOMENTUM};
+	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE, O_SHUFFLE, O_MOMENTUM, O_CUDAMPI};
 
 std::vector<int> requiredOptions = {O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_BATCHSIZE, O_MAXERROR, O_DATAFILE, O_NETFILE, O_BACKEND};
 
@@ -93,6 +93,7 @@ const option::Descriptor usage[] = {
 	{O_BACKEND, 1, "", "cpu", option::Arg::None, "--cpu \tUse the ArrayFire CPU Backend"},
 	{O_BACKEND, 2, "", "opencl", option::Arg::None, "--opencl\tUse the ArrayFire OpenCL Backend"},
 	{O_BACKEND, 3, "", "cuda", option::Arg::None, "--cuda \tUse the ArrayFire Cuda Backend"},
+	{O_CUDAMPI, 0, "", "cudampi", option::Arg::None, "--cudampi \tAssume that the MPI Implementation is CUDA Aware"},
 
 	{O_MAXERROR, 0, "", "error", Arg::Float, "--error <E>\tSet the training error, after which to stop training"},
 	{O_EPOCHS, 0, "", "epochs", Arg::Numeric, "--epochs <N>\tSet the maximum number of training epochs"},
@@ -151,14 +152,8 @@ void printListOfOrOptions(int index) {
 
 
 int main(int argc, char *argv[]) {
-	MPI_Init(&argc, &argv);
-
-	double time_start = MPI_Wtime();
 
 
-	int mpi_size, mpi_rank;
-	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
-	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
 	int n_classes;
 	int n_features;
@@ -218,7 +213,7 @@ int main(int argc, char *argv[]) {
 		n_classes = atoi(options[O_CLASSES].arg);
 		n_features = atoi(options[O_FEATURES].arg);
 		LEARNINGRATE = atof(options[O_LEARNINGRATE].arg);
-		batchsize = atoi(options[O_BATCHSIZE].arg) / mpi_size;
+		batchsize = atoi(options[O_BATCHSIZE].arg);
 		if (options[O_EPOCHS])
 			max_epochs = atoi(options[O_EPOCHS].arg);
 		else
@@ -251,6 +246,10 @@ int main(int argc, char *argv[]) {
 			default:
 				fprintf(stderr, "Could not parse backend Argument to Backend\n");
 		}
+
+		if (options[O_CUDAMPI]) {
+			juml::mpi::cuda_aware_mpi_available = true;
+		}
 		if (options[O_SYNCTYPE]) {
 			if (options[O_SYNCTYPE].count() > 1) {
 				fprintf(stderr, "Can only specify one of ");
@@ -278,18 +277,56 @@ int main(int argc, char *argv[]) {
 
 	printf("CUDA_VISIBLE_DEVICES: %s\n", secure_getenv("CUDA_VISIBLE_DEVICES"));
 	af::setBackend(backend);
-	af::setDevice(mpi_rank % 4); // TODO: need to fix this
-	puts("Backend set");
+	if (juml::mpi::cuda_aware_mpi_available) {
+		char *rank_from_env = NULL;
+		int local_rank;
+		if ((rank_from_env = getenv("MV2_COMM_WORLD_LOCAL_RANK")) != NULL) {
+			local_rank = atoi(rank_from_env);
+		} else if ((rank_from_env = getenv("OMPI_COMM_WORLD_LOCAL_RANK")) != NULL) {
+			local_rank = atoi(rank_from_env);
+		} else if ((rank_from_env = getenv("MPI_LOCALRANKID")) != NULL) {
+			local_rank = atoi(rank_from_env);
+		} else if ((rank_from_env = getenv("SLURM_LOCALID")) != NULL) {
+			local_rank = atoi(rank_from_env);
+		} else {
+			fprintf(stderr, "Could not read WORLD_LOCAL_RANK from environment. Cannot use --cudampi. Are you using MVAPICH or OpenMPI?\n");
+			return 1;
+		}
+		af::setDevice(local_rank % af::getDeviceCount()); 
+	}
+
+	MPI_Init(&argc, &argv);
+
+
+	double time_start = MPI_Wtime();
+
+	int mpi_size, mpi_rank;
+	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
+	if (juml::mpi::cuda_aware_mpi_available)
+		if (mpi_rank == 0) {
+			puts("CUDA-Aware MPI is enabled!");
+		}
+	else {
+		if (mpi_rank == 0) {
+			puts("CUDA-Aware MPI is disabled!");
+		}
+		af::setDevice(mpi_rank % af::getDeviceCount());
+	}
+
+	batchsize /= mpi_size;
+
 	af::info();
 	af::setSeed(seed);
-	printf("Seed: %d\n", af::getSeed());
+	printf("[%02d] Seed: %d\n", mpi_rank, af::getSeed());
 
 	double time_init_af = MPI_Wtime();
 
 	juml::SequentialNeuralNet net(backend);
 
 	{
-		puts("Creating ANN");
+		if (mpi_rank == 0) puts("Creating new ANN");
 		int previous_layer = n_features;
 		for (auto it = hidden_layers.begin(); it != hidden_layers.end(); it++) {
 			if (momentum != 0) {
@@ -308,14 +345,14 @@ int main(int argc, char *argv[]) {
 		if (stat(networkFilePath.c_str(), &buffer) == 0) {
 			// File exists
 			net.load(networkFilePath);
-			printf("ANN loaded from file %s\n", networkFilePath.c_str());;
+			if (mpi_rank == 0) printf("ANN loaded from file %s\n", networkFilePath.c_str());;
 			// TODO Check that ANN loaded from file matches specification from command line!
 		}
 	}
-	printf("Learningrate: %f\n", LEARNINGRATE);
+	if (mpi_rank == 0) printf("Learningrate: %f\n", LEARNINGRATE);
 
 	// Print network layer counts:
-	{
+	if (mpi_rank == 0) {
 		auto it = net.layers_begin();
 		printf("Layers: %d", (*it)->input_count);
 		for (; it != net.layers_end(); it++) {
@@ -352,27 +389,27 @@ int main(int argc, char *argv[]) {
 	MPI_Allreduce(MPI_IN_PLACE, &max_label, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
 
 	if (data_array.numdims() > 2) {
-		printf("Data Array has more than 2 dimensions. Transforming to 2 dimensions, keeping the first dimension and collapsing the others.\n");
+		if (mpi_rank == 0) printf("Data Array has more than 2 dimensions. Transforming to 2 dimensions, keeping the first dimension and collapsing the others.\n");
 		data_array = af::moddims(data_array, n_features, data_array.dims(data_array.numdims() - 1));
 	}
 
 	if (min_label == 0) {
-		printf("Found 0-based labels\n");
+		if (mpi_rank == 0) printf("Found 0-based labels\n");
 		if (max_label != n_classes - 1) {
-			printf("The biggest label is %d and not %d. Is your number of classes correct?\n", max_label, n_classes - 1);
+			if (mpi_rank == 0) printf("The biggest label is %d and not %d. Is your number of classes correct?\n", max_label, n_classes - 1);
 			MPI_Finalize();
 			exit(1);
 		}
 	} else if (min_label == 1) {
-		printf("Found 1-based labels\n");
+		if (mpi_rank == 0) printf("Found 1-based labels\n");
 		label_array -= 1;
 		if (max_label != n_classes) {
-			printf("The biggest label is %d and not %d. Is your number of classes correct?\n", max_label, n_classes);
+			if (mpi_rank == 0) printf("The biggest label is %d and not %d. Is your number of classes correct?\n", max_label, n_classes);
 			MPI_Finalize();
 			exit(1);
 		}
 	} else {
-		printf("Labels need to be 1 or 0 based!\n");
+		if (mpi_rank == 0) printf("Labels need to be 1 or 0 based!\n");
 		MPI_Finalize();
 		exit(1);
 	}
@@ -389,12 +426,12 @@ int main(int argc, char *argv[]) {
 	double time_train_sync = 0;
 
 	if (N < batchsize) {
-		puts("batchsize is bigger than available samples. reducing batchsize to all samples");
+		if (mpi_rank == 0) puts("batchsize is bigger than available samples. reducing batchsize to all samples");
 		batchsize = N;
 	}
 
 	int nbatches = N/batchsize;
-	printf("N: %d n_batches: %d\n" "batchsize: %d\n", N, nbatches, batchsize);
+	printf("[%02d] N: %d n_batches: %d batchsize: %d\n", mpi_rank, N, nbatches, batchsize);
 	if (mpi_rank == 0) {
 		printf("%5s %10s %10s %10s\n", "Epoch", "Error", "Last Error", "Accuracy");
 	}
@@ -449,7 +486,8 @@ int main(int argc, char *argv[]) {
 
 	juml::Dataset test_data_set(full_data);
 	juml::Dataset test_label_set(label_array);
-	printf("Full Class-Accuracy: %20.12f\n", net.classify_accuracy(test_data_set, test_label_set));
+	float full_class_accuracy = net.classify_accuracy(test_data_set, test_label_set);
+	if (mpi_rank == 0) printf("Full Class-Accuracy: %20.12f\n", full_class_accuracy);
 
 	double time_tested = MPI_Wtime();
 	/*juml::Dataset trainset(data_array);
@@ -459,8 +497,8 @@ int main(int argc, char *argv[]) {
 	net.save(networkFilePath, true);
 
 	double time_saved = MPI_Wtime();
-	puts("Time Measuerment: ");
-	#define Fs(time, name) printf("%20s %3.4f\n", name, time);
+	printf("[%02d] Time Measuerment: \n", mpi_rank);
+	#define Fs(time, name) printf("[%02d] %20s %3.4f\n", mpi_rank, name, time);
 	#define F(start, end, name) Fs(end - start, name);
 
 	F(time_start, time_init_af, "AF-init");

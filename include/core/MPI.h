@@ -21,6 +21,11 @@
 
 namespace juml {
 namespace mpi {
+    /**
+     * cuda_aware_mpi_available
+     * Set this to true, when CUDA-Aware MPI is available
+     */
+    extern bool cuda_aware_mpi_available;
     typedef int (*ReductionCollective)(const void*, void*, int, MPI_Datatype, MPI_Op, MPI_Comm);
 
     /**

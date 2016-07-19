@@ -21,8 +21,10 @@
 
 namespace juml {
 namespace mpi {
+    bool cuda_aware_mpi_available = false;
+
     bool can_use_device_pointer(const af::array& data) {
-        return Backend::of(data) == Backend::CPU;
+        return Backend::of(data) == Backend::CPU || (cuda_aware_mpi_available && Backend::of(data) == Backend::CUDA);
     }
 
     MPI_Datatype get_MPI_type(const af::array& data) {
