@@ -305,25 +305,28 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
 	if (juml::mpi::cuda_aware_mpi_available)
-		puts("CUDA-Aware MPI is available!");
+		if (mpi_rank == 0) {
+			puts("CUDA-Aware MPI is enabled!");
+		}
 	else {
-		puts("CUDA-Aware MPI is NOT availbale");
+		if (mpi_rank == 0) {
+			puts("CUDA-Aware MPI is disabled!");
+		}
 		af::setDevice(mpi_rank % af::getDeviceCount());
 	}
 
 	batchsize /= mpi_size;
 
-	puts("Backend set");
 	af::info();
 	af::setSeed(seed);
-	printf("Seed: %d\n", af::getSeed());
+	printf("[%02d] Seed: %d\n", mpi_rank, af::getSeed());
 
 	double time_init_af = MPI_Wtime();
 
 	juml::SequentialNeuralNet net(backend);
 
 	{
-		puts("Creating ANN");
+		if (mpi_rank == 0) puts("Creating new ANN");
 		int previous_layer = n_features;
 		for (auto it = hidden_layers.begin(); it != hidden_layers.end(); it++) {
 			if (momentum != 0) {
@@ -342,14 +345,14 @@ int main(int argc, char *argv[]) {
 		if (stat(networkFilePath.c_str(), &buffer) == 0) {
 			// File exists
 			net.load(networkFilePath);
-			printf("ANN loaded from file %s\n", networkFilePath.c_str());;
+			if (mpi_rank == 0) printf("ANN loaded from file %s\n", networkFilePath.c_str());;
 			// TODO Check that ANN loaded from file matches specification from command line!
 		}
 	}
-	printf("Learningrate: %f\n", LEARNINGRATE);
+	if (mpi_rank == 0) printf("Learningrate: %f\n", LEARNINGRATE);
 
 	// Print network layer counts:
-	{
+	if (mpi_rank == 0) {
 		auto it = net.layers_begin();
 		printf("Layers: %d", (*it)->input_count);
 		for (; it != net.layers_end(); it++) {
@@ -386,27 +389,27 @@ int main(int argc, char *argv[]) {
 	MPI_Allreduce(MPI_IN_PLACE, &max_label, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
 
 	if (data_array.numdims() > 2) {
-		printf("Data Array has more than 2 dimensions. Transforming to 2 dimensions, keeping the first dimension and collapsing the others.\n");
+		if (mpi_rank == 0) printf("Data Array has more than 2 dimensions. Transforming to 2 dimensions, keeping the first dimension and collapsing the others.\n");
 		data_array = af::moddims(data_array, n_features, data_array.dims(data_array.numdims() - 1));
 	}
 
 	if (min_label == 0) {
-		printf("Found 0-based labels\n");
+		if (mpi_rank == 0) printf("Found 0-based labels\n");
 		if (max_label != n_classes - 1) {
-			printf("The biggest label is %d and not %d. Is your number of classes correct?\n", max_label, n_classes - 1);
+			if (mpi_rank == 0) printf("The biggest label is %d and not %d. Is your number of classes correct?\n", max_label, n_classes - 1);
 			MPI_Finalize();
 			exit(1);
 		}
 	} else if (min_label == 1) {
-		printf("Found 1-based labels\n");
+		if (mpi_rank == 0) printf("Found 1-based labels\n");
 		label_array -= 1;
 		if (max_label != n_classes) {
-			printf("The biggest label is %d and not %d. Is your number of classes correct?\n", max_label, n_classes);
+			if (mpi_rank == 0) printf("The biggest label is %d and not %d. Is your number of classes correct?\n", max_label, n_classes);
 			MPI_Finalize();
 			exit(1);
 		}
 	} else {
-		printf("Labels need to be 1 or 0 based!\n");
+		if (mpi_rank == 0) printf("Labels need to be 1 or 0 based!\n");
 		MPI_Finalize();
 		exit(1);
 	}
@@ -423,12 +426,12 @@ int main(int argc, char *argv[]) {
 	double time_train_sync = 0;
 
 	if (N < batchsize) {
-		puts("batchsize is bigger than available samples. reducing batchsize to all samples");
+		if (mpi_rank == 0) puts("batchsize is bigger than available samples. reducing batchsize to all samples");
 		batchsize = N;
 	}
 
 	int nbatches = N/batchsize;
-	printf("N: %d n_batches: %d\n" "batchsize: %d\n", N, nbatches, batchsize);
+	printf("[%02d] N: %d n_batches: %d batchsize: %d\n", mpi_rank, N, nbatches, batchsize);
 	if (mpi_rank == 0) {
 		printf("%5s %10s %10s %10s\n", "Epoch", "Error", "Last Error", "Accuracy");
 	}
@@ -483,7 +486,8 @@ int main(int argc, char *argv[]) {
 
 	juml::Dataset test_data_set(full_data);
 	juml::Dataset test_label_set(label_array);
-	printf("Full Class-Accuracy: %20.12f\n", net.classify_accuracy(test_data_set, test_label_set));
+	float full_class_accuracy = net.classify_accuracy(test_data_set, test_label_set);
+	if (mpi_rank == 0) printf("Full Class-Accuracy: %20.12f\n", full_class_accuracy);
 
 	double time_tested = MPI_Wtime();
 	/*juml::Dataset trainset(data_array);
@@ -493,8 +497,8 @@ int main(int argc, char *argv[]) {
 	net.save(networkFilePath, true);
 
 	double time_saved = MPI_Wtime();
-	puts("Time Measuerment: ");
-	#define Fs(time, name) printf("%20s %3.4f\n", name, time);
+	printf("[%02d] Time Measuerment: \n", mpi_rank);
+	#define Fs(time, name) printf("[%02d] %20s %3.4f\n", mpi_rank, name, time);
 	#define F(start, end, name) Fs(end - start, name);
 
 	F(time_start, time_init_af, "AF-init");
