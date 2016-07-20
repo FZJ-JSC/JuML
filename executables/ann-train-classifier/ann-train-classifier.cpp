@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (options[O_SHUFFLE]) {
-			printf("Enabled shuffling of data");
+			puts("Enabled shuffling of data");
 			shuffle_samples = true;
 		}
 
@@ -457,7 +457,7 @@ int main(int argc, char *argv[]) {
 				batchsamples = data_array(af::span, af::seq(batch, last));
 				batchtarget = target(af::span, af::seq(batch, last));
 			}
-			//Only sync with other processes if sync_after_batch_update is set
+			//Only sync with other processes if sync_after_batch_update is set. MPI_COMM_NULL defaults to the MPI_Comm of the SequentialNeuralNet.
 			lasterror = net.fitBatch(batchsamples, batchtarget, LEARNINGRATE, sync_after_batch_update ? MPI_COMM_NULL : MPI_COMM_SELF);
 			error += lasterror;
 			batch += thisbatchsize;
