@@ -72,6 +72,7 @@ namespace mpi {
         // force evaluations of operations and allocation
         data.eval();
         target.eval();
+        af::sync(); //Finish evaluating, so we can use CUDA-Aware MPI safely.
 
         // do the actual data exchange
         if (can_use_device_pointer(data)) {
@@ -136,6 +137,7 @@ namespace mpi {
         af::array target = af::array(dimensions, data.type());
         data.eval();
         target.eval();
+        af::sync(); //Finish evaluating, so we can use CUDA-Aware MPI safely.
 
         if (use_device_pointer) {
             void* data_buffer = reinterpret_cast<void*>(data.device<unsigned char>());
@@ -177,6 +179,7 @@ namespace mpi {
 
     int inplace_reduction_collective(af::array &data, ReductionCollective function, MPI_Op op, MPI_Comm comm) {
         data.eval(); // safeguard that af op tree is committed, used to be bugged as of af 2.14 (could not get dev ptr)
+        af::sync(); //Finish evaluating, so we can use CUDA-Aware MPI safely.
         void* data_pointer = nullptr;
         bool  use_device_pointer = can_use_device_pointer(data);
 
