@@ -71,8 +71,8 @@ namespace juml {
 			float classify_accuracy(Dataset& X, Dataset &y) const;
 			int classify_accuracy_array(af::array X, af::array y) const;
 
-			void SequentialNeuralNet::classify_confusion(const Dataset& X, Dataset& y, af::array& outconfusion, float* outaccuracy) const;
-			void SequentialNeuralNet::classify_confusion_array(const af::array& X, const af::array& y, af::array& outconfusion, int* outcount) const;
+			void classify_confusion(Dataset& X, Dataset& y, af::array& outconfusion, float* outaccuracy) const;
+			void classify_confusion_array(const af::array& X, const af::array& y, af::array& outconfusion, int* outcount) const;
 
 			void save(std::string filename, bool overwrite);
 			virtual void load(const std::string& filename) override;

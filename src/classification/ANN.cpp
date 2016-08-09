@@ -67,17 +67,17 @@ float SequentialNeuralNet::classify_accuracy(Dataset& X, Dataset& y) const {
 void SequentialNeuralNet::classify_confusion_array(const af::array& X, const af::array& y, af::array& outconfusion, int* outcount) const {
 	af::array obtainedClasses = this->classify_array(X);
 	int n_classes = this->layers.back()->node_count;
-	outconfusion = af::constant(0, n_classes, n_classes, af::u32);
+	outconfusion = af::constant(0, n_classes, n_classes, u32);
 	for (int i = 0; i < n_classes; i++) {
 		af::array sampleWithClassI = y == i;
 		for (int j = 0; j < n_classes; j++) {
 			outconfusion(i, j) = af::count(sampleWithClassI && obtainedClasses == j);
 		}
 	}
-	*outcount = af::sum<int>(outconfusion.diag());
+	*outcount = af::sum<int>(af::diag(outconfusion));
 }
 
-void SequentialNeuralNet::classify_confusion(const Dataset& X, Dataset& y, af::array& outconfusion, float* outaccuracy) const {
+void SequentialNeuralNet::classify_confusion(Dataset& X, Dataset& y, af::array& outconfusion, float* outaccuracy) const {
 	X.load_equal_chunks();
 	y.load_equal_chunks();
 	int count;
