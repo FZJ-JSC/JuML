@@ -486,7 +486,17 @@ int main(int argc, char *argv[]) {
 
 	juml::Dataset test_data_set(full_data);
 	juml::Dataset test_label_set(label_array);
-	float full_class_accuracy = net.classify_accuracy(test_data_set, test_label_set);
+	bool show_confusion_matrix = true;
+	float full_class_accuracy;
+	if (show_confusion_matrix) {
+		af::array confusion_matrix;
+		net.classify_confusion(test_data_set, test_label_set, confusion_matrix, &full_class_accuracy);
+		if (mpi_rank == 0) {
+			af_print(confusion_matrix);
+		}
+	} else {
+		full_class_accuracy = net.classify_accuracy(test_data_set, test_label_set);
+	}
 	if (mpi_rank == 0) printf("Full Class-Accuracy: %20.12f\n", full_class_accuracy);
 
 	double time_tested = MPI_Wtime();

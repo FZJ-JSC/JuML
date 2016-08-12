@@ -64,6 +64,31 @@ float SequentialNeuralNet::classify_accuracy(Dataset& X, Dataset& y) const {
 	return ((float)correct)/all;
 }
 
+void SequentialNeuralNet::classify_confusion_array(const af::array& X, const af::array& y, af::array& outconfusion, int* outcount) const {
+	af::array obtainedClasses = this->classify_array(X);
+	int n_classes = this->layers.back()->node_count;
+	outconfusion = af::constant(0, n_classes, n_classes, u32);
+	for (int i = 0; i < n_classes; i++) {
+		af::array sampleWithClassI = y == i;
+		for (int j = 0; j < n_classes; j++) {
+			outconfusion(i, j) = af::count(sampleWithClassI && obtainedClasses == j);
+		}
+	}
+	*outcount = af::sum<int>(af::diag(outconfusion));
+}
+
+void SequentialNeuralNet::classify_confusion(Dataset& X, Dataset& y, af::array& outconfusion, float* outaccuracy) const {
+	X.load_equal_chunks();
+	y.load_equal_chunks();
+	int count;
+	this->classify_confusion_array(X.data(), y.data(), outconfusion, &count);
+	mpi::allreduce_inplace(outconfusion, MPI_SUM, this->comm_);
+	MPI_Allreduce(MPI_IN_PLACE, &count, 1, MPI_INT, MPI_SUM, this->comm_);
+	int all = X.data().dims(1);
+	MPI_Allreduce(MPI_IN_PLACE, &all, 1, MPI_INT, MPI_SUM, this->comm_);
+	*outaccuracy = ((float)count) / all;
+}
+
 void SequentialNeuralNet::fit(Dataset& X, Dataset& y) {
 	if (this->layers.size() == 0) {
 		throw std::runtime_error("Need at least 1 layer");
