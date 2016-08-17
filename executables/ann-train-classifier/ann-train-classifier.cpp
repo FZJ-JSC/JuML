@@ -376,12 +376,7 @@ int main(int argc, char *argv[]) {
 	af::array data_array = data.data().as(f32);
 	af::array full_data = data_array;
 
-	//data_array = data_array(af::span, af::seq(0, data_array.dims(1) - 1, dataset_stepsize));
-	//data_array = data_array(af::span, af::seq(0, 8000/mpi_size - 1));
-
 	af::array label_array = label.data().as(s32);
-	//label_array = label_array(af::span, af::seq(0, label_array.dims(1) - 1, dataset_stepsize));
-	//label_array = label_array(af::span, af::seq(0, 8000/mpi_size - 1));
 
 	int min_label = af::min<int>(label_array);
 	MPI_Allreduce(MPI_IN_PLACE, &min_label, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);

@@ -164,10 +164,7 @@ float SequentialNeuralNet::fitBatch(af::array batch, af::array target, float lea
 	this->backwards_all(batch, delta);
 
 	float error = af::sum<float>(af::sqrt(af::sum(delta * delta, 0)));
-	//MPI_Allreduce(MPI_IN_PLACE, &error, 1, MPI_FLOAT, MPI_SUM, this->comm_);
 	int fullbatchsize = batch.dims(1);
-	//MPI_Allreduce(MPI_IN_PLACE, &fullbatchsize, 1, MPI_INT, MPI_SUM, this->comm_);
-
 
 	for (auto it = this->layers.begin(); it != this->layers.end(); ++it) {
 		(*it)->updateWeights(learningrate, comm);
