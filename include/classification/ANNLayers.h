@@ -30,17 +30,18 @@ namespace juml {
 				af::array bias_update;
 				af::array lastOutput;
 				int update_count = 0;
-
 				virtual void applyWeightUpdate(float learningrate, MPI_Comm comm) {
-					this->weights -= learningrate * this->weights_update;
-				        this->bias -= learningrate * this->bias_update;
+					this->weights -= learningrate * this->weights_update + learningrate * this->weight_decay * this->weights;
+				        this->bias -= learningrate * this->bias_update + learningrate * this->weight_decay * this->bias;
 				}
 			public:
 				af::array bias;
 				af::array weights;
 				const int input_count;
 				const int node_count;
-				Layer(int input_count_, int node_count_) :
+				const float weight_decay;
+
+				Layer(int input_count_, int node_count_, float weight_decay_) :
 					weights(
 						af::randu(input_count_, node_count_)
 						* (1.0f/input_count_) - (0.5f/input_count_)
@@ -52,14 +53,16 @@ namespace juml {
 					),
 					bias_update(af::constant(0, node_count_)),
 					lastOutput(node_count_),
-		       			input_count(input_count_), node_count(node_count_) {}
+		       			input_count(input_count_), node_count(node_count_),
+		       			weight_decay(weight_decay_) {}
 
-				Layer(af::array weights_, af::array bias_) :
+				Layer(af::array weights_, af::array bias_, float weight_decay_) :
 					weights(weights_), bias(bias_),
 					weights_update(af::constant(0, weights_.dims(0), weights_.dims(1))),
 					bias_update(af::constant(0.0, bias_.dims(0))),
 					lastOutput(weights_.dims(1)),
-					input_count(weights_.dims(0)), node_count(weights_.dims(1))
+					input_count(weights_.dims(0)), node_count(weights_.dims(1)),
+					weight_decay(weight_decay_)
 				{
 					if (weights.dims(1) != bias.dims(0)) {
 						throw std::runtime_error("Node count in weight matrix and bias vector differ");
@@ -131,8 +134,8 @@ namespace juml {
 		template<Activation T>
 		class FunctionLayer: public Layer {
 			public: 
-			FunctionLayer(int input_size, int node_count) : Layer(input_size, node_count) {}
-			FunctionLayer(af::array weights, af::array bias) : Layer(weights, bias) {}
+			FunctionLayer(int input_size, int node_count, float weight_decay) : Layer(input_size, node_count, weight_decay) {}
+			FunctionLayer(af::array weights, af::array bias, float weight_decay) : Layer(weights, bias, weight_decay) {}
 
 			const af::array& forward(const af::array& input) override {
 				// matmul(transpose(IxN), (Ixb))  =
@@ -164,8 +167,8 @@ namespace juml {
 		template<Activation T>
 		class MomentumFunctionLayer: public FunctionLayer<T> {
 			public:
-			MomentumFunctionLayer(int input_size, int node_count, float momentum) :
-				FunctionLayer<T>(input_size, node_count),
+			MomentumFunctionLayer(int input_size, int node_count, float weight_decay, float momentum) :
+				FunctionLayer<T>(input_size, node_count, weight_decay),
 				previous_weight_update(af::constant(0.0, input_size, node_count)),
 				previous_bias_update(af::constant(0.0, node_count)),
 				momentum_(momentum) {
@@ -177,12 +180,16 @@ namespace juml {
 			float momentum_;
 
 			void applyWeightUpdate(float learningrate, MPI_Comm comm) override {
-				this->weights -= learningrate * (
+				this->weights_update = learningrate * (
 					       (1 - this->momentum_) * this->weights_update +
-					       this->momentum_ * this->previous_weight_update);
-				this->bias -= learningrate * (
+					       this->momentum_ * this->previous_weight_update +
+					       this->weight_decay * this->weights);
+				this->bias_update = learningrate * (
 						(1 - this->momentum_) * this->bias_update +
-						this->momentum_ * this->previous_bias_update);
+						this->momentum_ * this->previous_bias_update +
+						this->weight_decay * this->bias);
+				this->weights -= this->weights_update;
+				this->weights -= this->bias_update;
 
 				this->previous_weight_update = this->weights_update;
 				this->previous_bias_update = this->bias_update;
