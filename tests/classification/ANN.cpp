@@ -25,8 +25,8 @@ TEST_ALL(ANN_TEST, TEST_SIMPLE_NETWORK) {
 	Dataset Xset(Xarray);
 	Dataset yset(yarray);
 	SequentialNeuralNet net(BACKEND);
-	net.add(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(3, 4)));
-	net.add(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(4, 1)));
+	net.add(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(3, 4, 0.0f)));
+	net.add(std::shared_ptr<Layer>(new FunctionLayer<Activation::Sigmoid>(4, 1, 0.0f)));
 	net.fit(Xset, yset);
 
 	Dataset result = net.predict(Xset);
@@ -50,8 +50,8 @@ TEST_ALL(ANN_TEST, TEST_IDENTITY) {
 	Dataset Xset(Xarray);
 
 	SequentialNeuralNet net(BACKEND);
-	net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(5, 5));
-	net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(5, 5));
+	net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(5, 5, 0.0f));
+	net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(5, 5, 0.0f));
 
 	net.fit(Xset, Xset);
 
@@ -90,9 +90,9 @@ TEST_ALL(ANN_TEST, TEST_XOR) {
 
 	SequentialNeuralNet net(BACKEND);
 	net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(
-			af::array(2,2, weights1), af::array(2, bias1)));
+			af::array(2,2, weights1), af::array(2, bias1), 0.0f));
 	net.add(std::make_shared<FunctionLayer<Activation::Linear>>(
-			af::array(2, 1, weights2), af::array(1, bias2)));
+			af::array(2, 1, weights2), af::array(1, bias2), 0.0f));
 
 	for(auto it = net.layers_begin(); it != net.layers_end(); it++) {
 		af::print("weights", (*it)->getWeights());
@@ -138,8 +138,8 @@ TEST_ALL(ANN_TEST, SAVE_LOAD_TEST) {
 	using juml::ann::make_SigmoidLayer;
 
 	SequentialNeuralNet net(BACKEND);
-	net.add(make_SigmoidLayer(5, 5));
-	net.add(make_SigmoidLayer(5, 5));
+	net.add(make_SigmoidLayer(5, 5, 0.0f));
+	net.add(make_SigmoidLayer(5, 5, 0.0f));
 	net.save(filename, true);
 
 	SequentialNeuralNet net2(BACKEND);
@@ -166,8 +166,8 @@ TEST_ALL(ANN_TEST, IRIS_TEST) {
 	af::info();
 	using juml::ann::Layer;
 	juml::SequentialNeuralNet net(BACKEND);
-	net.add(juml::ann::make_SigmoidLayer(4, 100));
-	net.add(juml::ann::make_SigmoidLayer(100, 3));
+	net.add(juml::ann::make_SigmoidLayer(4, 100, 0.0f));
+	net.add(juml::ann::make_SigmoidLayer(100, 3, 0.0f));
 	juml::Dataset X(FILE_PATH, SAMPLES);
 	juml::Dataset y(FILE_PATH, LABELS);
 
@@ -180,8 +180,8 @@ TEST_ALL(ANN_TEST, INCOMPATIBLE_LAYERS) {
 	using juml::ann::Activation;
 	juml::SequentialNeuralNet net(BACKEND);
 	try {
-		net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(4, 5));
-		net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(3, 2));
+		net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(4, 5, 0.0f));
+		net.add(std::make_shared<FunctionLayer<Activation::Sigmoid>>(3, 2, 0.0f));
 		FAIL() << "SequentialNeuralNet did not notice incompatible layers";
 	} catch(...) {
 		SUCCEED();
@@ -191,15 +191,15 @@ TEST_ALL(ANN_TEST, INCOMPATIBLE_LAYERS) {
 
 TEST_ALL(ANN_TEST, LOAD_NET_WITH_LAYER_REPLACE) {
 	juml::SequentialNeuralNet net(BACKEND);
-	net.add(juml::ann::make_SigmoidLayer(20, 10));
-	net.add(juml::ann::make_TanHLayer(10, 23));
-	net.add(juml::ann::make_LinearLayer(23, 2));
+	net.add(juml::ann::make_SigmoidLayer(20, 10, 0.0f));
+	net.add(juml::ann::make_TanHLayer(10, 23, 0.0f));
+	net.add(juml::ann::make_LinearLayer(23, 2, 0.0f));
 
 	net.save("save_load_test_file.h5", true);
 	juml::SequentialNeuralNet net2(BACKEND);
-	net2.add(juml::ann::make_SigmoidLayer(20, 10));
-	net2.add(juml::ann::make_TanHLayer(10, 23));
-	net2.add(juml::ann::make_LinearLayer(23, 2));
+	net2.add(juml::ann::make_SigmoidLayer(20, 10, 0.0f));
+	net2.add(juml::ann::make_TanHLayer(10, 23, 0.0f));
+	net2.add(juml::ann::make_LinearLayer(23, 2, 0.0f));
 	net2.load("save_load_test_file.h5");
 	auto it1 = net.layers_begin();
 	auto it2 = net2.layers_begin();
@@ -215,43 +215,43 @@ TEST_ALL(ANN_TEST, LOAD_NET_WITH_LAYER_REPLACE) {
 
 TEST_ALL(ANN_TEST, LOAD_NET_WITH_LAYER_REPLACE_INCOMPATIBLE) {
 	juml::SequentialNeuralNet net(BACKEND);
-	net.add(juml::ann::make_SigmoidLayer(20, 10));
-	net.add(juml::ann::make_TanHLayer(10, 23));
-	net.add(juml::ann::make_LinearLayer(23, 2));
+	net.add(juml::ann::make_SigmoidLayer(20, 10, 0.0f));
+	net.add(juml::ann::make_TanHLayer(10, 23, 0.0f));
+	net.add(juml::ann::make_LinearLayer(23, 2, 0.0f));
 
 	net.save("save_load_test_file.h5", true);
 	juml::SequentialNeuralNet net2(BACKEND);
-	net2.add(juml::ann::make_SigmoidLayer(20, 5));
-	net2.add(juml::ann::make_TanHLayer(5, 23));
-	net2.add(juml::ann::make_LinearLayer(23, 2));
+	net2.add(juml::ann::make_SigmoidLayer(20, 5, 0.0f));
+	net2.add(juml::ann::make_TanHLayer(5, 23, 0.0f));
+	net2.add(juml::ann::make_LinearLayer(23, 2, 0.0f));
 	ASSERT_ANY_THROW(net2.load("save_load_test_file.h5")); // TODO: Check for special exception
 }
 
 TEST_ALL(ANN_TEST, LOAD_NET_WITH_LAYER_REPLACE_INCOMPATIBLE_MISSING) {
 	juml::SequentialNeuralNet net(BACKEND);
-	net.add(juml::ann::make_SigmoidLayer(20, 10));
-	net.add(juml::ann::make_TanHLayer(10, 23));
-	net.add(juml::ann::make_LinearLayer(23, 2));
+	net.add(juml::ann::make_SigmoidLayer(20, 10, 0.0f));
+	net.add(juml::ann::make_TanHLayer(10, 23, 0.0f));
+	net.add(juml::ann::make_LinearLayer(23, 2, 0.0f));
 
 	net.save("save_load_test_file.h5", true);
 	juml::SequentialNeuralNet net2(BACKEND);
-	net2.add(juml::ann::make_SigmoidLayer(20, 5));
-	net2.add(juml::ann::make_TanHLayer(5, 23));
+	net2.add(juml::ann::make_SigmoidLayer(20, 5, 0.0f));
+	net2.add(juml::ann::make_TanHLayer(5, 23, 0.0f));
 	ASSERT_ANY_THROW(net2.load("save_load_test_file.h5")); // TODO: Check for special exception
 }
 
 TEST_ALL(ANN_TEST, LOAD_NET_WITH_LAYER_REPLACE_INCOMPATIBLE_ADDITIONAL) {
 	juml::SequentialNeuralNet net(BACKEND);
-	net.add(juml::ann::make_SigmoidLayer(20, 10));
-	net.add(juml::ann::make_TanHLayer(10, 23));
-	net.add(juml::ann::make_LinearLayer(23, 2));
+	net.add(juml::ann::make_SigmoidLayer(20, 10, 0.0f));
+	net.add(juml::ann::make_TanHLayer(10, 23, 0.0f));
+	net.add(juml::ann::make_LinearLayer(23, 2, 0.0f));
 
 	net.save("save_load_test_file.h5", true);
 	juml::SequentialNeuralNet net2(BACKEND);
-	net2.add(juml::ann::make_SigmoidLayer(20, 5));
-	net2.add(juml::ann::make_TanHLayer(5, 23));
-	net2.add(juml::ann::make_LinearLayer(23, 2));
-	net2.add(juml::ann::make_SigmoidLayer(2, 3));
+	net2.add(juml::ann::make_SigmoidLayer(20, 5, 0.0f));
+	net2.add(juml::ann::make_TanHLayer(5, 23, 0.0f));
+	net2.add(juml::ann::make_LinearLayer(23, 2, 0.0f));
+	net2.add(juml::ann::make_SigmoidLayer(2, 3, 0.0f));
 	ASSERT_ANY_THROW(net2.load("save_load_test_file.h5")); // TODO: Check for special exception
 }
 int main(int argc, char** argv) {

@@ -76,9 +76,9 @@ struct Arg: public option::Arg
 };
 
 enum optionIndex{O_UNKNOWN, O_HELP, O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_HIDDEN, O_BATCHSIZE, O_EPOCHS, O_MAXERROR,
-	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE, O_SHUFFLE, O_MOMENTUM, O_CUDAMPI, O_TESTFILE, O_TESTFILE_DATA_SET, O_TESTFILE_LABEL_SET};
+	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE, O_SHUFFLE, O_MOMENTUM, O_CUDAMPI, O_TESTFILE, O_TESTFILE_DATA_SET, O_TESTFILE_LABEL_SET, O_WEIGHT_DECAY};
 
-std::vector<int> requiredOptions = {O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_BATCHSIZE, O_MAXERROR, O_DATAFILE, O_NETFILE, O_BACKEND};
+std::vector<int> requiredOptions = {O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_BATCHSIZE, O_MAXERROR, O_DATAFILE, O_NETFILE, O_BACKEND, O_WEIGHT_DECAY};
 
 //TODO: Document required arguments in USAGE
 const option::Descriptor usage[] = {
@@ -103,6 +103,7 @@ const option::Descriptor usage[] = {
 	{O_BATCHSIZE, 0, "b", "batchsize", Arg::Numeric, "--batchsize <B>, -b <B>\tSet the global batchsize."},
 	{O_SHUFFLE, 0, "","shuffle-samples", option::Arg::None, "--shuffle-samples\tChange the order of the samples for each epoch"},
 	{O_LEARNINGRATE, 0, "l", "learningrate", Arg::Float, "--learningrate <L>, -l <L>\tLearningrate for training of the ANN"},
+	{O_WEIGHT_DECAY, 0, "", "weight-decay", Arg::Float, "--weight-decay <DECAY>\tSpecify the weight decay"},
 	{O_MOMENTUM, 0, "m", "momentum", Arg::Float, "--momentum <M>, -m <M>\tSpecify the proportion of momentum to be used"},
 	{O_SYNCTYPE, 1, "", "sync-after-batch", option::Arg::None, "--sync-after-batch\tSyncronize the ANN after each batch."},
 	{O_SYNCTYPE, 0, "", "sync-after-epoch", option::Arg::None, "--sync-after-epoch\tSyncronize the ANN after each epoch."},
@@ -163,6 +164,7 @@ int main(int argc, char *argv[]) {
 	int n_features;
 	int n_hidden_nodes;
 	float LEARNINGRATE;
+	float WEIGHT_DECAY;
 	int batchsize;
 	int max_epochs;
 	std::string trainingFilePath;
@@ -221,6 +223,7 @@ int main(int argc, char *argv[]) {
 		n_classes = atoi(options[O_CLASSES].arg);
 		n_features = atoi(options[O_FEATURES].arg);
 		LEARNINGRATE = atof(options[O_LEARNINGRATE].arg);
+		WEIGHT_DECAY = atof(options[O_WEIGHT_DECAY].arg);
 		batchsize = atoi(options[O_BATCHSIZE].arg);
 		if (options[O_EPOCHS])
 			max_epochs = atoi(options[O_EPOCHS].arg);
@@ -352,16 +355,16 @@ int main(int argc, char *argv[]) {
 		int previous_layer = n_features;
 		for (auto it = hidden_layers.begin(); it != hidden_layers.end(); it++) {
 			if (momentum != 0) {
-				net.add(juml::ann::make_SigmoidMLayer(previous_layer, *it, momentum));
+				net.add(juml::ann::make_SigmoidMLayer(previous_layer, *it, WEIGHT_DECAY, momentum));
 			} else {
-				net.add(juml::ann::make_SigmoidLayer(previous_layer, *it));
+				net.add(juml::ann::make_SigmoidLayer(previous_layer, *it, WEIGHT_DECAY));
 			}
 			previous_layer = *it;
 		}
 		if (momentum != 0) {
-			net.add(juml::ann::make_SigmoidMLayer(previous_layer, n_classes, momentum));
+			net.add(juml::ann::make_SigmoidMLayer(previous_layer, n_classes, WEIGHT_DECAY, momentum));
 		} else {
-			net.add(juml::ann::make_SigmoidLayer(previous_layer, n_classes));
+			net.add(juml::ann::make_SigmoidLayer(previous_layer, n_classes, WEIGHT_DECAY));
 		}
 		struct stat buffer;
 		if (stat(networkFilePath.c_str(), &buffer) == 0) {

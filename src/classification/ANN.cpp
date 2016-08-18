@@ -367,7 +367,7 @@ void SequentialNeuralNet::load(const std::string& filename) {
 			this->layers[i]->bias = bias;
 		} else {
 			// TODO: Need a way to select  the default here
-			this->add(ann::make_SigmoidLayer(weights, bias));
+			this->add(ann::make_SigmoidLayer(weights, bias, 0));
 		}
 
 		H5Gclose(group_id);
