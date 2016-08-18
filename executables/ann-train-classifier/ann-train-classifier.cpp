@@ -176,8 +176,8 @@ int main(int argc, char *argv[]) {
 	bool sync_after_batch_update;
 	bool shuffle_samples = false;
 	float momentum = 0;
-	int MEAN_ERROR_HISTORY_SIZE = 50;
-	double MEAN_ERROR_BOUNDARY = 0.000001;
+	int MEAN_ERROR_HISTORY_SIZE = 100;
+	double MEAN_ERROR_BOUNDARY = 0.000000001;
 
 	std::vector<int> hidden_layers;
 
@@ -528,9 +528,9 @@ int main(int argc, char *argv[]) {
 			mean_error_history_sum += error;
 			mean_error_history[epoch % MEAN_ERROR_HISTORY_SIZE] = error;
 			if (epoch >= MEAN_ERROR_HISTORY_SIZE && mean_error_history_sum/MEAN_ERROR_HISTORY_SIZE - error < MEAN_ERROR_BOUNDARY) {
-				printf("Mean error(%f) only differs by %f < %f from the last error value. ABORTING TRAINING\n",
+				printf("Mean error(%20.17f) only differs by %20.17f < %20.17f from the last error value. ABORTING TRAINING\n",
 						mean_error_history_sum/MEAN_ERROR_HISTORY_SIZE,
-						mean_error_history_sum/MEAN_ERROR_HISTORY_SIZE,
+						mean_error_history_sum/MEAN_ERROR_HISTORY_SIZE - error,
 						MEAN_ERROR_BOUNDARY);
 				break;
 			}
