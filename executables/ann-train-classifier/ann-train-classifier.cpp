@@ -170,6 +170,8 @@ int main(int argc, char *argv[]) {
 	bool sync_after_batch_update;
 	bool shuffle_samples = false;
 	float momentum = 0;
+	int MEAN_ERROR_HISTORY_SIZE = 50;
+	double MEAN_ERROR_BOUNDARY = 0.000001;
 
 	std::vector<int> hidden_layers;
 
@@ -425,6 +427,12 @@ int main(int argc, char *argv[]) {
 		batchsize = N;
 	}
 
+	float *mean_error_history;
+	double mean_error_history_sum;
+	if (MEAN_ERROR_HISTORY_SIZE > 0) {
+		mean_error_history = (float*)calloc(MEAN_ERROR_HISTORY_SIZE, sizeof(float));
+	}
+
 	int nbatches = N/batchsize;
 	printf("[%02d] N: %d n_batches: %d batchsize: %d\n", mpi_rank, N, nbatches, batchsize);
 	if (mpi_rank == 0) {
@@ -464,16 +472,28 @@ int main(int argc, char *argv[]) {
 		}
 
 		MPI_Allreduce(MPI_IN_PLACE, &error, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
-		error /= mpi_size;
+		error /= (mpi_size * nbatches);
 		time_train_sync += MPI_Wtime() - time_buf;
 		time_buf = MPI_Wtime();
 		float classify_accuracy = net.classify_accuracy_array(data_array, label_array) / static_cast<float>(globalN);
 		if (mpi_rank == 0) {
-			printf("%5d %10.6f %10.6f %10.6f\n", epoch, error/nbatches, lasterror, classify_accuracy);
+			printf("%5d %10.6f %10.6f %10.6f\n", epoch, error, lasterror, classify_accuracy);
 		}
 		time_train_batch_test += MPI_Wtime() - time_buf;
-		if (error / nbatches < max_error) {
+		if (error < max_error) {
 			break;
+		}
+		if (MEAN_ERROR_HISTORY_SIZE > 0) {
+			mean_error_history_sum -= mean_error_history[epoch % MEAN_ERROR_HISTORY_SIZE];
+			mean_error_history_sum += error;
+			mean_error_history[epoch % MEAN_ERROR_HISTORY_SIZE] = error;
+			if (epoch >= MEAN_ERROR_HISTORY_SIZE && mean_error_history_sum/MEAN_ERROR_HISTORY_SIZE - error < MEAN_ERROR_BOUNDARY) {
+				printf("Mean error(%f) only differs by %f < %f from the last error value. ABORTING TRAINING\n",
+						mean_error_history_sum/MEAN_ERROR_HISTORY_SIZE,
+						mean_error_history_sum/MEAN_ERROR_HISTORY_SIZE,
+						MEAN_ERROR_BOUNDARY);
+				break;
+			}
 		}
 	}
 
