@@ -182,14 +182,14 @@ namespace juml {
 			void applyWeightUpdate(float learningrate, MPI_Comm comm) override {
 				this->weights_update = learningrate * (
 					       (1 - this->momentum_) * this->weights_update +
-					       this->momentum_ * this->previous_weight_update +
-					       this->weight_decay * this->weights);
+					       this->weight_decay * this->weights) + 
+					       this->momentum_ * this->previous_weight_update;
 				this->bias_update = learningrate * (
 						(1 - this->momentum_) * this->bias_update +
-						this->momentum_ * this->previous_bias_update +
-						this->weight_decay * this->bias);
+						this->weight_decay * this->bias) +
+						this->momentum_ * this->previous_bias_update;
 				this->weights -= this->weights_update;
-				this->weights -= this->bias_update;
+				this->bias -= this->bias_update;
 
 				this->previous_weight_update = this->weights_update;
 				this->previous_bias_update = this->bias_update;
