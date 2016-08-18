@@ -57,8 +57,12 @@ int SequentialNeuralNet::classify_accuracy_array(const af::array X, const af::ar
 float SequentialNeuralNet::classify_accuracy(Dataset& X, Dataset& y) const {
 	X.load_equal_chunks();
 	y.load_equal_chunks();
-	int correct = classify_accuracy_array(X.data(), y.data());
-	int all = X.data().dims(1);
+	return this->classify_accuracy(X.data(), y.data());
+}
+
+float SequentialNeuralNet::classify_accuracy(af::array X, af::array y) const {
+	int correct = classify_accuracy_array(X, y);
+	int all = X.dims(1);
 	MPI_Allreduce(MPI_IN_PLACE, &all, 1, MPI_INT, MPI_SUM, this->comm_);
 
 	return ((float)correct)/all;
@@ -80,11 +84,15 @@ void SequentialNeuralNet::classify_confusion_array(const af::array& X, const af:
 void SequentialNeuralNet::classify_confusion(Dataset& X, Dataset& y, af::array& outconfusion, float* outaccuracy) const {
 	X.load_equal_chunks();
 	y.load_equal_chunks();
+	this->classify_confusion(X.data(), y.data(), outconfusion, outaccuracy);
+}
+
+void SequentialNeuralNet::classify_confusion(const af::array& X, af::array& y, af::array& outconfusion, float* outaccuracy) const {
 	int count;
-	this->classify_confusion_array(X.data(), y.data(), outconfusion, &count);
+	this->classify_confusion_array(X, y, outconfusion, &count);
 	mpi::allreduce_inplace(outconfusion, MPI_SUM, this->comm_);
 	MPI_Allreduce(MPI_IN_PLACE, &count, 1, MPI_INT, MPI_SUM, this->comm_);
-	int all = X.data().dims(1);
+	int all = X.dims(1);
 	MPI_Allreduce(MPI_IN_PLACE, &all, 1, MPI_INT, MPI_SUM, this->comm_);
 	*outaccuracy = ((float)count) / all;
 }

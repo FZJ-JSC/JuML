@@ -68,10 +68,12 @@ namespace juml {
 			void sync(MPI_Comm comm = MPI_COMM_NULL);
 
 			float accuracy(Dataset& X, Dataset& y) const override;
+			float classify_accuracy(af::array X, af::array y) const;
 			float classify_accuracy(Dataset& X, Dataset &y) const;
 			int classify_accuracy_array(af::array X, af::array y) const;
 
 			void classify_confusion(Dataset& X, Dataset& y, af::array& outconfusion, float* outaccuracy) const;
+			void classify_confusion(const af::array& X, af::array& y, af::array& outconfusion, float* outaccuracy) const; 
 			void classify_confusion_array(const af::array& X, const af::array& y, af::array& outconfusion, int* outcount) const;
 
 			void save(std::string filename, bool overwrite);

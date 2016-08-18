@@ -76,7 +76,7 @@ struct Arg: public option::Arg
 };
 
 enum optionIndex{O_UNKNOWN, O_HELP, O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_HIDDEN, O_BATCHSIZE, O_EPOCHS, O_MAXERROR,
-	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE, O_SHUFFLE, O_MOMENTUM, O_CUDAMPI};
+	O_DATAFILE, O_DATAFILE_DATA_SET, O_DATAFILE_LABEL_SET, O_SEED, O_BACKEND, O_SYNCTYPE, O_NETFILE, O_SHUFFLE, O_MOMENTUM, O_CUDAMPI, O_TESTFILE, O_TESTFILE_DATA_SET, O_TESTFILE_LABEL_SET};
 
 std::vector<int> requiredOptions = {O_FEATURES, O_CLASSES, O_LEARNINGRATE, O_BATCHSIZE, O_MAXERROR, O_DATAFILE, O_NETFILE, O_BACKEND};
 
@@ -86,7 +86,8 @@ const option::Descriptor usage[] = {
 		"USAGE: \n"
 		"  juml-ann-train-classifier --help | -h\n"
 		"  juml-ann-train-classifier [--seed=N] (-cpu|--opencl|--cuda) --error=F [--epochs=1000] --batchsize=N --learningrate=F [--momentum=0] "
-		"--features=N [--hidden=N [--hidden=N ...]] --classes=N --data=F [--data-set=Data] [--label-set=Label] --net=F [--shuffle-samples] [--sync-after-batch|--sync-after-epoch]"
+		"--features=N [--hidden=N [--hidden=N ...]] --classes=N --data=F [--data-X=Data] [--data-Y=Label] --net=F [--shuffle-samples] [--sync-after-batch|--sync-after-epoch] "
+		"[--test=F [--test-X=Data] [--test-Y=Label]]"
 		"\n\nGeneral Options:"},
 	{O_HELP, 0, "h", "help", option::Arg::None, "--help, -h\tPrint usage and exit."},
 	{O_SEED, 0, "", "seed", Arg::Numeric, "--seed <N>\tSet the seed used for random initialization"},
@@ -95,6 +96,8 @@ const option::Descriptor usage[] = {
 	{O_BACKEND, 3, "", "cuda", option::Arg::None, "--cuda \tUse the ArrayFire Cuda Backend"},
 	{O_CUDAMPI, 0, "", "cudampi", option::Arg::None, "--cudampi \tAssume that the MPI Implementation is CUDA Aware"},
 
+	{O_UNKNOWN, 0, "", "", NULL, 0},
+	{O_UNKNOWN, 0, "", "", Arg::Unknown, "\nTraining Options:"},
 	{O_MAXERROR, 0, "", "error", Arg::Float, "--error <E>\tSet the training error, after which to stop training"},
 	{O_EPOCHS, 0, "", "epochs", Arg::Numeric, "--epochs <N>\tSet the maximum number of training epochs"},
 	{O_BATCHSIZE, 0, "b", "batchsize", Arg::Numeric, "--batchsize <B>, -b <B>\tSet the global batchsize."},
@@ -103,17 +106,21 @@ const option::Descriptor usage[] = {
 	{O_MOMENTUM, 0, "m", "momentum", Arg::Float, "--momentum <M>, -m <M>\tSpecify the proportion of momentum to be used"},
 	{O_SYNCTYPE, 1, "", "sync-after-batch", option::Arg::None, "--sync-after-batch\tSyncronize the ANN after each batch."},
 	{O_SYNCTYPE, 0, "", "sync-after-epoch", option::Arg::None, "--sync-after-epoch\tSyncronize the ANN after each epoch."},
+
 	{O_UNKNOWN, 0, "", "", NULL, 0},
-	{O_UNKNOWN, 0, "", "", Arg::Unknown, "ANN-Options:"},
+	{O_UNKNOWN, 0, "", "", Arg::Unknown, "\nANN-Options:"},
 	{O_FEATURES, 0, "f", "features", Arg::Numeric, "--features <F>, -f <F>\tThe number of features the data will contain. The same as the number of neurons in the input layer."},
 	{O_HIDDEN, 0, "H", "hidden", Arg::Numeric, "--hidden <N>, -H <N>\tAdd a hidden layer to the ANN."},
 	{O_CLASSES, 0, "c", "classes", Arg::Numeric, "--classes <C>, -c <C>\tThe number of classes in the data. The same as the number of output neurons in the last layer."},
 
 	{O_UNKNOWN, 0, "", "", NULL, 0},
-	{O_UNKNOWN, 0, "", "", Arg::Unknown, "Input and Output Options:"},
-	{O_DATAFILE, 0, "d", "data", Arg::ExistingFile, "--data PATH, -d PATH\tPath to HDF5 File, taht contains the training data"},
-	{O_DATAFILE_DATA_SET, 0, "", "data-set", Arg::NonEmpty, "--data-set <S>\tSet the name of the Dataset inside the HDF5 data file that contains the features"},
-	{O_DATAFILE_LABEL_SET, 0, "", "label-set", Arg::NonEmpty, "--label-set <S>\tSet the name of the Dataaset inside the HDF5 data file that contains the class labels"},
+	{O_UNKNOWN, 0, "", "", Arg::Unknown, "\nInput and Output Options:"},
+	{O_DATAFILE, 0, "d", "data", Arg::ExistingFile, "--data PATH, -d PATH\tPath to HDF5 File, that contains the training data"},
+	{O_DATAFILE_DATA_SET, 0, "", "data-X", Arg::NonEmpty, "--data-X <S>\tSet the name of the Dataset inside the HDF5 data file that contains the features"},
+	{O_DATAFILE_LABEL_SET, 0, "", "data-Y", Arg::NonEmpty, "--data-Y <S>\tSet the name of the Dataaset inside the HDF5 data file that contains the class labels"},
+	{O_TESTFILE, 0, "", "test", Arg::ExistingFile, "--test PATH\tPath to HDF5 File, that contains the testing data"},
+	{O_TESTFILE_DATA_SET, 0, "", "test-X", Arg::NonEmpty, "--test-X <S>\tSet the name of the Dataset inside the HDF5 data file that contains the features"},
+	{O_TESTFILE_LABEL_SET, 0, "", "test-Y", Arg::NonEmpty, "--test-Y <S>\tSet the name of the Dataaset inside the HDF5 data file that contains the class labels"},
 	{O_NETFILE, 0, "n", "net", Arg::Required, "--net <PATH>, -n <PATH>\tPath to a HDF5 file where the ANN will be loaded from and stored to. If the file does not exist a new ANN will be created"},
 	{0, 0, 0, 0, 0, 0}
 };
@@ -152,9 +159,6 @@ void printListOfOrOptions(int index) {
 
 
 int main(int argc, char *argv[]) {
-
-
-
 	int n_classes;
 	int n_features;
 	int n_hidden_nodes;
@@ -164,6 +168,8 @@ int main(int argc, char *argv[]) {
 	std::string trainingFilePath;
 	std::string xDatasetName;
 	std::string yDatasetName;
+	bool TESTFILE_PRESENT = false;
+	std::string TESTFILE_PATH, TESTFILE_X_SET = "Data", TESTFILE_Y_SET = "Label";
 	float max_error;
 	int seed;
 	af::Backend backend = AF_BACKEND_CUDA;
@@ -237,8 +243,22 @@ int main(int argc, char *argv[]) {
 		else
 			yDatasetName = "Label";
 
+		if (options[O_TESTFILE]) {
+			TESTFILE_PRESENT = true;
+			TESTFILE_PATH = options[O_TESTFILE].arg;
+			if (options[O_TESTFILE_DATA_SET]) {
+				TESTFILE_X_SET = options[O_TESTFILE_DATA_SET].arg;
+			}
+			if (options[O_TESTFILE_LABEL_SET]) {
+				TESTFILE_Y_SET = options[O_TESTFILE_LABEL_SET].arg;
+			}
+		} else if (options[O_TESTFILE_DATA_SET] || options[O_TESTFILE_LABEL_SET]) {
+			fprintf(stderr,"You can only specify the Dataset names for the testfile, if you specify one.\n");
+			return 1;
+		}
+
 		networkFilePath = options[O_NETFILE].arg;
-		if (options[O_SEED]) 
+		if (options[O_SEED])
 			seed = atoi(options[O_SEED].arg);
 
 		switch(options[O_BACKEND].last()->type()) {
@@ -246,7 +266,7 @@ int main(int argc, char *argv[]) {
 			case 2: backend = AF_BACKEND_OPENCL; break;
 			case 3: backend = AF_BACKEND_CUDA; break;
 			default:
-				fprintf(stderr, "Could not parse backend Argument to Backend\n");
+				fprintf(stderr, "Could not parse backend Argument to Backend\n");return 1;
 		}
 
 		if (options[O_CUDAMPI]) {
@@ -385,6 +405,19 @@ int main(int argc, char *argv[]) {
 	int max_label = af::max<int>(label_array);
 	MPI_Allreduce(MPI_IN_PLACE, &max_label, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
 
+	af::array test_array_X, test_array_y;
+	int n_testfile_samples;
+	if (TESTFILE_PRESENT) {
+		juml::Dataset testdata_X(TESTFILE_PATH, TESTFILE_X_SET);
+		juml::Dataset testdata_y(TESTFILE_PATH, TESTFILE_Y_SET);
+		testdata_X.load_equal_chunks();
+		testdata_y.load_equal_chunks();
+		test_array_X = testdata_X.data();
+		test_array_y = testdata_y.data();
+		n_testfile_samples = test_array_X.dims(1);
+		MPI_Allreduce(MPI_IN_PLACE, &n_testfile_samples, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+	}
+
 	if (data_array.numdims() > 2) {
 		if (mpi_rank == 0) printf("Data Array has more than 2 dimensions. Transforming to 2 dimensions, keeping the first dimension and collapsing the others.\n");
 		data_array = af::moddims(data_array, n_features, data_array.dims(data_array.numdims() - 1));
@@ -404,6 +437,9 @@ int main(int argc, char *argv[]) {
 			if (mpi_rank == 0) printf("The biggest label is %d and not %d. Is your number of classes correct?\n", max_label, n_classes);
 			MPI_Finalize();
 			exit(1);
+		}
+		if (TESTFILE_PRESENT) {
+			test_array_y -= 1;
 		}
 	} else {
 		if (mpi_rank == 0) printf("Labels need to be 1 or 0 based!\n");
@@ -476,8 +512,12 @@ int main(int argc, char *argv[]) {
 		time_train_sync += MPI_Wtime() - time_buf;
 		time_buf = MPI_Wtime();
 		float classify_accuracy = net.classify_accuracy_array(data_array, label_array) / static_cast<float>(globalN);
+		float test_classify_accuracy = NAN;
+		if(TESTFILE_PRESENT) {
+			test_classify_accuracy = net.classify_accuracy_array(test_array_X, test_array_y) / static_cast<float>(n_testfile_samples);
+		}
 		if (mpi_rank == 0) {
-			printf("%5d %10.6f %10.6f %10.6f\n", epoch, error, lasterror, classify_accuracy);
+			printf("%5d %10.6f %10.6f %10.6f %10.6f\n", epoch, error, lasterror, classify_accuracy, test_classify_accuracy);
 		}
 		time_train_batch_test += MPI_Wtime() - time_buf;
 		if (error < max_error) {
@@ -499,20 +539,35 @@ int main(int argc, char *argv[]) {
 
 	double time_trained = MPI_Wtime();
 
-	juml::Dataset test_data_set(full_data);
-	juml::Dataset test_label_set(label_array);
 	bool show_confusion_matrix = true;
 	float full_class_accuracy;
+	float final_test_accuracy = NAN;
 	if (show_confusion_matrix) {
 		af::array confusion_matrix;
-		net.classify_confusion(test_data_set, test_label_set, confusion_matrix, &full_class_accuracy);
+		net.classify_confusion(data_array, label_array, confusion_matrix, &full_class_accuracy);
 		if (mpi_rank == 0) {
+			printf("Trainingsset: ");
 			af_print(confusion_matrix);
 		}
+		if (TESTFILE_PRESENT) {
+			net.classify_confusion(test_array_X, test_array_y, confusion_matrix, &final_test_accuracy);
+			if (mpi_rank == 0) {
+				printf("Testset: ");
+				af_print(confusion_matrix);
+			}
+		}
 	} else {
-		full_class_accuracy = net.classify_accuracy(test_data_set, test_label_set);
+		full_class_accuracy = net.classify_accuracy(full_data, label_array);
+		if (TESTFILE_PRESENT) {
+			final_test_accuracy = net.classify_accuracy(test_array_X, test_array_y);
+		}
 	}
-	if (mpi_rank == 0) printf("Full Class-Accuracy: %20.12f\n", full_class_accuracy);
+	if (mpi_rank == 0) {
+		printf("Full Class-Accuracy: %20.12f\n", full_class_accuracy);
+		if(TESTFILE_PRESENT) {
+			printf("Full Test-Accuracy: %20.12f\n", final_test_accuracy);
+		}
+	}
 
 	double time_tested = MPI_Wtime();
 	/*juml::Dataset trainset(data_array);
