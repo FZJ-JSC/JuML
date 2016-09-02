@@ -31,8 +31,8 @@ namespace juml {
 				af::array lastOutput;
 				int update_count = 0;
 				virtual void applyWeightUpdate(float learningrate, MPI_Comm comm) {
-					this->weights -= learningrate * this->weights_update + learningrate * this->weight_decay * this->weights;
-				        this->bias -= learningrate * this->bias_update + learningrate * this->weight_decay * this->bias;
+					this->weights -= learningrate * this->weights_update + this->weight_decay * this->weights;
+				        this->bias -= learningrate * this->bias_update + this->weight_decay * this->bias;
 				}
 			public:
 				af::array bias;
@@ -180,13 +180,11 @@ namespace juml {
 			float momentum_;
 
 			void applyWeightUpdate(float learningrate, MPI_Comm comm) override {
-				this->weights_update = learningrate * (
-					       (1 - this->momentum_) * this->weights_update +
-					       this->weight_decay * this->weights) + 
+				this->weights_update = learningrate * this->weights_update +
+					       this->weight_decay * this->weights +
 					       this->momentum_ * this->previous_weight_update;
-				this->bias_update = learningrate * (
-						(1 - this->momentum_) * this->bias_update +
-						this->weight_decay * this->bias) +
+				this->bias_update = learningrate * this->bias_update +
+						this->weight_decay * this->bias +
 						this->momentum_ * this->previous_bias_update;
 				this->weights -= this->weights_update;
 				this->bias -= this->bias_update;
