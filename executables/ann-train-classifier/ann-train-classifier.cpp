@@ -515,7 +515,7 @@ int main(int argc, char *argv[]) {
 			printf("%5d %10.6f %10.6f %10.6f %10.6f\n", epoch, error, lasterror, classify_accuracy, test_classify_accuracy);
 		}
 		time_train_batch_test += MPI_Wtime() - time_buf;
-		if (error / nbatches < max_error) {
+		if (error < max_error) {
 			break;
 		}
 	}
